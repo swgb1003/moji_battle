@@ -31,6 +31,8 @@ namespace MojiBattle.Tests
         {
             SimHarness.Begin(false);
             int seedsPerPair = int.TryParse(System.Environment.GetEnvironmentVariable("RR_SEEDS"), out var n) ? n : 3;
+            // 調整用: RR_ONLY=鬱 などで、その文字を含む組だけを回す（seed は全体実行と同じ）
+            string only = System.Environment.GetEnvironmentVariable("RR_ONLY");
             var agg = Nine.ToDictionary(c => c.ToString(), c => new GlyphAgg { g = c.ToString() });
             var pairLines = new List<string>();
             int dup = 0, envOutside = 0, unfinished = 0, draws = 0, zeroDamage = 0, koTotal = 0, total = 0, suddenDeaths = 0, slamTotal = 0;
@@ -43,6 +45,7 @@ namespace MojiBattle.Tests
             for (int j = i + 1; j < Nine.Length; j++)
             {
                 pairIndex++;
+                if (!string.IsNullOrEmpty(only) && Nine[i].ToString() != only && Nine[j].ToString() != only) continue;
                 int leftWins = 0, rightWins = 0;
                 for (int s = 0; s < seedsPerPair; s++)
                 {
@@ -114,12 +117,13 @@ namespace MojiBattle.Tests
             }
 
             string summary = $"- matches: {total} / draws: {draws} ({draws * 100f / Mathf.Max(1, total):F0}%) / sudden death: {suddenDeaths} / slams: {slamTotal} / no damage at all: {zeroDamage} / KO: {koTotal} ({koTotal * 100f / Mathf.Max(1, total):F0}%) / avg total damage per match: {damageTotal / Mathf.Max(1, total):F0}";
-            WriteReport(agg, pairLines, special.ToString(), dup, envOutside, maxIdle, maxIdleCase, seedsPerPair, summary);
+            WriteReport(agg, pairLines, special.ToString(), dup, envOutside, maxIdle, maxIdleCase, seedsPerPair, summary, string.IsNullOrEmpty(only) ? "p2_round_robin.md" : "p2_round_robin_only.md");
 
             Assert.AreEqual(0, unfinished, "終わらない試合");
             Assert.AreEqual(0, dup, "二重本体ダメージ");
             Assert.AreEqual(0, envOutside, "吹っ飛び外の環境ダメージ");
             Assert.Less(maxIdle, 10f, $"膠着: {maxIdleCase}");
+            if (!string.IsNullOrEmpty(only)) yield break;
             // 文字ごとに違う戦い方: 溜め・手数・衝撃・勝率がばらける
             var list = agg.Values.ToList();
             float Rate(GlyphAgg a, float v) => v / Mathf.Max(1f, a.seconds / 60f);
@@ -134,7 +138,7 @@ namespace MojiBattle.Tests
             Assert.IsTrue(list.All(a => a.wins > 0), "一度も勝てない文字がある: " + string.Join(",", list.Where(a => a.wins == 0).Select(a => a.g)));
         }
 
-        static void WriteReport(Dictionary<string, GlyphAgg> agg, List<string> pairs, string special, int dup, int envOutside, float maxIdle, string maxIdleCase, int seedsPerPair, string summary)
+        static void WriteReport(Dictionary<string, GlyphAgg> agg, List<string> pairs, string special, int dup, int envOutside, float maxIdle, string maxIdleCase, int seedsPerPair, string summary, string fileName)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"# P2 round robin — 9 glyphs (Gothic), 36 pairs × {seedsPerPair} seeds");
@@ -163,7 +167,7 @@ namespace MojiBattle.Tests
             sb.AppendLine("## 最小検証ケース（山 vs 一、口 vs 火）");
             sb.AppendLine();
             sb.Append(special);
-            File.WriteAllText(Path.Combine(SimHarness.ReportDir, "p2_round_robin.md"), sb.ToString(), Encoding.UTF8);
+            File.WriteAllText(Path.Combine(SimHarness.ReportDir, fileName), sb.ToString(), Encoding.UTF8);
             Debug.Log("[RR]\n" + sb);
         }
     }

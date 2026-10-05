@@ -26,7 +26,7 @@ MonoBehaviour:
   defA: 0.3
   defM: 0.2
   defMin: 20
-  defMax: 100
+  defMax: 85
   spdBase: 105
   spdM: 0.85
   spdC: 0.1
@@ -38,8 +38,8 @@ MonoBehaviour:
   durB: 0.2
   durMin: 20
   durMax: 100
-  hpBase: 60
-  hpPerDurability: 1.4
+  hpBase: 78
+  hpPerDurability: 0.85
   weaponMassBase: 1.1
   weaponMassPerM: 0.035
   bodyMassBase: 2
@@ -83,7 +83,7 @@ MonoBehaviour:
   activeLight: 0.1
   activeHeavy: 0.6
   recoveryLight: 0.18
-  recoveryHeavy: 0.95
+  recoveryHeavy: 1.25
   attackTimingJitter: 0.12
   threatWindow: 0.6
   guardMinDwell: 0.3
@@ -110,8 +110,8 @@ MonoBehaviour:
   risingWhenHighHeavy: 0.25
   risingWhenLowHeavy: 0.1
   attackCooldownLight: 0.15
-  attackCooldownHeavy: 1.2
-  heavyWhiffRecoveryMultiplier: 1.4
+  attackCooldownHeavy: 1.4
+  heavyWhiffRecoveryMultiplier: 1.7
   followThroughFraction: 0.6
   punishReachFactor: 0.8
   light:
@@ -150,7 +150,7 @@ MonoBehaviour:
     aimHeadChance: 0.35
     counterBias: 0.3
     reactionChance: 0.6
-  walkSpeedMin: 1.4
+  walkSpeedMin: 1.2
   walkSpeedMax: 4.5
   moveAccelGain: 12
   maxMoveAccel: 28

@@ -35,10 +35,10 @@ namespace MojiBattle
         public float mBase = 5f, mA = 0.70f, mC = 0.20f, mH = 0.10f, mMin = 5f, mMax = 100f;
         [Tooltip("Tuned: 攻撃の下限 20→30（軽い字形の与ダメージが小さすぎたため。仕様の参考値「一」攻撃31）")]
         public float atkM = 0.60f, atkC = 0.40f, atkMin = 30f, atkMax = 100f;
-        public float defW = 0.50f, defA = 0.30f, defM = 0.20f, defMin = 20f, defMax = 100f;
+        public float defW = 0.50f, defA = 0.30f, defM = 0.20f, defMin = 20f, defMax = 85f;
         public float spdBase = 105f, spdM = 0.85f, spdC = 0.10f, spdB = 0.05f, spdMin = 10f, spdMax = 100f;
         public float durA = 0.50f, durM = 0.30f, durB = 0.20f, durMin = 20f, durMax = 100f;
-        public float hpBase = 60f, hpPerDurability = 1.4f;
+        public float hpBase = 78f, hpPerDurability = 0.85f;
         public float weaponMassBase = 1.1f, weaponMassPerM = 0.035f;
         public float bodyMassBase = 2.0f, bodyMassPerDurability = 0.008f;
         public float lightMaxWeight = 35f, heavyMinWeight = 70f;
@@ -82,7 +82,7 @@ namespace MojiBattle
         [Tooltip("Tuned: 溜め時間の補間の指数（1 = 仕様どおり線形。大きいほど中量級が短い）")]
         public float windupCurve = 1.6f;
         public float activeLight = 0.10f, activeHeavy = 0.60f;
-        public float recoveryLight = 0.18f, recoveryHeavy = 0.95f;
+        public float recoveryLight = 0.18f, recoveryHeavy = 1.25f;
         public float attackTimingJitter = 0.12f;
         public float threatWindow = 0.6f;
         public float guardMinDwell = 0.3f;
@@ -110,8 +110,8 @@ namespace MojiBattle
         public float stepInSpeedLight = 1.0f, stepInSpeedHeavy = 1.8f;
         [Tooltip("相手の武器が胸より上/下にある時に斬り上げを選ぶ確率（軽量・中量 / 重量）")]
         public float risingWhenHighLight = 0.75f, risingWhenLowLight = 0.3f, risingWhenHighHeavy = 0.25f, risingWhenLowHeavy = 0.1f;
-        public float attackCooldownLight = 0.15f, attackCooldownHeavy = 1.2f;
-        public float heavyWhiffRecoveryMultiplier = 1.4f;
+        public float attackCooldownLight = 0.15f, attackCooldownHeavy = 1.4f;
+        public float heavyWhiffRecoveryMultiplier = 1.7f;
         [Tooltip("Tuned: 攻撃後の硬直のうち、武器を振り切った位置に残す割合")]
         public float followThroughFraction = 0.6f;
         [Tooltip("Tuned: 相手の硬直に差し込むため、射程外から踏み込める距離（歩行速度×残り硬直×係数）")]
@@ -133,7 +133,7 @@ namespace MojiBattle
         };
 
         [Header("移動・回避")]
-        public float walkSpeedMin = 1.4f, walkSpeedMax = 4.5f;
+        public float walkSpeedMin = 1.2f, walkSpeedMax = 4.5f;
         public float moveAccelGain = 12f, maxMoveAccel = 28f;
         public float backstepSpeed = 7.5f, backstepHop = 2.2f;
         public float hopOverSpeedX = 6.0f, hopOverSpeedY = 7.8f;
