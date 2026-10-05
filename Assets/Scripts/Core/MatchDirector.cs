@@ -30,6 +30,7 @@ namespace MojiBattle
         bool unstackBoth;
         readonly float[] dropRestoreAt = { -1f, -1f };
         readonly float[] perchedTime = new float[2];
+        readonly float[] stretchTime = new float[2];
         readonly System.Collections.Generic.List<(Collider2D a, Collider2D b)> separatedPairs = new System.Collections.Generic.List<(Collider2D, Collider2D)>();
         readonly ContactPoint2D[] footContacts = new ContactPoint2D[24];
         int pendingWinner;
@@ -99,6 +100,7 @@ namespace MojiBattle
             if (StepCount % 5 == 0) ResolveDeepPenetration();
             ResolveStandingOnWeapon();
             ResolveStacking(dt);
+            ResolveHingeStretch(dt);
             Fighters[0].Tick(ctx.SimTime, dt);
             Fighters[1].Tick(ctx.SimTime, dt);
             Fighters[0].CachePreStep();
@@ -238,6 +240,42 @@ namespace MojiBattle
                     break;
                 }
             }
+        }
+
+        /// <summary>
+        /// カスタマイズした武器（小さすぎて相手の字形の穴に挟まる・長すぎて押さえ込まれる）が引っ掛かり、
+        /// 握り（ヒンジ）が大きくずれたままになったら、相手との衝突を離れるまで外し、武器の保持トルクを一瞬抜いて外す。
+        /// カスタマイズ無しの試合は P1/P2 の検証どおりのまま（対象外）。
+        /// </summary>
+        void ResolveHingeStretch(float dt)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                var f = Fighters[i];
+                if (!f.Mods.customized || f.Runtime.IsDown) { stretchTime[i] = 0f; continue; }
+                float stretch = (f.WeaponBody.position - f.Body.GetRelativePoint(f.ShoulderLocal(f.Facing))).magnitude;
+                stretchTime[i] = stretch > StretchLimit ? stretchTime[i] + dt : 0f;
+                if (stretchTime[i] < StretchSeconds) continue;
+                stretchTime[i] = 0f;
+                var opp = f.Opponent;
+                foreach (var w in f.WeaponColliders)
+                {
+                    foreach (var o in opp.WeaponColliders) Separate(w, o);
+                    foreach (var o in opp.BodyColliders) Separate(w, o);
+                }
+                f.Runtime.weaponLimpUntil = Context.SimTime + 0.3f;
+                Telemetry?.Note($"RESOLVE hinge-stretch {i} {stretch:F2}");
+            }
+        }
+
+        const float StretchLimit = 0.25f, StretchSeconds = 0.3f;
+
+        /// <summary>離れるまで衝突を外す（ResolveDeepPenetration が 0.05 以上離れたら戻す）。</summary>
+        void Separate(Collider2D a, Collider2D b)
+        {
+            if (Physics2D.GetIgnoreCollision(a, b)) return;
+            Physics2D.IgnoreCollision(a, b, true);
+            if (!separatedPairs.Contains((a, b))) separatedPairs.Add((a, b));
         }
 
         /// <summary>

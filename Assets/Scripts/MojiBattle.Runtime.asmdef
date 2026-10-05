@@ -1,7 +1,7 @@
 {
     "name": "MojiBattle.Runtime",
     "rootNamespace": "MojiBattle",
-    "references": [],
+    "references": ["UnityEngine.UI"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

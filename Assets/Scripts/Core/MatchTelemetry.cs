@@ -27,6 +27,14 @@ namespace MojiBattle
         /// <summary>有効時間開始時の距離 / 自分の射程 の合計（攻撃が届く距離で振っているか）</summary>
         public float distAtActiveSum; public int distAtActiveCount;
         [NonSerialized] public float swingPsiMin, swingPsiMax;
+        /// <summary>振り（有効時間）ごとの武器の最大角速度（度/秒）と切っ先の最大速度の合計（カスタマイズの振りの速さ・重さの比較用）</summary>
+        public float peakSwingOmegaSum, peakTipSpeedSum; public int peakSwingCount;
+        [NonSerialized] public float swingPeakOmega;
+        /// <summary>握り（ヒンジ）の最大のずれ（物理の破綻の検出用）</summary>
+        public float maxHingeStretch;
+        /// <summary>握りのずれが 0.2 を超えていたステップ数</summary>
+        public int stretchedSteps;
+        public int[] stretchStateSteps = new int[10];
         public int maxComboHits;
     }
 
@@ -145,9 +153,16 @@ namespace MojiBattle
             if (e.to == FighterState.AttackActive)
             {
                 t.swingPsiMin = 999f; t.swingPsiMax = -999f;
+                t.swingPeakOmega = 0f;
                 var fa = director.Fighters[e.fighter];
                 t.distAtActiveSum += fa.DistanceToOpponent / Mathf.Max(0.1f, fa.AttackRange);
                 t.distAtActiveCount++;
+            }
+            if (e.from == FighterState.AttackActive)
+            {
+                t.peakSwingOmegaSum += t.swingPeakOmega;
+                t.peakTipSpeedSum += t.swingPeakOmega * Mathf.Deg2Rad * director.Fighters[e.fighter].Weapon.length;
+                t.peakSwingCount++;
             }
             if (e.from == FighterState.AttackActive && fr.attackStyle != AttackStyle.Thrust)
             {
@@ -192,6 +207,16 @@ namespace MojiBattle
                     float psi = f.WeaponMotor.CurrentPsi;
                     t.swingPsiMin = Mathf.Min(t.swingPsiMin, psi);
                     t.swingPsiMax = Mathf.Max(t.swingPsiMax, psi);
+                    t.swingPeakOmega = Mathf.Max(t.swingPeakOmega, Mathf.Abs(f.WeaponBody.angularVelocity - f.Body.angularVelocity));
+                }
+                float stretch = (f.WeaponBody.position - f.Body.GetRelativePoint(f.ShoulderLocal(f.Facing))).magnitude;
+                if (stretch > t.maxHingeStretch) t.maxHingeStretch = stretch;
+                if (stretch > 0.2f)
+                {
+                    t.stretchedSteps++;
+                    t.stretchStateSteps[(int)f.Runtime.state]++;
+                    if (Trace && t.stretchedSteps % 10 == 1)
+                        Log($"STRETCH {Side(i)} {stretch:F2} {f.Runtime.state} '{f.Brain.LastDecision}' y={f.Body.position.y:F2} vy={f.Body.linearVelocity.y:F1} psi={f.WeaponMotor.CurrentPsi:F0} tgt={f.WeaponMotor.TargetPsi:F0} tq={f.WeaponMotor.LastTorque:F0} w={f.WeaponBody.angularVelocity:F0} d={f.DistanceToOpponent:F2}");
                 }
             }
             if (Trace && director.StepCount % 50 == 0)

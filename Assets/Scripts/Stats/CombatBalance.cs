@@ -22,6 +22,8 @@ namespace MojiBattle
         [Range(0, 1)] public float counterBias;
         [Tooltip("AI判断1回あたりに相手の攻撃予兆へ反応できる確率（読み違い・反応遅れ）")]
         [Range(0, 1)] public float reactionChance = 0.6f;
+
+        public ClassTendency Clone() => (ClassTendency)MemberwiseClone();
     }
 
     /// <summary>
@@ -54,7 +56,7 @@ namespace MojiBattle
         public bool dilateForColliders = true;
 
         [Header("6.2 武器")]
-        public float weaponMaxSide = 2.2f;
+        public float weaponMaxSide = 1.8f;
         public Vector2 shoulderLocal = new Vector2(0.22f, 1.32f);
         public float weaponAngularDamping = 0.05f;
         public float weaponMaxAngularSpeedDeg = 1440f;

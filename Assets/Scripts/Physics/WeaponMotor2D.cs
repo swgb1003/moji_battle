@@ -19,12 +19,19 @@ namespace MojiBattle
         public float TargetPsi { get; private set; }
         public float CurrentPsi { get; private set; }
         public float LastTorque { get; private set; }
+        /// <summary>目標から大きくずれたまま回らない（相手の字形・地面などに押さえ込まれている）。</summary>
+        public bool Stalled => stallTime > 0.25f;
 
         public WeaponMotor2D(Fighter self) { this.self = self; }
 
-        float ReadyPsi => self.Balance.ReadyPsi(self.Stats.weightScore);
+        float ReadyPsi => self.ReadyPsi;
         float NaturalFrequency => StatCalculator.Lerp01(self.Balance.poseFrequencyLight, self.Balance.poseFrequencyHeavy, self.Stats.weightScore);
-        float AccelLimit => self.Balance.maxAngularAccel * Mathf.Lerp(1f, self.Balance.heavyAccelFactor, self.Stats.weightScore / 100f);
+        /// <summary>
+        /// 最大角加速度。字形の重量クラスで決まり、カスタマイズでは「同じ筋力で慣性が大きいほど遅い」比（handlingAccel）を掛ける。
+        /// 端持ち・大型の武器は振り始めが遅く、復帰も遅くなる（数値の時間補正ではなく慣性から）。
+        /// </summary>
+        float AccelLimit => self.Balance.maxAngularAccel * Mathf.Lerp(1f, self.Balance.heavyAccelFactor, self.Stats.weightScore / 100f)
+                            * self.Mods.handlingAccel;
 
         /// <summary>現在の ψ（度）。</summary>
         public float MeasurePsi()
@@ -77,6 +84,9 @@ namespace MojiBattle
                     // 待機中は軽く持つだけ（踏ん張らない）。重い一撃を受けると武器ごと押し退けられる。
                     // 武器同士がぶつかって前進できない時だけ、武器を立てて担いで障害を越える
                     target = self.Brain.CarryWeapon ? Mathf.Max(ReadyPsi, b.carryPsi) : ReadyPsi;
+                    // 戦闘スタイル（鉄壁）: 相手が近ければ字形を相手へ向けて構える
+                    float stylePsi = self.Style != null ? self.Style.IdlePsiOverride() : float.NaN;
+                    if (!float.IsNaN(stylePsi) && !self.Brain.CarryWeapon) target = stylePsi;
                     torqueScale = self.Balance.idleHoldTorqueScale; break;
             }
             // 目標角の速度（同じ状態が続いている間だけ）。PD の微分項を目標速度との差にして振りの遅れを無くす
@@ -111,7 +121,9 @@ namespace MojiBattle
             // 重力補償: 重心が握りから横にずれているほど必要トルクが大きい
             Vector2 r = wb.worldCenterOfMass - wb.position;
             float gravityTorque = wb.mass * -Physics2D.gravity.y * wb.gravityScale * r.x;
-            float limit = inertia * AccelLimit * torqueScale + Mathf.Abs(gravityTorque) * b.gravityCompensation;
+            // 持ち方の「攻撃時トルク」は溜め・振りの間だけ
+            bool attacking = rt.state == FighterState.AttackWindup || rt.state == FighterState.AttackActive;
+            float limit = inertia * AccelLimit * torqueScale * (attacking ? self.Mods.attackTorque : 1f) + Mathf.Abs(gravityTorque) * b.gravityCompensation;
             torque += gravityTorque * b.gravityCompensation;
             torque = Mathf.Clamp(torque, -limit, limit);
 

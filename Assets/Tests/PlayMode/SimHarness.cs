@@ -48,6 +48,19 @@ namespace MojiBattle.Tests
             return battle;
         }
 
+        /// <summary>カスタマイズ付きの試合（FighterLoadout.build を指定）。</summary>
+        public static BattleInstance Build(int seed, FighterLoadout left, FighterLoadout right, float duration = 60f, bool presentation = false)
+        {
+            var config = new MatchConfig { left = left, right = right, seed = seed, durationSeconds = duration };
+            var battle = BattleBuilder.Build(config, CombatBalance.Default, GlyphCalibration.Default, presentation, 0f, out var error);
+            if (battle == null) throw new System.Exception(error);
+            return battle;
+        }
+
+        public static FighterLoadout Custom(string ch, WeaponSize size = WeaponSize.M, GripType grip = GripType.OneHanded,
+            float gripPosition = 0.5f, BattleStyle style = BattleStyle.Aggressive) =>
+            new FighterBuildData { character = ch, weaponSize = size, gripType = grip, gripPosition = gripPosition, battleStyle = style }.ToLoadout();
+
         public static IEnumerator RunToEnd(BattleInstance battle, float speed, int maxFrames = 200000)
         {
             TimeController.SetSpectatorSpeed(speed);

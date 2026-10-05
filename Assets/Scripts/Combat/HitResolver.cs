@@ -132,11 +132,13 @@ namespace MojiBattle
                 Vector2 vd = c.targetIsWeapon ? d.PreWeaponPointVelocity(c.point) : d.PreBodyVelocity;
                 float vN = Mathf.Max(Mathf.Abs(Vector2.Dot(va - vd, n)), Mathf.Abs(Vector2.Dot(c.relativeVelocity, n)));
                 var cand = new ContactCandidate { isWeapon = c.targetIsWeapon, vN = vN };
-                if (c.targetIsWeapon) cand.frontal = IsFrontal(d, c.point, b.guardHalfAngle);
+                // 横持ちはガードの正面角が広い
+                if (c.targetIsWeapon) cand.frontal = IsFrontal(d, c.point, Mathf.Min(180f, b.guardHalfAngle * d.Mods.guardRange));
                 else
                 {
                     qualities[i] = ClassifyQuality(a, c.point, n, va, b);
-                    cand.damage = DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense, vN, qualities[i], c.part, b);
+                    // サイズの威力は質量を通じてだけ（Mods.damage = 質量倍率^指数）
+                    cand.damage = DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense, vN, qualities[i], c.part, b) * a.Mods.damage;
                 }
                 candidates.Add(cand);
             }
@@ -201,13 +203,14 @@ namespace MojiBattle
             float load = vN * a.WeaponBody.mass * b.guardLoadPerMomentum;
             rtD.guardLoad += load;
             rtD.metrics.guards++;
-            float imp = DamageMath.Impulse(vN, a.WeaponBody.mass, d.Body.mass, b) * b.guardImpulseRatio;
+            // 持ち方のガード安定性: 崩れにくく、押し込まれにくい
+            float imp = DamageMath.Impulse(vN, a.WeaponBody.mass, d.Body.mass, b) * b.guardImpulseRatio / d.Mods.guardStability;
             Vector2 dir = KnockDirection(a, d, hit.normal, 0.1f);
             d.Body.AddForce(dir * imp * b.impulseScale, ForceMode2D.Impulse);
             // 武器同士は反発し、重量差があると軽い側の本体も後退する
             float mA = a.WeaponBody.mass, mD = d.WeaponBody.mass;
             if (mA < mD) a.Body.AddForce(-dir * imp * b.impulseScale * (mD - mA) / (mA + mD), ForceMode2D.Impulse);
-            bool broke = rtD.guardLoad >= b.guardBreakThreshold;
+            bool broke = rtD.guardLoad >= b.guardBreakThreshold * d.Mods.guardStability;
             // ガードが持ちこたえたらこのスイングの本体ダメージは無し。崩れた場合は同じスイングがそのまま本体に届き得る。
             if (!broke) Ledger.MarkResolved(rtA.currentAttackId, d.Id);
             if (broke)
@@ -243,7 +246,8 @@ namespace MojiBattle
             if (quality == HitQuality.Center) rtA.metrics.centerHits++;
             ctx.LastDamageTime = time;
 
-            float impulse = DamageMath.Impulse(c.vN, a.WeaponBody.mass, d.Body.mass, b);
+            // 両手持ちはノックバック耐性で衝撃を割る
+            float impulse = DamageMath.Impulse(c.vN, a.WeaponBody.mass, d.Body.mass, b) / d.Mods.knockbackResistance;
             bool leg = hit.part == BodyPart.Leg;
             rtD.knockdownAccum += impulse * b.knockdownAccumPerImpulse + (leg ? b.legKnockdownBonus : 0f);
             bool knock = impulse >= b.knockdownImpulse || (leg && impulse >= b.legKnockdownImpulse) || rtD.knockdownAccum >= b.knockdownAccumThreshold;

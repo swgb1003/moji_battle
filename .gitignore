@@ -21,3 +21,4 @@
 /Assets/InitTestScene*.unity
 /Assets/InitTestScene*.unity.meta
 Reports/p2_round_robin_only.md
+TestResults-*.xml

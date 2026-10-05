@@ -61,7 +61,9 @@ namespace MojiBattle
 
             Vector3 grip = weaponPos;
             DrawArm(armFront, shoulder, grip, bodyRot * Vector3.down * 0.12f);
-            DrawArm(armBack, shoulder + bodyRot * new Vector3(-0.05f * f.Facing, -0.02f, 0f), grip, bodyRot * Vector3.down * 0.2f);
+            // 両手持ち: 添え手は握りから重心方向の少し先（表示のみ。物理の接続は握り1点）
+            Vector3 backHand = f.Mods.customized && f.Mods.grip == GripType.TwoHanded ? SecondHand(f, weaponPos, weaponRot) : grip;
+            DrawArm(armBack, shoulder + bodyRot * new Vector3(-0.05f * f.Facing, -0.02f, 0f), backHand, bodyRot * Vector3.down * 0.2f);
 
             // 脚: 接地中は歩行サイクル、空中は畳む、転倒中は胴に沿って伸ばす
             float vx = f.Body.linearVelocity.x;
@@ -97,8 +99,29 @@ namespace MojiBattle
             {
                 UiKit.FitText(debugLabel, 0.2f, cam);
                 debugLabel.transform.position = headC + Vector3.up * 0.8f;
-                debugLabel.text = $"{rt.state}\n{f.Brain.LastDecision}";
+                debugLabel.text = DebugText(f);
             }
+        }
+
+        /// <summary>両手持ちの添え手の位置（握りから重心方向へ secondHandOffset、重心までが上限）。</summary>
+        public static Vector3 SecondHand(Fighter f, Vector2 weaponPos, Quaternion weaponRot)
+        {
+            Vector2 com = new Vector2(f.Weapon.comLocal.x * f.Facing, f.Weapon.comLocal.y);
+            float len = com.magnitude;
+            if (len < 1e-3f) return weaponPos;
+            float offset = Mathf.Min(len, f.Context.Customize != null ? f.Context.Customize.secondHandOffset : 0.32f);
+            return (Vector3)weaponPos + weaponRot * (Vector3)(com / len * offset);
+        }
+
+        /// <summary>D キーの AI 表示: 状態・判断、カスタマイズ時はスタイル・サイズ・持ち方・質量・てこの長さ・距離・射程。</summary>
+        static string DebugText(Fighter f)
+        {
+            var rt = f.Runtime;
+            string s = $"{rt.state}  {f.Brain.LastDecision}";
+            var m = f.Mods;
+            if (!m.customized) return s;
+            string style = f.Style != null ? $"{CustomizeLabels.Style(m.style)} {f.Style.DebugState(f.Context.SimTime)}" : "";
+            return $"{s}\n{style}\n{m.size}/{CustomizeLabels.Grip(m.grip)} 質量{f.WeaponBody.mass:F1} てこ{m.leverArm:F2} 扱{m.handlingAccel:F2}\n距離{f.DistanceToOpponent:F1} 射程{f.AttackRange:F1}";
         }
 
         static void DrawArm(LineRenderer lr, Vector3 shoulder, Vector3 hand, Vector3 elbowBias)

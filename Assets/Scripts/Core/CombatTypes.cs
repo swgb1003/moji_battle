@@ -61,7 +61,9 @@ namespace MojiBattle
     {
         public string grapheme;
         public FontStyleId font;
-        public FighterLoadout(string grapheme, FontStyleId font) { this.grapheme = grapheme; this.font = font; }
+        /// <summary>カスタマイズ内容。null なら P1/P2 の検証どおりの既定（字形固有の握り・補正なし）。</summary>
+        public FighterBuildData build;
+        public FighterLoadout(string grapheme, FontStyleId font) { this.grapheme = grapheme; this.font = font; build = null; }
     }
 
     [Serializable]

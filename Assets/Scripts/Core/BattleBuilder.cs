@@ -47,6 +47,7 @@ namespace MojiBattle
                 Balance = balance,
                 Events = new CombatEvents(),
                 ArenaHalfWidth = balance.arenaHalfWidth,
+                Customize = CustomizeBalance.Default,
             };
             ctx.Hits = new HitResolver(ctx);
             ctx.Env = new EnvironmentImpactResolver(ctx);

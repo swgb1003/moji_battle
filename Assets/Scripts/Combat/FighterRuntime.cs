@@ -43,6 +43,7 @@ namespace MojiBattle
 
         // 回避
         public float evadeReadyAt;
+        public float evadeEndedAt = -999f;
         public EvadeKind evadeKind;
 
         public readonly FighterMetrics metrics = new FighterMetrics();

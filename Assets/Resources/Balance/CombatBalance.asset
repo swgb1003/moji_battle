@@ -55,7 +55,7 @@ MonoBehaviour:
   maxColliders: 64
   minComponentPixels: 16
   dilateForColliders: 1
-  weaponMaxSide: 2.2
+  weaponMaxSide: 1.8
   shoulderLocal: {x: 0.22, y: 1.32}
   weaponAngularDamping: 0.05
   weaponMaxAngularSpeedDeg: 1440

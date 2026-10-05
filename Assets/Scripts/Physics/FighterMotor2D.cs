@@ -53,6 +53,8 @@ namespace MojiBattle
         {
             var b = self.Balance;
             float speed = StatCalculator.Lerp01(b.lungeSpeedLight, b.lungeSpeedHeavy, self.Stats.weightScore);
+            // 重い・長い武器を抱えた踏み込みは遅い
+            if (self.Mods.customized) speed *= Mathf.Sqrt(Mathf.Min(1f, self.Mods.handlingAccel));
             if (!self.IsGrounded) return;
             float dv = self.TowardOpponent * speed - self.Body.linearVelocity.x;
             self.AddVelocity(new Vector2(dv, 0f));

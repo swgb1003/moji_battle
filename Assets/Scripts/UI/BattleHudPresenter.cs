@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MojiBattle
 {
@@ -13,7 +13,7 @@ namespace MojiBattle
         MatchDirector director;
         CameraRig rig;
         readonly Bar[] bars = new Bar[2];
-        readonly HudText[] names = new HudText[2], statsText = new HudText[2];
+        readonly HudText[] names = new HudText[2], statsText = new HudText[2], buildText = new HudText[2];
         HudText timer, center, sub, footer, speed, seedText;
         readonly float[] trail = new float[2];
 
@@ -45,13 +45,16 @@ namespace MojiBattle
                 string side = i == 0 ? "左・朱" : "右・群青";
                 names[i] = MakeText($"{f.Loadout.grapheme}  {GlyphCatalog.FontDisplayName(f.Loadout.font)}  [{side}]", team, i == 0 ? 64 : 1856, 26, 40, anchor);
                 var s = f.Stats;
+                // カスタマイズの試合はビルド（サイズ / 持ち方 / スタイル）を小さく表示（カスタマイズ仕様 19）
+                string build = f.Mods.customized ? $"{f.Mods.size} / {CustomizeLabels.Grip(f.Mods.grip)} / 握り{Mathf.RoundToInt(f.Mods.gripPosition * 100f)}% / {CustomizeLabels.Style(f.Mods.style)}" : "";
+                buildText[i] = MakeText(build, team, i == 0 ? 64 : 1856, 150, 26, anchor);
                 statsText[i] = MakeText($"攻{s.attack} 防{s.defense} 速{s.speed} 耐{s.durability}  重量{new string('★', s.WeightStars)}  {f.WeightClass}",
                     FighterFactory.Ink, i == 0 ? 64 : 1856, 116, 24, anchor);
             }
             timer = MakeText("60", FighterFactory.Ink, 960, 30, 72, TextAnchor.UpperCenter);
             center = MakeText("", FighterFactory.Ink, 960, 380, 120, TextAnchor.MiddleCenter);
             sub = MakeText("", FighterFactory.Ink, 960, 500, 34, TextAnchor.MiddleCenter);
-            footer = MakeText("Space 一時停止 / 1・2・3 速度 / R 新seed / T 同seed / Z・X 左の文字 / N・M 右の文字 / C Collider / D AI",
+            footer = MakeText("Space 停止 / 1・2・3 速度 / R・T 再戦 / Z・X・N・M 文字 / C 当たり判定 / D AI / B カスタマイズ",
                 new Color(0.22f, 0.22f, 0.22f), 64, 1040, 24, TextAnchor.LowerLeft);
             speed = MakeText("1×", FighterFactory.Ink, 1420, 1040, 30, TextAnchor.LowerCenter);
             seedText = MakeText($"seed {d.Config.seed}", new Color(0.22f, 0.22f, 0.22f), 1856, 1040, 24, TextAnchor.LowerRight);
@@ -91,6 +94,7 @@ namespace MojiBattle
                 SetRect(bars[i].fill, W(fx, y + barH * 0.5f), fillW * u * refW / 1920f, barH * u);
                 Place(names[i], W, u, cam);
                 Place(statsText[i], W, u, cam);
+                Place(buildText[i], W, u, cam);
             }
 
             timer.tm.text = director.Overtime ? "延長" : Mathf.CeilToInt(director.TimeRemaining).ToString("00");
@@ -120,7 +124,7 @@ namespace MojiBattle
                 var m0 = r.metrics[0];
                 var m1 = r.metrics[1];
                 small = $"{r.elapsedSeconds:F1}秒  残HP {r.hpRemaining[0]:F0} / {r.hpRemaining[1]:F0}  与ダメ {m0.damageDealt:F0} / {m1.damageDealt:F0}  " +
-                        $"ガード {m0.guards} / {m1.guards}  最大吹っ飛び {m0.maxKnockbackDistance:F1} / {m1.maxKnockbackDistance:F1}\nR: 新しいseedで再戦   T: 同じseedで再戦";
+                        $"ガード {m0.guards} / {m1.guards}  最大吹っ飛び {m0.maxKnockbackDistance:F1} / {m1.maxKnockbackDistance:F1}";
             }
             else center.tm.color = FighterFactory.Ink;
             center.tm.text = big;

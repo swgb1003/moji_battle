@@ -14,6 +14,8 @@ namespace MojiBattle
         public bool MatchOver;
         public bool AiEnabled = true;
         public float LastDamageTime;
+        /// <summary>カスタマイズの調整値（カスタマイズ無しの試合でも参照だけはできる）。</summary>
+        public CustomizeBalance Customize;
         /// <summary>試合時計（経過秒）。KO 演出中は止まる。</summary>
         public float MatchClock;
         /// <summary>延長戦中（AI は最大限攻める）。</summary>
@@ -69,6 +71,11 @@ namespace MojiBattle
         public KnockdownController Knockdown;
         public StickmanView View;
         public float AttackRange, WalkSpeed;
+        /// <summary>カスタマイズ補正（無しなら Identity）。</summary>
+        public FighterModifiers Mods = FighterModifiers.Identity;
+        /// <summary>戦闘スタイルの AI 方針（カスタマイズ無しなら null = 重量クラスの既定の動き）。</summary>
+        public BattleStyleStrategy Style;
+        ClassTendency tendency;
         public bool IsGrounded { get; private set; }
         public float LastTurnTime = -10f;
 
@@ -88,11 +95,25 @@ namespace MojiBattle
         public float DistanceToOpponent => Mathf.Abs(Opponent.X - X);
         /// <summary>背後（向きと反対側）の壁までの距離。</summary>
         public float BackSpace => Facing > 0 ? X + Context.ArenaHalfWidth : Context.ArenaHalfWidth - X;
-        public ClassTendency Tendency => Balance.TendencyFor(WeightClass);
+        public ClassTendency Tendency => tendency ?? Balance.TendencyFor(WeightClass);
+        public void SetTendency(ClassTendency t) => tendency = t;
+        /// <summary>待機姿勢 ψ（持ち方で上書き、無ければ重量クラスの既定）。</summary>
+        public float ReadyPsi => float.IsNaN(Mods.readyPsi) ? Balance.ReadyPsi(Stats.weightScore) : Mods.readyPsi;
+        /// <summary>溜め・振り・硬直の時間（サイズ・持ち方の攻撃速度を反映）。</summary>
+        public float WindupTime => StatCalculator.Windup(Stats.weightScore, Balance) / Mods.attackSpeed;
+        public float ActiveTime => StatCalculator.Active(Stats.weightScore, Balance) / Mods.attackSpeed;
+        public float RecoveryTime => StatCalculator.Recovery(Stats.weightScore, Balance) / Mods.attackSpeed;
+        /// <summary>切っ先が地面に届かない最も低い ψ（武器が長いほど高い）。</summary>
+        public float GroundPsi => -Mathf.Asin(Mathf.Clamp01((Balance.shoulderLocal.y - 0.15f) / Mathf.Max(0.01f, Weapon.length))) * Mathf.Rad2Deg + 5f;
+        /// <summary>
+        /// 下段ガードの ψ。カスタマイズで長くした武器は地面に突き立てない高さまで上げる
+        /// （地面に押し付けたままトルクを掛け続けると握りが外れかける）。
+        /// </summary>
+        public float GuardPsiLow => Mods.customized ? Mathf.Max(Balance.GuardPsiLow(Stats.weightScore), GroundPsi) : Balance.GuardPsiLow(Stats.weightScore);
         /// <summary>相手から見た自分の攻撃の脅威距離（射程＋振りの間の踏み込み）。</summary>
         public float ThreatRange =>
             AttackRange + StatCalculator.Lerp01(Balance.stepInSpeedLight, Balance.stepInSpeedHeavy, Stats.weightScore)
-            * StatCalculator.Active(Stats.weightScore, Balance);
+            * ActiveTime;
 
         public void SetState(FighterState s)
         {
@@ -119,7 +140,7 @@ namespace MojiBattle
             switch (rt.state)
             {
                 case FighterState.AttackWindup:
-                    if (rt.stateTime >= rt.windupDuration)
+                    if (rt.stateTime >= rt.windupDuration && WindupReady())
                     {
                         SetState(FighterState.AttackActive);
                         if (rt.attackStyle == AttackStyle.Thrust) Motor.ApplyLunge();
@@ -127,14 +148,17 @@ namespace MojiBattle
                     }
                     break;
                 case FighterState.AttackActive:
-                    if (rt.stateTime >= rt.activeDuration) EndActive(time);
+                    if (rt.stateTime >= rt.activeDuration && SwingFinished()) EndActive(time);
                     break;
                 case FighterState.AttackRecovery:
-                    if (rt.stateTime >= rt.recoveryDuration) EndRecovery(time);
+                    if (rt.stateTime >= rt.recoveryDuration && RecoveredPose()) EndRecovery(time);
                     break;
                 case FighterState.Evade:
                     if ((rt.stateTime >= b.evadeMinTime && IsGrounded) || rt.stateTime >= b.evadeMaxTime)
+                    {
+                        rt.evadeEndedAt = time;
                         SetState(FighterState.Approach);
+                    }
                     break;
                 case FighterState.Stagger:
                     if (rt.stateTime >= rt.stateDurationOverride && (IsGrounded || rt.stateTime >= rt.stateDurationOverride * 3f)) SetState(FighterState.Approach);
@@ -154,6 +178,42 @@ namespace MojiBattle
             WeaponMotor.Tick(dt);
         }
 
+        /// <summary>
+        /// カスタマイズした武器は、振りかぶり・振り抜きを時間ではなく武器の実際の角度で終える（最大で予定の数倍まで待つ）。
+        /// 重い・長い・端を握った武器ほどトルクに対して慣性が大きく、実際に振りが遅くなる。カスタマイズ無しは従来どおり時間で終える。
+        /// </summary>
+        bool WindupReady()
+        {
+            if (!Mods.customized) return true;
+            var rt = Runtime;
+            var cb = Context.Customize;
+            // 押さえ込まれて回らないなら待たない（押し続けると握りが外れかける）
+            return Mathf.Abs(Mathf.DeltaAngle(WeaponMotor.CurrentPsi, rt.swingFromPsi)) <= cb.windupReadyToleranceDeg
+                   || WeaponMotor.Stalled || rt.stateTime >= rt.windupDuration * cb.maxPhaseStretch;
+        }
+
+        bool SwingFinished()
+        {
+            if (!Mods.customized) return true;
+            var rt = Runtime;
+            var cb = Context.Customize;
+            if (rt.attackHadContact || rt.attackStyle == AttackStyle.Thrust || WeaponMotor.Stalled || rt.stateTime >= rt.activeDuration * cb.maxPhaseStretch) return true;
+            float span = rt.swingToPsi - rt.swingFromPsi;
+            if (Mathf.Abs(span) < 1f) return true;
+            float progress = (WeaponMotor.CurrentPsi - rt.swingFromPsi) / span;
+            return progress >= cb.swingFinishProgress;
+        }
+
+        /// <summary>カスタマイズした武器は、構えへ戻るまで（最大で予定の数倍）硬直が続く。長い・重い武器ほど戻りが遅い。</summary>
+        bool RecoveredPose()
+        {
+            if (!Mods.customized) return true;
+            var rt = Runtime;
+            var cb = Context.Customize;
+            return Mathf.Abs(Mathf.DeltaAngle(WeaponMotor.CurrentPsi, ReadyPsi)) <= cb.recoverReadyToleranceDeg
+                   || WeaponMotor.Stalled || rt.stateTime >= rt.recoveryDuration * cb.maxPhaseStretch;
+        }
+
         public void StartAttack(float time)
         {
             var rt = Runtime;
@@ -162,9 +222,13 @@ namespace MojiBattle
             rt.currentAttackId = rt.NextAttackId(Id);
             rt.attackHadContact = false;
             rt.clashedThisAttack = false;
-            rt.windupDuration = StatCalculator.Windup(m, b);
-            rt.activeDuration = StatCalculator.Active(m, b);
-            rt.recoveryDuration = StatCalculator.Recovery(m, b);
+            rt.windupDuration = WindupTime;
+            rt.activeDuration = ActiveTime;
+            rt.recoveryDuration = RecoveryTime;
+            // 逆手: 回避の直後は素早く切り返す
+            if (Mods.postEvadeAttackSpeed != 1f && Context.Customize != null && time - rt.evadeEndedAt <= Context.Customize.postEvadeWindow)
+                rt.windupDuration /= Mods.postEvadeAttackSpeed;
+            Style?.OnAttackStarted(time);
 
             // 狙いの上下位置（PRNG）。相手の武器が高い位置にあれば下から、低ければ上から狙いやすい。
             // 相手の現在位置を狙うが命中は保証しない。
@@ -173,6 +237,8 @@ namespace MojiBattle
             float pRising = heavy ? (oppWeaponHigh ? b.risingWhenHighHeavy : b.risingWhenLowHeavy)
                                   : (oppWeaponHigh ? b.risingWhenHighLight : b.risingWhenLowLight);
             float pThrust = StatCalculator.Lerp01(b.thrustChanceLight, b.thrustChanceHeavy, m);
+            // 扱いにくい（慣性の大きい）武器は突きを繰り出しにくい
+            if (Mods.customized) pThrust *= Mathf.Min(1f, Mods.handlingAccel);
             // 近すぎると突きは勢いがつかない（刺さったまま押すだけになる）ので振りを選ぶ
             if (DistanceToOpponent < AttackRange * 0.6f) pThrust = 0f;
             rt.attackStyle = Brain.Rng.Chance(pThrust) ? AttackStyle.Thrust
@@ -209,11 +275,13 @@ namespace MojiBattle
                 rt.swingFromPsi = aim + arc;
                 // 大きい字形ほど振り抜きを浅くする（低く振り抜くと手前の地面に当たって届かない）
                 rt.swingToPsi = aim - b.strikeOvershoot * Mathf.Lerp(1f, 0.2f, m / 100f);
+                // カスタマイズで長くした武器は、振り下ろしの終わりを地面の手前で止める
+                if (Mods.customized) rt.swingToPsi = Mathf.Max(rt.swingToPsi, GroundPsi);
             }
             else
             {
                 // 武器の長さから、切っ先が地面に刺さらない開始角を求める
-                float groundPsi = -Mathf.Asin(Mathf.Clamp01((b.shoulderLocal.y - 0.15f) / Mathf.Max(0.01f, Weapon.length))) * Mathf.Rad2Deg + 5f;
+                float groundPsi = GroundPsi;
                 // 開始角より下は斬り上げでは届かないので、その場合は胴を狙う
                 if (aim < groundPsi + 15f)
                 {
@@ -222,6 +290,8 @@ namespace MojiBattle
                 }
                 rt.swingFromPsi = Mathf.Max(aim - arc * 0.7f, b.risingMinPsi, groundPsi);
                 rt.swingToPsi = aim + b.strikeOvershoot * 0.8f;
+                // 長い武器は地面で開始角が持ち上がり振り幅が小さくなるので、上へ振り抜いて同じ振り幅を確保する
+                if (Mods.customized) rt.swingToPsi = Mathf.Max(rt.swingToPsi, rt.swingFromPsi + arc * 0.7f);
             }
             rt.metrics.attacksStarted++;
             Context.LastAttackStartTime = time;
@@ -270,7 +340,7 @@ namespace MojiBattle
             // 連撃を続ける前に相手の溜めを確認し、気づけば中断して対応する（反応率に従う）
             var ort = Opponent.Runtime;
             // 相手の溜めが自分の次の一撃より先に終わる時だけ中断する（遅い溜めには打ち勝てる）
-            float myNextHit = StatCalculator.Windup(Stats.weightScore, Balance) + 0.1f;
+            float myNextHit = WindupTime + 0.1f;
             bool oppCharging = ort.state == FighterState.AttackWindup && ort.windupDuration - ort.stateTime < myNextHit;
             if (rt.comboRemaining > 0 && oppCharging && Brain.Rng.Chance(Tendency.reactionChance)) rt.comboRemaining = 0;
             bool oppAttackable = ort.state != FighterState.KO && (!ort.IsDown || Balance.allowAttackOnDowned);

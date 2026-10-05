@@ -18,6 +18,12 @@ namespace MojiBattle
         float stuckTime;
         bool punishing;
         float lastDistance = 999f;
+        float guardBlockedUntil;
+
+        /// <summary>計測用: 攻撃後に離脱した回数 / 反撃の好機に始めた攻撃の数</summary>
+        public int RetreatsAfterAttack { get; private set; }
+        public int WindowAttacks { get; private set; }
+        public int SequencesFinished { get; private set; }
 
         public MoveIntent Move { get; private set; } = MoveIntent.Advance;
         /// <summary>前進が武器に阻まれている間は武器を立てて担ぐ（WeaponMotor2D が参照）。</summary>
@@ -48,19 +54,31 @@ namespace MojiBattle
             var o = self.Opponent.Runtime;
             if (o.state != FighterState.AttackWindup) return false;
             float oppRemaining = o.windupDuration - o.stateTime;
-            float mine = StatCalculator.Windup(self.Stats.weightScore, B);
+            float mine = self.WindupTime;
             return mine > oppRemaining + 0.05f && Rng.Chance(self.Tendency.reactionChance * DefenseScale);
         }
 
         /// <summary>
         /// これより近いと武器が地面・相手の字形・体に挟まって振れない。軽量・中量級は射程の一定割合まで下がって打つ。
         /// </summary>
-        float MinStrikeDistance => self.WeightClass == WeightClass.Heavy
+        float MinStrikeDistance => self.Mods.customized ? CustomSpacing(B.minAttackDistance)
+            : self.WeightClass == WeightClass.Heavy
             ? B.minAttackDistance
             : Mathf.Max(B.minAttackDistance, self.AttackRange * B.preferredSpacingFraction);
-        float TooCloseDistance => self.WeightClass == WeightClass.Heavy
+        float TooCloseDistance => self.Mods.customized ? CustomSpacing(B.tooCloseDistance)
+            : self.WeightClass == WeightClass.Heavy
             ? B.tooCloseDistance
             : Mathf.Max(B.tooCloseDistance, self.AttackRange * B.preferredSpacingFraction);
+
+        /// <summary>
+        /// カスタマイズでは射程が字形の既定より大きく変わる（S・中央持ちは射程 1 未満）ため、
+        /// 下がる距離も射程に比例させる（固定の最小距離のままだと短い武器は打てる距離が無くなる）。
+        /// </summary>
+        float CustomSpacing(float legacy) =>
+            Mathf.Clamp(self.AttackRange * B.preferredSpacingFraction, CustomMinSpacing, Mathf.Max(CustomMinSpacing, legacy));
+
+        /// <summary>体どうしが触れる距離（胴の幅）より少し外。</summary>
+        const float CustomMinSpacing = 0.45f;
         FighterRuntime Rt => self.Runtime;
 
         public void Idle()
@@ -72,6 +90,7 @@ namespace MojiBattle
 
         public void Tick(float time)
         {
+            self.Style?.Observe(time);
             if (time < nextDecisionAt) return;
             nextDecisionAt = time + B.aiInterval;
             Decide(time);
@@ -80,9 +99,13 @@ namespace MojiBattle
         public void OnAttackSequenceFinished(float time)
         {
             pendingAttackAt = -1f;
-            if (Rng.Chance(self.Tendency.retreatAfterAttack))
+            SequencesFinished++;
+            // 戦闘スタイルが離脱時間を決める（ヒット＆アウェイは原則離脱、猛攻は離脱しない）
+            float? styleRetreat = self.Style?.RetreatSecondsAfterAttack(Rng);
+            if (styleRetreat.HasValue ? styleRetreat.Value > 0f : Rng.Chance(self.Tendency.retreatAfterAttack))
             {
-                retreatUntil = time + Rng.Range(0.4f, 0.8f);
+                retreatUntil = time + (styleRetreat ?? Rng.Range(0.4f, 0.8f));
+                RetreatsAfterAttack++;
                 // 軽量級は攻撃後にバックステップで離脱しやすい
                 if (self.WeightClass == WeightClass.Light && time >= Rt.evadeReadyAt && self.BackSpace > B.minBackstepSpace && Rng.Chance(0.5f))
                 {
@@ -98,6 +121,16 @@ namespace MojiBattle
         {
             var s = Rt.state;
             if (!Rt.CanBeControlled) return;
+            // 連続ガードの上限（鉄壁）: 上限に達したら一度ガードを解き、しばらくガードしない
+            var style = self.Style;
+            if (style != null && s == FighterState.Guard && Rt.stateTime >= style.MaxGuardSeconds)
+            {
+                guardBlockedUntil = time + style.GuardCooldown;
+                holdGuardUntil = 0f;
+                self.SetState(FighterState.Approach);
+                s = FighterState.Approach;
+                LastDecision = "ガード解除";
+            }
             if (s == FighterState.Guard && Rt.stateTime < B.guardMinDwell) return;
 
             var opp = self.Opponent;
@@ -161,6 +194,7 @@ namespace MojiBattle
                     punishing = false;
                     pendingAttackAt = -1f;
                     Rt.comboRemaining = Rng.RangeInclusive(tend.comboMin, tend.comboMax) - 1;
+                    if (self.Style != null && self.Style.AttackWillingnessBonus(time) > 0f) WindowAttacks++;
                     self.StartAttack(time);
                     LastDecision = "差し込み";
                     return;
@@ -221,17 +255,20 @@ namespace MojiBattle
             // 3) 間合い内で安定姿勢なら攻撃
             if (inRange && d >= MinStrikeDistance && oppAttackable && time >= Rt.attackReadyAt && time >= retreatUntil && !WouldBeOutpaced())
             {
-                float willingness = tend.attackWillingness + (stalemate ? 0.2f : 0f) + B.lateAttackBonus * Urgency;
+                float styleBonus = style != null ? style.AttackWillingnessBonus(time) : 0f;
+                float willingness = tend.attackWillingness + (stalemate ? 0.2f : 0f) + B.lateAttackBonus * Urgency + styleBonus;
                 if (Rng.Chance(willingness))
                 {
                     Rt.comboRemaining = Rng.RangeInclusive(tend.comboMin, tend.comboMax) - 1;
-                    pendingAttackAt = time + Rng.Range(0f, 2f * B.attackTimingJitter);
+                    bool now = style != null && style.StrikeImmediately(time);
+                    if (styleBonus > 0f) WindowAttacks++;
+                    pendingAttackAt = now ? time : time + Rng.Range(0f, 2f * B.attackTimingJitter);
                     Move = MoveIntent.Hold;
                     LastDecision = "攻撃予約";
                     return;
                 }
                 // 重量級は攻撃しない時、構えて待つことが多い
-                if (Rng.Chance(tend.proactiveGuard * DefenseScale)) { EnterGuard(time, Rng.Range(0.4f, 0.8f)); LastDecision = "構え"; return; }
+                if (time >= guardBlockedUntil && Rng.Chance(tend.proactiveGuard * DefenseScale)) { EnterGuard(time, Rng.Range(0.4f, 0.8f)); LastDecision = "構え"; return; }
             }
 
             // 3b) 下がろうとしても動けない（引っ掛かり・壁際）なら跳び越えるか、そのまま打つ
@@ -276,7 +313,7 @@ namespace MojiBattle
                     default:
                         // 膠着中は密着でガードを固めず打つ
                         if (stalemate && oppAttackable && time >= Rt.attackReadyAt) { self.StartAttack(time); LastDecision = "密着から打つ"; }
-                        else if (!oppDown && Rng.Chance(tend.guardBias * DefenseScale)) { EnterGuard(time, Rng.Range(0.5f, 0.9f)); LastDecision = "ガード"; }
+                        else if (!oppDown && time >= guardBlockedUntil && Rng.Chance(tend.guardBias * DefenseScale)) { EnterGuard(time, Rng.Range(0.5f, 0.9f)); LastDecision = "ガード"; }
                         else { Move = MoveIntent.Hold; LastDecision = "待機"; }
                         return;
                 }
@@ -284,8 +321,22 @@ namespace MojiBattle
 
             // 5) 接近 / 待機
             if (inRange) { Move = MoveIntent.Hold; LastDecision = "間合い"; return; }
+            // 戦闘スタイル（鉄壁）: 相手の間合いの手前では字形を盾に構えて待つ
+            if (style != null && !stalemate && time >= guardBlockedUntil && !oppDown && style.PreferGuard(time, d))
+            {
+                EnterGuard(time, Rng.Range(0.8f, 1.6f));
+                LastDecision = "盾構え";
+                return;
+            }
+            // 戦闘スタイル（カウンター）: 自分からは詰めず、相手の射程の少し外で攻撃を待つ
+            if (style != null && !stalemate && style.PreferWait(time, d))
+            {
+                Move = MoveIntent.Hold;
+                LastDecision = "待ち(カウンター)";
+                return;
+            }
             // 相手が溜めている間は射程の外で待ち、振り終わり（硬直）を狙う
-            if (opp.Runtime.state == FighterState.AttackWindup && d > opp.AttackRange * 0.95f && Rng.Chance(tend.reactionChance))
+            if ((style == null || style.WaitsOutOpponentWindup) && opp.Runtime.state == FighterState.AttackWindup && d > opp.AttackRange * 0.95f && Rng.Chance(tend.reactionChance))
             {
                 Move = d < opp.ThreatRange + 0.6f ? MoveIntent.Retreat : MoveIntent.Hold;
                 LastDecision = "溜めを待つ";
@@ -327,13 +378,13 @@ namespace MojiBattle
             var tend = self.Tendency;
             bool evadeReady = time >= Rt.evadeReadyAt;
             float back = self.BackSpace;
-            float wGuard = tend.guardBias
+            float wGuard = time < guardBlockedUntil ? 0f : tend.guardBias
                 + (self.Stats.defense >= B.highDefenseGuardThreshold ? B.highDefenseGuardBonus : 0f)
                 + (back < B.minBackstepSpace ? 0.2f : 0f);
             float wEvade = evadeReady ? tend.evadeBias * (back < B.minBackstepSpace ? 0.6f : 1f) * DefenseScale : 0f;
             // ガードの構えが間に合わない（武器を大きく回す必要がある）なら回避を優先
             var oa = self.Opponent.Runtime;
-            float guardTarget = oa.attackStyle == AttackStyle.Overhead ? B.guardPsiHigh : B.GuardPsiLow(self.Stats.weightScore);
+            float guardTarget = oa.attackStyle == AttackStyle.Overhead ? B.guardPsiHigh : self.GuardPsiLow;
             float raiseTime = Mathf.Abs(guardTarget - self.WeaponMotor.CurrentPsi) / Mathf.Lerp(700f, 250f, self.Stats.weightScore / 100f);
             if (raiseTime > timeToHit) wGuard *= 0.25f;
             // 距離が射程端に近いほど後退で外しやすい
@@ -368,7 +419,7 @@ namespace MojiBattle
                     : Mathf.Max(0f, o.activeDuration - o.stateTime);
                 EnterGuard(time, remain + 0.15f);
                 // 来る攻撃の種類に合わせてガード位置を変える
-                Rt.guardPsiTarget = o.attackStyle == AttackStyle.Overhead ? B.guardPsiHigh : B.GuardPsiLow(self.Stats.weightScore);
+                Rt.guardPsiTarget = o.attackStyle == AttackStyle.Overhead ? B.guardPsiHigh : self.GuardPsiLow;
                 LastDecision = o.attackStyle == AttackStyle.Overhead ? "上段ガード" : "下段ガード";
             }
         }

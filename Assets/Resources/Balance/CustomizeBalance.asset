@@ -1,0 +1,143 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ce3a5c5c0621e546861c109ddc7d45e, type: 3}
+  m_Name: CustomizeBalance
+  m_EditorClassIdentifier: 
+  sizeS:
+    scale: 0.75
+    massMultiplier: 0.65
+    attackSpeed: 1.2
+    moveSpeed: 1.1
+  sizeM:
+    scale: 1
+    massMultiplier: 1
+    attackSpeed: 1
+    moveSpeed: 1
+  sizeL:
+    scale: 1.3
+    massMultiplier: 1.45
+    attackSpeed: 0.85
+    moveSpeed: 0.92
+  sizeXL:
+    scale: 1.65
+    massMultiplier: 2.1
+    attackSpeed: 0.68
+    moveSpeed: 0.82
+  oneHanded:
+    attackSpeed: 1.1
+    attackTorque: 0.9
+    guardStability: 0.85
+    moveSpeed: 1
+    knockbackResistance: 1
+    effectiveReach: 1
+    guardRange: 1
+    postEvadeAttackSpeed: 1
+    guardBiasBonus: 0
+    overrideReadyPsi: 0
+    readyPsi: 0
+  twoHanded:
+    attackSpeed: 0.8
+    attackTorque: 1.3
+    guardStability: 1.25
+    moveSpeed: 0.9
+    knockbackResistance: 1.15
+    effectiveReach: 1
+    guardRange: 1
+    postEvadeAttackSpeed: 1
+    guardBiasBonus: 0
+    overrideReadyPsi: 0
+    readyPsi: 0
+  reverse:
+    attackSpeed: 1.15
+    attackTorque: 0.8
+    guardStability: 0.75
+    moveSpeed: 1
+    knockbackResistance: 1
+    effectiveReach: 0.85
+    guardRange: 1
+    postEvadeAttackSpeed: 1.25
+    guardBiasBonus: 0
+    overrideReadyPsi: 1
+    readyPsi: 175
+  horizontal:
+    attackSpeed: 0.85
+    attackTorque: 0.9
+    guardStability: 1.4
+    moveSpeed: 0.9
+    knockbackResistance: 1
+    effectiveReach: 1
+    guardRange: 1.25
+    postEvadeAttackSpeed: 1
+    guardBiasBonus: 0.25
+    overrideReadyPsi: 1
+    readyPsi: 0
+  postEvadeWindow: 1
+  secondHandOffset: 0.32
+  gripClampMin: 0.08
+  gripClampMax: 0.92
+  inertiaExponent: 0.5
+  weightFromHandling: 30
+  weightFromHandlingMin: -20
+  weightFromHandlingMax: 70
+  handlingFactor: 0.6
+  windupReadyToleranceDeg: 20
+  swingFinishProgress: 0.85
+  recoverReadyToleranceDeg: 35
+  maxPhaseStretch: 3
+  massDamageExponent: 0.5
+  aggressive:
+    attackWillingness: 0.97
+    guardBiasScale: 0.35
+    evadeBiasScale: 0.5
+    proactiveGuard: 0
+    retreatAfterAttack: 0
+    comboBonus: 1
+    reactionBonus: -0.15
+    counterBias: 0.35
+    waitsNearCenter: 0
+  hitAndAway:
+    attackWillingness: 0.85
+    guardBiasScale: 0.6
+    evadeBiasScale: 1.3
+    proactiveGuard: 0
+    retreatAfterAttack: 1
+    comboBonus: -1
+    reactionBonus: 0.05
+    counterBias: 0
+    waitsNearCenter: 0
+  counter:
+    attackWillingness: 0.25
+    guardBiasScale: 1.3
+    evadeBiasScale: 1.3
+    proactiveGuard: 0.1
+    retreatAfterAttack: 0.5
+    comboBonus: 0
+    reactionBonus: 0.25
+    counterBias: 0
+    waitsNearCenter: 1
+  defensive:
+    attackWillingness: 0.45
+    guardBiasScale: 2
+    evadeBiasScale: 0.6
+    proactiveGuard: 0.6
+    retreatAfterAttack: 0.3
+    comboBonus: 0
+    reactionBonus: 0.15
+    counterBias: 0.1
+    waitsNearCenter: 1
+  hitAndAwayRetreatLight: 1.2
+  hitAndAwayRetreatHeavy: 0.5
+  counterWindow: 0.6
+  counterWaitRangeScale: 1.15
+  defensiveMaxGuardSeconds: 2.5
+  defensiveGuardCooldown: 0.5
+  defensiveFaceMargin: 0.8
