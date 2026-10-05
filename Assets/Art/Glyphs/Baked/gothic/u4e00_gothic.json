@@ -1,0 +1,44 @@
+﻿{
+    "grapheme": "一",
+    "font": "Gothic",
+    "fontAssetPath": "Assets/Art/Fonts/Gothic/NotoSansJP-Bold.ttf",
+    "fontFamily": "Noto Sans JP",
+    "fontHash": "9e4e354e728cfc32e04bbc0bf686c7285a1cf47f64ce2ac27c1d813ad1dc9d63",
+    "settingsHash": "fb8263744cba8b65",
+    "bakedAt": "2026-10-05T14:21:39",
+    "unityVersion": "6000.0.61f1",
+    "features": {
+        "inkRatio": 0.11947916448116303,
+        "widthRatio": 0.925000011920929,
+        "heightRatio": 0.12916666269302369,
+        "edgeRatio": 2.1083333492279054,
+        "balance": 1.0,
+        "centerOfMass": {
+            "x": 128.0,
+            "y": 130.5
+        },
+        "colliderRects": [
+            {
+                "serializedVersion": "2",
+                "x": 16.0,
+                "y": 114.0,
+                "width": 224.0,
+                "height": 33.0
+            }
+        ],
+        "inkBounds": {
+            "x": 17,
+            "y": 115,
+            "width": 222,
+            "height": 31
+        },
+        "gripPoint": {
+            "x": 30.5,
+            "y": 130.5
+        },
+        "componentCount": 1,
+        "maskSize": 256,
+        "emSizePx": 240.0,
+        "colliderGridUsed": 64
+    }
+}

@@ -1,0 +1,79 @@
+1.00 TICK L[Approach x=-2.47 y=0.22 vx=3.46 g=True mv=Advance '接近'] R[Approach x=2.52 y=0.01 vx=-3.22 g=True mv=Advance '接近' rot=0]
+2.00 TICK L[Approach x=-2.00 y=0.65 vx=-1.30 g=False mv=Advance '接近'] R[Approach x=1.67 y=0.01 vx=-2.93 g=True mv=Advance '接近' rot=0]
+3.00 TICK L[Approach x=-3.22 y=0.92 vx=-2.12 g=False mv=Advance '接近'] R[Approach x=-0.60 y=0.00 vx=-1.91 g=True mv=Advance '接近' rot=0]
+4.00 TICK L[Approach x=-5.92 y=3.43 vx=-3.31 g=False mv=Advance '接近'] R[Approach x=-2.43 y=0.00 vx=-3.12 g=True mv=Advance '接近' rot=0]
+4.98 ST L Approach->AttackWindup d=3.04 x=-8.56 psi=76 '攻撃予約' style=Rising
+5.00 TICK L[AttackWindup x=-8.64 y=1.42 vx=-2.24 g=False mv=Hold '連撃x3'] R[Approach x=-5.65 y=0.00 vx=-3.22 g=True mv=Advance '接近' rot=0]
+5.50 ST L AttackWindup->AttackActive d=1.56 x=-7.78 psi=-25 '連撃x3' style=Rising
+5.62 ST R Approach->Evade d=0.91 x=-6.56 psi=60 '接近' style=Overhead
+5.62 EVADE R Backstep
+5.78 ST L AttackActive->AttackRecovery d=1.61 x=-7.04 psi=13 '連撃x3' style=Rising
+6.00 TICK L[AttackRecovery x=-6.38 y=5.95 vx=2.77 g=False mv=Hold '連撃x3'] R[Evade x=-3.80 y=0.00 vx=5.97 g=False mv=Advance '回避(後退)' rot=0]
+6.02 ST R Evade->Approach d=2.58 x=-3.80 psi=55 '回避(後退)' style=Overhead
+6.24 ST L AttackRecovery->AttackWindup d=2.41 x=-5.78 psi=-5 '連撃x3' style=Thrust
+6.26 ST R Approach->Guard d=2.33 x=-3.40 psi=56 '前進(膠着打開)' style=Overhead
+6.76 ST L AttackWindup->AttackActive d=0.47 x=-3.97 psi=-71 '連撃x3' style=Thrust
+7.00 TICK L[AttackActive x=-3.30 y=2.59 vx=1.06 g=False mv=Hold '連撃x3'] R[Guard x=-3.50 y=0.00 vx=0.00 g=True mv=Hold '下段ガード' rot=0]
+7.00 GUARD R load=18.2
+7.04 ST L AttackActive->AttackRecovery d=0.25 x=-3.25 psi=-69 '連撃x3' style=Thrust
+7.22 ST R Guard->Approach d=0.26 x=-3.45 psi=-8 '下段ガード' style=Overhead
+7.50 ST L AttackRecovery->AttackWindup d=0.57 x=-4.01 psi=-15 '連撃x3' style=Overhead
+7.86 ST R Approach->Evade d=2.03 x=-2.79 psi=56 '間合い' style=Overhead
+7.86 EVADE R Backstep
+8.00 TICK L[AttackWindup x=-5.20 y=2.79 vx=-2.33 g=False mv=Hold '連撃x3'] R[Evade x=-1.59 y=0.21 vx=7.48 g=False mv=Hold '回避(後退)' rot=0]
+8.02 ST L AttackWindup->AttackActive d=3.60 x=-5.20 psi=28 '連撃x3' style=Overhead
+8.12 ST R Evade->Approach d=4.65 x=-0.85 psi=55 '回避(後退)' style=Overhead
+8.30 ST L AttackActive->Stagger d=5.52 x=-5.14 psi=-110 '連撃x3' style=Overhead
+8.76 ST L Stagger->Approach d=6.94 x=-6.75 psi=-6 '連撃x3' style=Overhead
+9.00 TICK L[Approach x=-6.41 y=0.44 vx=-0.07 g=False mv=Advance '前進(膠着打開)'] R[Approach x=-0.64 y=0.00 vx=-3.22 g=True mv=Advance '前進(膠着打開)' rot=0]
+10.00 TICK L[Approach x=-6.92 y=0.13 vx=-2.23 g=False mv=Advance '前進(膠着打開)'] R[Approach x=-3.41 y=0.00 vx=-2.49 g=True mv=Advance '前進(膠着打開)' rot=0]
+11.00 TICK L[Approach x=-7.94 y=0.01 vx=-0.53 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-4.46 y=0.00 vx=-0.55 g=True mv=Advance '前進(膠着打開)' rot=0]
+12.00 TICK L[Approach x=-8.21 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-4.74 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+13.00 TICK L[Approach x=-8.15 y=0.01 vx=0.09 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.09 y=0.00 vx=0.09 g=True mv=Advance '前進(膠着打開)' rot=0]
+14.00 TICK L[Approach x=-8.20 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.10 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+15.00 TICK L[Approach x=-8.22 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.11 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+16.00 TICK L[Approach x=-8.26 y=0.01 vx=-0.06 g=True mv=Hold '攻撃予約'] R[Approach x=-5.10 y=0.01 vx=0.04 g=True mv=Hold '攻撃予約' rot=0]
+17.00 TICK L[Approach x=-8.26 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.16 y=0.01 vx=-0.05 g=True mv=Advance '前進(膠着打開)' rot=0]
+18.00 TICK L[Approach x=-8.28 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.17 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+19.00 TICK L[Approach x=-8.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.19 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+20.00 TICK L[Approach x=-8.33 y=0.01 vx=-0.06 g=True mv=Hold '攻撃予約'] R[Approach x=-5.18 y=0.01 vx=0.04 g=True mv=Hold '攻撃予約' rot=0]
+21.00 TICK L[Approach x=-8.33 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.23 y=0.01 vx=-0.05 g=True mv=Advance '前進(膠着打開)' rot=0]
+22.00 TICK L[Approach x=-8.35 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.24 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+23.00 TICK L[Approach x=-8.36 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.26 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+24.00 TICK L[Approach x=-8.41 y=0.01 vx=-0.06 g=True mv=Hold '攻撃予約'] R[Approach x=-5.25 y=0.01 vx=0.04 g=True mv=Hold '攻撃予約' rot=0]
+25.00 TICK L[Approach x=-8.39 y=0.01 vx=0.02 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.28 y=0.01 vx=-0.01 g=True mv=Advance '前進(膠着打開)' rot=0]
+26.00 TICK L[Approach x=-8.39 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.28 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+27.00 TICK L[Approach x=-8.40 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+28.00 TICK L[Approach x=-8.42 y=0.01 vx=-0.06 g=True mv=Hold '攻撃予約'] R[Approach x=-5.26 y=0.01 vx=0.03 g=True mv=Hold '攻撃予約' rot=0]
+29.00 TICK L[Approach x=-8.38 y=0.01 vx=0.44 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.30 y=0.01 vx=-0.50 g=True mv=Advance '前進(膠着打開)' rot=0]
+30.00 TICK L[Approach x=-8.40 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+31.00 TICK L[Approach x=-8.40 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+32.00 TICK L[Approach x=-8.42 y=0.01 vx=-0.05 g=True mv=Hold '攻撃予約'] R[Approach x=-5.27 y=0.01 vx=0.04 g=True mv=Hold '攻撃予約' rot=0]
+33.00 TICK L[Approach x=-8.40 y=0.00 vx=0.03 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+34.00 TICK L[Approach x=-8.40 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+35.00 TICK L[Approach x=-8.39 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.28 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+36.00 TICK L[Approach x=-8.42 y=0.00 vx=-0.06 g=True mv=Hold '攻撃予約'] R[Approach x=-5.26 y=0.01 vx=0.03 g=True mv=Hold '攻撃予約' rot=0]
+37.00 TICK L[Approach x=-8.40 y=0.01 vx=0.04 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+38.00 TICK L[Approach x=-8.40 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+39.00 TICK L[Approach x=-8.40 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.28 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+40.00 TICK L[Approach x=-8.42 y=0.00 vx=-0.06 g=True mv=Hold '攻撃予約'] R[Approach x=-5.26 y=0.01 vx=0.03 g=True mv=Hold '攻撃予約' rot=0]
+41.00 TICK L[Approach x=-8.39 y=0.00 vx=0.03 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.28 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+42.00 TICK L[Approach x=-8.39 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+43.00 TICK L[Approach x=-8.40 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+44.00 TICK L[Approach x=-8.42 y=0.01 vx=-0.03 g=True mv=Hold '攻撃予約'] R[Approach x=-5.27 y=0.01 vx=0.06 g=True mv=Hold '攻撃予約' rot=0]
+45.00 TICK L[Approach x=-8.40 y=0.01 vx=0.04 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+46.00 TICK L[Approach x=-8.40 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+47.00 TICK L[Approach x=-8.40 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+48.00 TICK L[Approach x=-8.42 y=0.00 vx=-0.05 g=True mv=Hold '攻撃予約'] R[Approach x=-5.27 y=0.01 vx=0.04 g=True mv=Hold '攻撃予約' rot=0]
+49.00 TICK L[Approach x=-8.40 y=0.00 vx=0.03 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+50.00 TICK L[Approach x=-8.40 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.28 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+51.00 TICK L[Approach x=-8.39 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.28 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+52.00 TICK L[Approach x=-8.42 y=0.00 vx=-0.06 g=True mv=Hold '攻撃予約'] R[Approach x=-5.26 y=0.01 vx=0.03 g=True mv=Hold '攻撃予約' rot=0]
+53.00 TICK L[Approach x=-8.39 y=0.00 vx=0.03 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.28 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+54.00 TICK L[Approach x=-8.40 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.28 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+55.00 TICK L[Approach x=-8.40 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.30 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+56.00 TICK L[Approach x=-8.42 y=0.01 vx=-0.03 g=True mv=Hold '攻撃予約'] R[Approach x=-5.27 y=0.01 vx=0.06 g=True mv=Hold '攻撃予約' rot=0]
+57.00 TICK L[Approach x=-8.40 y=0.01 vx=0.04 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+58.00 TICK L[Approach x=-8.40 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+59.00 TICK L[Approach x=-8.40 y=0.00 vx=0.00 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-5.29 y=0.01 vx=0.00 g=True mv=Advance '前進(膠着打開)' rot=0]
+60.00 END TIME_UP_DRAW winner=-1 hp=117.4/130.0

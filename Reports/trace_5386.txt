@@ -1,0 +1,158 @@
+1.00 TICK L[Approach x=-2.91 y=0.00 vx=2.82 g=True mv=Advance '接近'] R[Approach x=2.42 y=0.21 vx=-3.51 g=True mv=Advance '接近' rot=0]
+2.00 TICK L[Approach x=-1.76 y=0.01 vx=0.00 g=True mv=Hold '攻撃予約'] R[Approach x=1.02 y=0.03 vx=-0.09 g=False mv=Hold '攻撃予約' rot=0]
+2.10 ST R Approach->AttackWindup d=2.75 x=0.98 psi=40 '攻撃予約' style=Thrust
+2.26 ST L Approach->AttackWindup d=3.27 x=-1.76 psi=125 '攻撃予約' style=Overhead
+2.44 ST R AttackWindup->AttackActive d=3.54 x=1.91 psi=-17 '連撃x2' style=Thrust
+2.72 ST R AttackActive->AttackRecovery d=4.13 x=2.58 psi=-18 '連撃x2' style=Thrust
+2.84 ST L AttackWindup->AttackActive d=4.38 x=-1.51 psi=154 '連撃x2' style=Overhead
+3.00 TICK L[AttackActive x=-1.47 y=0.01 vx=0.00 g=True mv=Hold '連撃x2'] R[AttackRecovery x=3.30 y=0.66 vx=3.01 g=False mv=Hold '連撃x2' rot=0]
+3.18 ST R AttackRecovery->Approach d=5.36 x=3.68 psi=-5 '連撃x2' style=Thrust
+3.22 ST R Approach->Stagger d=5.26 x=3.73 psi=6 '離脱' style=Thrust
+3.24 ST L AttackActive->AttackRecovery d=5.26 x=-1.53 psi=1 '連撃x2' style=Overhead
+3.68 ST R Stagger->Approach d=5.93 x=5.17 psi=-5 '離脱' style=Thrust
+3.86 ST L AttackRecovery->Approach d=4.76 x=0.50 psi=110 '連撃x2' style=Overhead
+4.00 TICK L[Approach x=0.93 y=1.39 vx=1.97 g=False mv=Retreat '間合い調整'] R[Approach x=5.75 y=0.66 vx=3.59 g=False mv=Retreat '離脱' rot=0]
+5.00 TICK L[Approach x=3.11 y=0.00 vx=2.82 g=True mv=Advance '接近'] R[Approach x=7.46 y=0.00 vx=-3.24 g=True mv=Advance '接近' rot=0]
+6.00 TICK L[Approach x=4.26 y=0.00 vx=2.70 g=True mv=Advance '接近'] R[Approach x=7.68 y=2.00 vx=3.79 g=False mv=Advance '接近' rot=0]
+7.00 TICK L[Approach x=6.15 y=0.00 vx=0.87 g=True mv=Advance '前進(膠着打開)'] R[Approach x=8.77 y=2.46 vx=0.78 g=False mv=Advance '前進(膠着打開)' rot=0]
+8.00 TICK L[Approach x=5.33 y=0.00 vx=-2.34 g=True mv=Retreat '間合い調整'] R[Approach x=6.14 y=5.13 vx=-2.67 g=False mv=Retreat '離脱' rot=0]
+8.86 RESOLVE stacked top=1
+9.00 TICK L[Approach x=3.31 y=0.00 vx=-2.29 g=True mv=Retreat '間合い調整'] R[Approach x=4.90 y=3.76 vx=3.98 g=False mv=Hold '攻撃予約' rot=0]
+10.00 TICK L[Approach x=4.77 y=0.00 vx=2.82 g=True mv=Advance '前進(膠着打開)'] R[Approach x=7.73 y=0.30 vx=-0.75 g=False mv=Advance '前進(膠着打開)' rot=0]
+10.90 ST L Approach->AttackWindup d=2.44 x=6.30 psi=127 '攻撃予約' style=Thrust
+11.00 TICK L[AttackWindup x=5.63 y=0.01 vx=-6.87 g=True mv=Hold '連撃x2'] R[Approach x=8.72 y=0.05 vx=-1.34 g=True mv=Advance '回避(跳び越え)' rot=0]
+11.48 ST L AttackWindup->AttackActive d=3.79 x=3.96 psi=10 '連撃x2' style=Thrust
+11.88 ST L AttackActive->AttackRecovery d=3.40 x=3.46 psi=9 '連撃x2' style=Thrust
+12.00 TICK L[AttackRecovery x=3.29 y=6.38 vx=-1.24 g=False mv=Hold '連撃x2'] R[Approach x=6.38 y=0.21 vx=-3.50 g=True mv=Advance '前進(膠着打開)' rot=0]
+12.50 ST L AttackRecovery->AttackWindup d=1.02 x=3.67 psi=110 '連撃x2' style=Overhead
+12.66 ST R Approach->Evade d=1.39 x=4.59 psi=-5 '離脱' style=Thrust
+12.66 EVADE R Backstep
+13.00 TICK L[AttackWindup x=2.32 y=2.30 vx=-1.27 g=False mv=Hold '連撃x2'] R[Evade x=7.27 y=0.36 vx=7.43 g=False mv=Retreat '回避(後退)' rot=0]
+13.08 ST L AttackWindup->AttackActive d=5.48 x=2.24 psi=50 '連撃x2' style=Overhead
+13.16 ST R Evade->Approach d=6.18 x=8.26 psi=-3 '回避(後退)' style=Thrust
+13.48 ST L AttackActive->Stagger d=5.17 x=3.22 psi=-94 '連撃x2' style=Overhead
+13.74 RESOLVE standing-on-weapon 0
+13.94 ST R Approach->AttackWindup d=1.38 x=6.97 psi=-6 '踏み込み' style=Overhead
+14.00 TICK L[Stagger x=5.80 y=3.32 vx=2.62 g=False mv=Hold '連撃x2'] R[AttackWindup x=6.77 y=0.00 vx=-1.52 g=True mv=Advance '差し込み' rot=0]
+14.26 RESOLVE standing-on-weapon 0
+14.26 ST L Stagger->Approach d=0.40 x=6.49 psi=42 '連撃x2' style=Overhead
+14.26 ST L Approach->Evade d=0.40 x=6.49 psi=42 '連撃x2' style=Overhead
+14.26 EVADE L Backstep
+14.28 ST R AttackWindup->AttackActive d=0.51 x=6.14 psi=177 '差し込み' style=Overhead
+14.36 ST L Evade->Stagger d=0.40 x=6.80 psi=48 '回避(後退)' style=Overhead
+14.56 ST R AttackActive->AttackRecovery d=2.26 x=7.86 psi=42 '差し込み' style=Overhead
+15.00 TICK L[Stagger x=4.00 y=4.19 vx=3.39 g=False mv=Hold '回避(後退)'] R[AttackRecovery x=8.67 y=1.55 vx=-2.08 g=False mv=Advance '差し込み' rot=0]
+15.02 ST R AttackRecovery->Approach d=4.67 x=8.67 psi=4 '差し込み' style=Overhead
+15.72 ST L Stagger->Approach d=6.02 x=0.79 psi=125 '回避(後退)' style=Overhead
+16.00 TICK L[Approach x=0.80 y=0.01 vx=2.79 g=True mv=Advance '前進(膠着打開)'] R[Approach x=5.76 y=0.22 vx=-3.46 g=True mv=Advance '前進(膠着打開)' rot=0]
+17.00 TICK L[Approach x=1.81 y=0.01 vx=-0.03 g=True mv=Hold '攻撃予約'] R[Approach x=4.60 y=0.15 vx=0.00 g=False mv=Hold '攻撃予約' rot=0]
+17.14 ST L Approach->AttackWindup d=2.75 x=1.81 psi=125 '攻撃予約' style=Thrust
+17.14 ST R Approach->Evade d=2.75 x=4.55 psi=40 '攻撃予約' style=Overhead
+17.14 EVADE R Backstep
+17.72 ST L AttackWindup->AttackActive d=6.64 x=1.88 psi=-8 '連撃x2' style=Thrust
+18.00 TICK L[AttackActive x=2.24 y=0.41 vx=0.57 g=True mv=Hold '連撃x2'] R[Evade x=7.74 y=1.27 vx=-2.52 g=False mv=Hold '回避(後退)' rot=0]
+18.12 ST L AttackActive->AttackRecovery d=5.21 x=2.27 psi=-8 '連撃x2' style=Thrust
+18.26 ST R Evade->Approach d=4.87 x=7.14 psi=80 '回避(後退)' style=Overhead
+18.74 ST L AttackRecovery->Approach d=3.99 x=2.21 psi=50 '連撃x2' style=Thrust
+19.00 TICK L[Approach x=2.35 y=0.82 vx=-2.45 g=False mv=Advance '前進(膠着打開)'] R[Approach x=6.20 y=2.63 vx=-0.22 g=False mv=Advance '前進(膠着打開)' rot=0]
+20.00 TICK L[Approach x=1.87 y=0.00 vx=2.82 g=True mv=Advance '前進(膠着打開)'] R[Approach x=5.97 y=2.33 vx=-0.23 g=False mv=Advance '前進(膠着打開)' rot=0]
+21.00 TICK L[Approach x=3.32 y=0.00 vx=2.56 g=True mv=Advance '前進(膠着打開)'] R[Approach x=6.96 y=1.96 vx=4.50 g=False mv=Advance '前進(膠着打開)' rot=0]
+22.00 TICK L[Approach x=5.87 y=0.03 vx=-0.20 g=True mv=Hold '攻撃予約'] R[Approach x=8.08 y=0.00 vx=1.07 g=True mv=Advance '前進(膠着打開)' rot=0]
+22.10 ST L Approach->AttackWindup d=2.38 x=5.86 psi=123 '攻撃予約' style=Thrust
+22.10 ST R Approach->Guard d=2.38 x=8.24 psi=48 '前進(膠着打開)' style=Overhead
+22.68 ST L AttackWindup->AttackActive d=8.63 x=0.08 psi=-4 '攻撃' style=Thrust
+23.00 TICK L[AttackActive x=-3.95 y=2.22 vx=-11.82 g=False mv=Hold '攻撃'] R[Guard x=8.65 y=0.30 vx=-0.21 g=False mv=Hold '下段ガード' rot=0]
+23.08 ST L AttackActive->AttackRecovery d=13.30 x=-4.65 psi=-5 '攻撃' style=Thrust
+23.22 ST R Guard->Approach d=14.91 x=8.61 psi=-14 '下段ガード' style=Overhead
+23.70 ST L AttackRecovery->Approach d=15.87 x=-8.39 psi=69 '攻撃' style=Thrust
+24.00 TICK L[Approach x=-5.53 y=1.36 vx=6.82 g=False mv=Advance '前進(膠着打開)'] R[Approach x=6.37 y=0.21 vx=-3.50 g=True mv=Advance '前進(膠着打開)' rot=0]
+25.00 TICK L[Approach x=0.26 y=0.02 vx=0.23 g=True mv=Advance '前進(膠着打開)'] R[Approach x=3.04 y=0.19 vx=0.33 g=False mv=Advance '前進(膠着打開)' rot=0]
+25.62 ST R Approach->AttackWindup d=2.74 x=3.02 psi=40 '攻撃予約' style=Rising
+25.96 ST R AttackWindup->AttackActive d=3.66 x=3.89 psi=-24 '連撃x3' style=Rising
+26.00 TICK L[Approach x=0.23 y=0.00 vx=0.00 g=True mv=Hold '溜めを待つ'] R[AttackActive x=4.06 y=2.06 vx=2.91 g=False mv=Hold '連撃x3' rot=0]
+26.24 ST R AttackActive->AttackRecovery d=4.22 x=4.68 psi=20 '連撃x3' style=Rising
+26.70 ST R AttackRecovery->Approach d=4.23 x=5.96 psi=-4 '連撃x3' style=Rising
+27.00 TICK L[Approach x=2.63 y=0.00 vx=2.82 g=True mv=Advance '前進(膠着打開)'] R[Approach x=6.02 y=0.15 vx=0.42 g=False mv=Advance '前進(膠着打開)' rot=0]
+28.00 TICK L[Approach x=3.90 y=0.00 vx=2.82 g=True mv=Advance '前進(膠着打開)'] R[Approach x=7.47 y=0.65 vx=0.22 g=False mv=Advance '前進(膠着打開)' rot=0]
+28.82 ST L Approach->AttackWindup d=2.37 x=5.51 psi=125 '攻撃予約' style=Rising
+29.00 TICK L[AttackWindup x=4.37 y=0.16 vx=-16.74 g=False mv=Hold '連撃x2'] R[Approach x=8.73 y=1.21 vx=8.43 g=False mv=Retreat '溜めを待つ' rot=0]
+29.40 ST L AttackWindup->AttackActive d=7.86 x=0.90 psi=-18 '連撃x2' style=Rising
+29.80 ST L AttackActive->AttackRecovery d=9.95 x=-2.35 psi=22 '連撃x2' style=Rising
+30.00 TICK L[AttackRecovery x=-4.16 y=0.40 vx=-8.12 g=False mv=Hold '連撃x2'] R[Approach x=6.83 y=0.21 vx=-3.46 g=True mv=Advance '前進(膠着打開)' rot=0]
+30.42 ST L AttackRecovery->Approach d=10.26 x=-4.83 psi=107 '連撃x2' style=Rising
+31.00 TICK L[Approach x=-7.17 y=1.42 vx=-4.22 g=False mv=Retreat '間合い調整'] R[Approach x=3.34 y=0.22 vx=-3.46 g=True mv=Advance '前進(膠着打開)' rot=0]
+32.00 TICK L[Approach x=-5.72 y=0.00 vx=2.83 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-0.16 y=0.21 vx=-3.46 g=True mv=Advance '前進(膠着打開)' rot=0]
+33.00 TICK L[Approach x=-4.46 y=0.02 vx=-0.06 g=True mv=Hold '攻撃予約'] R[Approach x=-1.67 y=0.15 vx=-0.03 g=False mv=Hold '攻撃予約' rot=0]
+33.14 ST L Approach->AttackWindup d=2.74 x=-4.46 psi=125 '攻撃予約' style=Rising
+33.14 ST R Approach->Evade d=2.74 x=-1.71 psi=40 '攻撃予約' style=Rising
+33.14 EVADE R Backstep
+33.72 ST L AttackWindup->AttackActive d=7.28 x=-3.47 psi=-18 '攻撃' style=Rising
+34.00 TICK L[AttackActive x=-2.72 y=0.18 vx=2.15 g=False mv=Hold '攻撃'] R[Evade x=6.82 y=2.04 vx=9.99 g=False mv=Hold '回避(後退)' rot=0]
+34.12 ST L AttackActive->AttackRecovery d=10.36 x=-2.53 psi=18 '攻撃' style=Rising
+34.26 ST R Evade->Approach d=11.28 x=8.75 psi=72 '回避(後退)' style=Rising
+34.74 ST L AttackRecovery->Approach d=9.76 x=-2.18 psi=104 '攻撃' style=Rising
+35.00 TICK L[Approach x=-3.18 y=1.26 vx=-4.34 g=False mv=Retreat '間合い調整'] R[Approach x=6.67 y=0.00 vx=-3.40 g=True mv=Advance '前進(膠着打開)' rot=0]
+36.00 TICK L[Approach x=-5.77 y=0.00 vx=2.83 g=True mv=Advance '前進(膠着打開)'] R[Approach x=3.23 y=0.00 vx=-3.44 g=True mv=Advance '前進(膠着打開)' rot=0]
+37.00 TICK L[Approach x=-2.94 y=0.00 vx=2.82 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-0.21 y=0.00 vx=-3.44 g=True mv=Advance '前進(膠着打開)' rot=0]
+37.30 ST L Approach->AttackWindup d=2.31 x=-2.75 psi=126 '攻撃予約' style=Rising
+37.88 ST L AttackWindup->AttackActive d=8.78 x=-5.25 psi=-18 '攻撃' style=Rising
+38.00 TICK L[AttackActive x=-5.62 y=1.24 vx=-2.80 g=False mv=Hold '攻撃'] R[Approach x=3.79 y=0.20 vx=-0.06 g=True mv=Advance '前進(膠着打開)' rot=0]
+38.28 ST L AttackActive->AttackRecovery d=9.38 x=-6.23 psi=17 '攻撃' style=Rising
+38.90 ST L AttackRecovery->Approach d=6.82 x=-5.83 psi=106 '攻撃' style=Rising
+39.00 TICK L[Approach x=-6.10 y=0.86 vx=-3.07 g=False mv=Retreat '間合い調整'] R[Approach x=0.57 y=0.21 vx=-3.52 g=True mv=Advance '前進(膠着打開)' rot=0]
+40.00 TICK L[Approach x=-6.85 y=0.00 vx=2.30 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-2.92 y=0.21 vx=-3.51 g=True mv=Advance '前進(膠着打開)' rot=0]
+40.98 ST L Approach->AttackWindup d=2.74 x=-6.28 psi=125 '攻撃予約' style=Rising
+40.98 ST R Approach->Evade d=2.74 x=-3.54 psi=40 '攻撃予約' style=Rising
+40.98 EVADE R Backstep
+41.00 TICK L[AttackWindup x=-6.29 y=0.01 vx=-0.36 g=True mv=Hold '攻撃'] R[Evade x=-3.32 y=0.13 vx=5.88 g=True mv=Hold '回避(後退)' rot=0]
+41.56 ST L AttackWindup->AttackActive d=7.28 x=-5.29 psi=-18 '攻撃' style=Rising
+41.96 ST L AttackActive->AttackRecovery d=10.35 x=-4.36 psi=18 '攻撃' style=Rising
+42.00 TICK L[AttackRecovery x=-4.36 y=0.12 vx=0.00 g=False mv=Hold '攻撃'] R[Evade x=6.58 y=1.63 vx=9.94 g=False mv=Hold '回避(後退)' rot=0]
+42.10 ST R Evade->Approach d=11.73 x=7.37 psi=80 '回避(後退)' style=Rising
+42.58 ST L AttackRecovery->Approach d=12.13 x=-4.01 psi=104 '攻撃' style=Rising
+43.00 TICK L[Approach x=-5.71 y=1.38 vx=-4.39 g=False mv=Retreat '間合い調整'] R[Approach x=6.64 y=0.00 vx=-3.44 g=True mv=Advance '前進(膠着打開)' rot=0]
+44.00 TICK L[Approach x=-6.10 y=0.01 vx=2.82 g=True mv=Advance '前進(膠着打開)'] R[Approach x=3.20 y=0.00 vx=-3.44 g=True mv=Advance '前進(膠着打開)' rot=0]
+45.00 TICK L[Approach x=-3.28 y=0.01 vx=2.82 g=True mv=Advance '前進(膠着打開)'] R[Approach x=-0.24 y=0.00 vx=-3.44 g=True mv=Advance '前進(膠着打開)' rot=0]
+46.00 TICK L[Approach x=-1.91 y=0.00 vx=2.83 g=True mv=Advance '前進(膠着打開)'] R[Approach x=1.83 y=1.57 vx=4.33 g=False mv=Advance '前進(膠着打開)' rot=0]
+47.00 TICK L[Approach x=0.76 y=0.03 vx=-0.10 g=True mv=Advance '前進(膠着打開)'] R[Approach x=2.85 y=0.00 vx=0.34 g=True mv=Advance '前進(膠着打開)' rot=0]
+47.22 ST L Approach->AttackWindup d=2.38 x=0.70 psi=123 '攻撃予約' style=Thrust
+47.80 ST L AttackWindup->AttackActive d=9.78 x=-2.67 psi=-6 '攻撃' style=Thrust
+48.00 TICK L[AttackActive x=-3.62 y=1.49 vx=-4.31 g=False mv=Hold '攻撃'] R[Approach x=8.55 y=0.16 vx=4.93 g=False mv=Advance '前進(膠着打開)' rot=0]
+48.20 ST L AttackActive->AttackRecovery d=13.01 x=-4.39 psi=-6 '攻撃' style=Thrust
+48.82 ST L AttackRecovery->Approach d=11.45 x=-4.93 psi=98 '攻撃' style=Thrust
+49.00 TICK L[Approach x=-5.49 y=1.41 vx=-4.02 g=False mv=Advance '前進(膠着打開)'] R[Approach x=5.83 y=0.21 vx=-3.51 g=True mv=Advance '前進(膠着打開)' rot=0]
+50.00 TICK L[Approach x=-7.03 y=0.24 vx=0.22 g=False mv=Advance '前進(膠着打開)'] R[Approach x=2.33 y=0.21 vx=-3.50 g=True mv=Advance '前進(膠着打開)' rot=0]
+50.10 ST L Approach->Evade d=9.06 x=-7.01 psi=128 '前進(膠着打開)' style=Thrust
+50.10 EVADE L HopOver
+51.00 TICK L[Evade x=-1.80 y=2.70 vx=5.64 g=False mv=Advance '跳び越え(脱出)'] R[Approach x=-0.93 y=0.21 vx=-0.53 g=True mv=Hold '攻撃予約' rot=0]
+51.22 ST L Evade->Approach d=0.01 x=-0.67 psi=125 '跳び越え(脱出)' style=Thrust
+51.34 RESOLVE standing-on-weapon 0
+51.70 ST R Approach->AttackWindup d=1.85 x=-0.84 psi=-6 '攻撃予約' style=Overhead
+51.86 ST L Approach->AttackWindup d=2.07 x=1.34 psi=177 '攻撃予約' style=Overhead
+51.90 RESOLVE standing-on-weapon 0
+52.00 TICK L[AttackWindup x=1.83 y=2.59 vx=3.38 g=False mv=Hold '連撃x2'] R[AttackWindup x=-0.43 y=0.58 vx=-3.70 g=False mv=Hold '連撃x3' rot=0]
+52.04 ST R AttackWindup->AttackActive d=2.40 x=-0.49 psi=150 '連撃x3' style=Overhead
+52.32 ST R AttackActive->Stagger d=5.62 x=-2.67 psi=15 '連撃x3' style=Overhead
+52.44 ST L AttackWindup->AttackActive d=6.62 x=3.59 psi=105 '連撃x2' style=Overhead
+52.68 ST R Stagger->Approach d=9.19 x=-4.03 psi=-5 '連撃x3' style=Overhead
+52.84 ST L AttackActive->Stagger d=9.23 x=5.08 psi=-79 '連撃x2' style=Overhead
+53.00 TICK L[Stagger x=5.01 y=2.75 vx=4.27 g=False mv=Hold '連撃x2'] R[Approach x=-3.74 y=0.21 vx=3.19 g=True mv=Advance '前進(膠着打開)' rot=0]
+53.26 ST L Stagger->Approach d=9.57 x=6.65 psi=48 '連撃x2' style=Overhead
+54.00 TICK L[Approach x=7.06 y=1.02 vx=-0.18 g=False mv=Advance '前進(膠着打開)'] R[Approach x=-0.26 y=0.21 vx=3.50 g=True mv=Advance '前進(膠着打開)' rot=0]
+55.00 TICK L[Approach x=5.57 y=0.03 vx=-0.43 g=True mv=Advance '前進(膠着打開)'] R[Approach x=2.79 y=0.20 vx=-0.35 g=True mv=Advance '前進(膠着打開)' rot=0]
+55.70 ST L Approach->AttackWindup d=2.74 x=5.56 psi=125 '攻撃予約' style=Rising
+56.00 TICK L[AttackWindup x=6.21 y=2.55 vx=-1.37 g=False mv=Hold '攻撃'] R[Approach x=1.92 y=0.01 vx=-3.85 g=True mv=Retreat '溜めを待つ' rot=0]
+56.28 ST L AttackWindup->AttackActive d=4.00 x=5.76 psi=-18 '攻撃' style=Rising
+56.68 ST L AttackActive->AttackRecovery d=2.46 x=5.11 psi=21 '攻撃' style=Rising
+56.82 ST R Approach->AttackWindup d=1.77 x=3.13 psi=80 '前進(膠着打開)' style=Rising
+57.00 TICK L[AttackRecovery x=4.59 y=5.29 vx=-1.57 g=False mv=Hold '攻撃'] R[AttackWindup x=3.26 y=0.41 vx=2.77 g=False mv=Advance '差し込み' rot=0]
+57.16 ST R AttackWindup->AttackActive d=0.53 x=3.70 psi=0 '差し込み' style=Rising
+57.30 ST L AttackRecovery->Approach d=0.87 x=3.18 psi=110 '攻撃' style=Rising
+57.44 ST R AttackActive->Stagger d=1.55 x=4.38 psi=98 '差し込み' style=Rising
+57.50 RESOLVE standing-on-weapon 0
+57.80 ST R Stagger->Approach d=1.80 x=3.89 psi=102 '差し込み' style=Rising
+58.00 TICK L[Approach x=1.84 y=1.15 vx=-3.28 g=False mv=Hold '間合い'] R[Approach x=3.80 y=0.07 vx=1.27 g=True mv=Hold '攻撃予約' rot=0]
+59.00 TICK L[Approach x=-0.34 y=0.01 vx=2.83 g=True mv=Advance '前進(膠着打開)'] R[Approach x=2.36 y=0.21 vx=-3.46 g=True mv=Advance '前進(膠着打開)' rot=0]
+59.70 ST L Approach->AttackWindup d=2.74 x=-0.36 psi=125 '攻撃予約' style=Rising
+59.70 ST R Approach->AttackWindup d=2.74 x=2.39 psi=40 '攻撃予約' style=Thrust
+60.00 END TIME_UP_DRAW winner=-1 hp=146.8/117.4

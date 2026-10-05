@@ -1,0 +1,93 @@
+﻿{
+    "grapheme": "山",
+    "font": "Gothic",
+    "fontAssetPath": "Assets/Art/Fonts/Gothic/NotoSansJP-Bold.ttf",
+    "fontFamily": "Noto Sans JP",
+    "fontHash": "9e4e354e728cfc32e04bbc0bf686c7285a1cf47f64ce2ac27c1d813ad1dc9d63",
+    "settingsHash": "fb8263744cba8b65",
+    "bakedAt": "2026-10-05T14:21:39",
+    "unityVersion": "6000.0.61f1",
+    "features": {
+        "inkRatio": 0.3307291567325592,
+        "widthRatio": 0.8208333253860474,
+        "heightRatio": 0.8999999761581421,
+        "edgeRatio": 5.541666507720947,
+        "balance": 0.9914534091949463,
+        "centerOfMass": {
+            "x": 128.09841918945313,
+            "y": 102.37322998046875
+        },
+        "colliderRects": [
+            {
+                "serializedVersion": "2",
+                "x": 29.0,
+                "y": 17.0,
+                "width": 31.0,
+                "height": 15.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 196.0,
+                "y": 18.0,
+                "width": 32.0,
+                "height": 14.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 29.0,
+                "y": 32.0,
+                "width": 199.0,
+                "height": 32.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 29.0,
+                "y": 64.0,
+                "width": 35.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 108.0,
+                "y": 64.0,
+                "width": 36.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 196.0,
+                "y": 64.0,
+                "width": 32.0,
+                "height": 120.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 29.0,
+                "y": 68.0,
+                "width": 31.0,
+                "height": 115.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 112.0,
+                "y": 68.0,
+                "width": 31.0,
+                "height": 167.0
+            }
+        ],
+        "inkBounds": {
+            "x": 30,
+            "y": 18,
+            "width": 197,
+            "height": 216
+        },
+        "gripPoint": {
+            "x": 45.0,
+            "y": 31.5
+        },
+        "componentCount": 1,
+        "maskSize": 256,
+        "emSizePx": 240.0,
+        "colliderGridUsed": 64
+    }
+}
