@@ -96,6 +96,8 @@ namespace MojiBattle
         public float minBackstepSpace = 1.6f;
         public float heavyHoldDistanceFromCenter = 1.5f;
         public float stalemateSeconds = 6f;
+        [Tooltip("安全策: 両者ともこの秒数攻撃を出していなければ、距離に関係なく攻撃を出して膠着を崩す")]
+        public float idleBreakSeconds = 6f;
         [Tooltip("Tuned: 転倒中の相手への追撃を許可する（KO中は不可）")]
         public bool allowAttackOnDowned = true;
         [Tooltip("Tuned: 前進が阻まれた（武器や体が当たって近づけない）と判定するまでの時間")]
@@ -117,7 +119,7 @@ namespace MojiBattle
         public ClassTendency light = new ClassTendency
         {
             comboMin = 2, comboMax = 3, attackWillingness = 0.9f, guardBias = 0.15f, evadeBias = 0.85f,
-            proactiveGuard = 0.02f, retreatAfterAttack = 0.6f, waitsNearCenter = false, aimHeadChance = 0.5f, reactionChance = 0.75f
+            proactiveGuard = 0.02f, retreatAfterAttack = 0.6f, waitsNearCenter = false, aimHeadChance = 0.5f, reactionChance = 0.65f
         };
         public ClassTendency medium = new ClassTendency
         {

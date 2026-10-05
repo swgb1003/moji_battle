@@ -13,6 +13,7 @@ namespace MojiBattle
         float windupStartPsi;
         float lastTarget = float.NaN;
         float lastTargetVelDeg;
+        float stallTime;
         FighterState lastState;
 
         public float TargetPsi { get; private set; }
@@ -97,6 +98,11 @@ namespace MojiBattle
             float errRad = errDeg * Mathf.Deg2Rad;
             float relOmega = (wb.angularVelocity - self.Body.angularVelocity) * Mathf.Deg2Rad;
             float targetOmega = targetVelDeg * self.Facing * Mathf.Deg2Rad;
+            // 失速保護: 目標から大きくずれたまま回らない（相手の字形などに押さえ込まれている）間はトルクを弱め、
+            // ヒンジを静的に引き伸ばし続けないようにする
+            bool stalled = Mathf.Abs(errDeg) > 25f && Mathf.Abs(relOmega) < 0.6f;
+            stallTime = stalled ? stallTime + dt : 0f;
+            torqueScale *= Mathf.Lerp(1f, 0.3f, Mathf.Clamp01(stallTime / 0.3f));
             float wn = NaturalFrequency;
             // 加速度の先回りは振り（有効時間）の間だけ。溜めの急加速では使わない（ヒンジを強く引っ張るため）
             float targetAlpha = rt.state == FighterState.AttackActive ? targetAccDeg * self.Facing * Mathf.Deg2Rad : 0f;

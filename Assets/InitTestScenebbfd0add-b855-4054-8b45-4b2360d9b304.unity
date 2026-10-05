@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &120134894
+--- !u!1 &2140189391
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,128 +127,73 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 120134896}
-  - component: {fileID: 120134895}
+  - component: {fileID: 2140189393}
+  - component: {fileID: 2140189392}
   m_Layer: 0
-  m_Name: BattleBootstrap
+  m_Name: Code-based tests runner
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &120134895
+--- !u!114 &2140189392
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 120134894}
+  m_GameObject: {fileID: 2140189391}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1499a1a0d76cee4ab177dbc92bf5337, type: 3}
+  m_Script: {fileID: 11500000, guid: 102e512f651ee834f951a2516c1ea3b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  balance: {fileID: 11400000, guid: bb1ff965c5a4544499261a4fbf6b2651, type: 2}
-  calibration: {fileID: 11400000, guid: 07a25704dc0abee418a8d76b3460c445, type: 2}
-  leftGrapheme: "\u4E00"
-  rightGrapheme: "\u9B31"
-  leftFont: 0
-  rightFont: 0
-  seed: 0
-  useCountdown: 1
---- !u!4 &120134896
+  m_AssembliesWithTests:
+  - MojiBattle.Tests.PlayMode
+  - UnityEngine.TestRunner
+  testStartedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  testFinishedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  runStartedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  runFinishedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  settings:
+    filters:
+    - testMode: 4
+      assemblyNames: []
+      groupNames: []
+      categoryNames: []
+      testNames: []
+      synchronousOnly: 0
+    sceneBased: 0
+    originalScene: 
+    bootstrapScene: 
+    orderedTestNames: []
+    featureFlags:
+      fileCleanUpCheck: 0
+      requiresSplashScreen: 0
+      strictDomainReload: 0
+      disableNestedEnumeratorBugfix: 0
+    retryCount: 0
+    repeatCount: 0
+    automated: 0
+    randomOrderSeed: 0
+--- !u!4 &2140189393
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 120134894}
+  m_GameObject: {fileID: 2140189391}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &130226183
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 130226185}
-  - component: {fileID: 130226184}
-  m_Layer: 0
-  m_Name: Main Camera
-  m_TagString: MainCamera
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!20 &130226184
-Camera:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 130226183}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.95686275, g: 0.9411765, b: 0.9098039, a: 1}
-  m_projectionMatrixMode: 1
-  m_GateFitMode: 2
-  m_FOVAxisMode: 0
-  m_Iso: 200
-  m_ShutterSpeed: 0.005
-  m_Aperture: 16
-  m_FocusDistance: 10
-  m_FocalLength: 50
-  m_BladeCount: 5
-  m_Curvature: {x: 2, y: 11}
-  m_BarrelClipping: 0.25
-  m_Anamorphism: 0
-  m_SensorSize: {x: 36, y: 24}
-  m_LensShift: {x: 0, y: 0}
-  m_NormalizedViewPortRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
-  field of view: 60
-  orthographic: 1
-  orthographic size: 5.2
-  m_Depth: 0
-  m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_RenderingPath: -1
-  m_TargetTexture: {fileID: 0}
-  m_TargetDisplay: 0
-  m_TargetEye: 3
-  m_HDR: 1
-  m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
-  m_ForceIntoRT: 0
-  m_OcclusionCulling: 1
-  m_StereoConvergence: 10
-  m_StereoSeparation: 0.022
---- !u!4 &130226185
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 130226183}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 3.85, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -258,5 +203,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 130226185}
-  - {fileID: 120134896}
+  - {fileID: 2140189393}

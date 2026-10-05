@@ -105,8 +105,25 @@ namespace MojiBattle
             float d = self.DistanceToOpponent;
             float range = self.AttackRange;
             bool oppDown = opp.Runtime.IsDown;
+            // 前進が阻まれている時間（予約攻撃の待ち中も数える）
+            // 相手が逃げている（後退・回避中）なら追跡であって「阻まれ」ではない
+            bool oppFleeing = opp.Runtime.state == FighterState.Evade || opp.Brain.Move == MoveIntent.Retreat;
+            bool pushing = s == FighterState.Approach && (Move == MoveIntent.Advance || pendingAttackAt >= 0f) && d < range * 2.5f && lastDistance - d < 0.03f
+                           && !oppFleeing;
+            blockedTime = pushing ? blockedTime + B.aiInterval : 0f;
+            lastDistance = d;
             // 追撃可なら転倒中の相手も攻撃対象（KO後は不可）
             bool oppAttackable = opp.Runtime.state != FighterState.KO && (!oppDown || B.allowAttackOnDowned);
+
+            // 0) 膠着の安全策: 両者が長く攻撃していなければ、距離に関係なく打って崩す
+            if (s == FighterState.Approach && self.IsGrounded && time >= Rt.attackReadyAt && opp.Runtime.state != FighterState.KO
+                && self.Context.SimTime - self.Context.LastAttackStartTime > B.idleBreakSeconds)
+            {
+                pendingAttackAt = -1f;
+                self.StartAttack(time);
+                LastDecision = "膠着を崩す";
+                return;
+            }
 
             // 1) 相手の攻撃予兆に反応（ガード / 回避）
             // 試合後半は予兆への反応（受け・回避）も減り、打ち合いになりやすい
@@ -174,9 +191,9 @@ namespace MojiBattle
                     if (WouldBeOutpaced()) { Rt.comboRemaining = 0; Move = MoveIntent.Hold; LastDecision = "溜めを見て待つ"; return; }
                     // 阻まれ判定は直近のものだけ有効、かつ射程の 1.5 倍以内（古い判定で遠くから振らない）
                     bool blockedNow = (blockedTime >= B.blockedAdvanceSeconds && d <= range * 1.5f) || blockedTime >= B.blockedAdvanceSeconds + 1.5f;
-                    blockedTime = 0f;
                     if (d <= range * 1.05f || blockedNow)
                     {
+                        blockedTime = 0f;
                         self.StartAttack(time);
                         LastDecision = Rt.comboRemaining > 0 ? $"連撃x{Rt.comboRemaining + 1}" : "攻撃";
                         return;
@@ -190,10 +207,6 @@ namespace MojiBattle
             // 前進しているのに距離が縮まらない（相手の武器・体に阻まれている）なら、届く範囲とみなして攻撃する
             // 相手へ向かう速度が出ていない（止まっている・押し戻されている）時だけ「阻まれている」とみなす。
             // 相手が下がって距離が縮まらないだけなら追い続ける
-            bool pushing = s == FighterState.Approach && Move == MoveIntent.Advance && d < range * 2.5f && lastDistance - d < 0.03f
-                           && self.Body.linearVelocity.x * self.TowardOpponent < 0.3f;
-            blockedTime = pushing ? blockedTime + B.aiInterval : 0f;
-            lastDistance = d;
             float slack = self.WeightClass == WeightClass.Heavy ? B.heavyRangeSlack : 1f;
             // 射程外で阻まれていたら武器を立てて詰める。射程付近まで来たら構えに戻す
             if (blockedTime >= B.blockedAdvanceSeconds && d > range * 1.2f) CarryWeapon = true;

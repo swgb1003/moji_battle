@@ -95,6 +95,7 @@ MonoBehaviour:
   minBackstepSpace: 1.6
   heavyHoldDistanceFromCenter: 1.5
   stalemateSeconds: 6
+  idleBreakSeconds: 6
   allowAttackOnDowned: 1
   blockedAdvanceSeconds: 0.45
   heavyRangeSlack: 1.05
@@ -124,7 +125,7 @@ MonoBehaviour:
     waitsNearCenter: 0
     aimHeadChance: 0.5
     counterBias: 0
-    reactionChance: 0.75
+    reactionChance: 0.65
   medium:
     comboMin: 1
     comboMax: 2

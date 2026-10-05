@@ -18,6 +18,8 @@ namespace MojiBattle
         public float MatchClock;
         /// <summary>延長戦中（AI は最大限攻める）。</summary>
         public bool Overtime;
+        /// <summary>どちらかが最後に攻撃を始めた時刻（膠着の検出用）。</summary>
+        public float LastAttackStartTime;
         /// <summary>衝突の復帰（重なっていれば離れてから戻す）。MatchDirector が設定する。</summary>
         public System.Action<Collider2D, Collider2D> RestoreCollision;
     }
@@ -221,6 +223,7 @@ namespace MojiBattle
                 rt.swingToPsi = aim + b.strikeOvershoot * 0.8f;
             }
             rt.metrics.attacksStarted++;
+            Context.LastAttackStartTime = time;
             SetState(FighterState.AttackWindup);
         }
 
@@ -265,7 +268,9 @@ namespace MojiBattle
             var rt = Runtime;
             // 連撃を続ける前に相手の溜めを確認し、気づけば中断して対応する（反応率に従う）
             var ort = Opponent.Runtime;
-            bool oppCharging = ort.state == FighterState.AttackWindup && ort.windupDuration - ort.stateTime < Balance.threatWindow + 0.35f;
+            // 相手の溜めが自分の次の一撃より先に終わる時だけ中断する（遅い溜めには打ち勝てる）
+            float myNextHit = StatCalculator.Windup(Stats.weightScore, Balance) + 0.1f;
+            bool oppCharging = ort.state == FighterState.AttackWindup && ort.windupDuration - ort.stateTime < myNextHit;
             if (rt.comboRemaining > 0 && oppCharging && Brain.Rng.Chance(Tendency.reactionChance)) rt.comboRemaining = 0;
             bool oppAttackable = ort.state != FighterState.KO && (!ort.IsDown || Balance.allowAttackOnDowned);
             // 連撃の継続距離は武器の最遠点基準（AI の射程は控えめなので、それより広く取る）

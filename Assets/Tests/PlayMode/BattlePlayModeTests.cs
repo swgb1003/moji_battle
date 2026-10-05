@@ -46,7 +46,7 @@ namespace MojiBattle.Tests
                     var f = fs[i];
                     Vector2 shoulder = f.Body.GetRelativePoint(f.ShoulderLocal(f.Facing));
                     float ge = Vector2.Distance(shoulder, f.WeaponBody.position);
-                    if (ge > maxGripError) { maxGripError = ge; gripInfo = $"{f.Loadout.grapheme} t={battle.Director.Clock:F2} state={f.Runtime.state} limp={battle.Context.SimTime < f.Runtime.weaponLimpUntil} pass={f.Runtime.weaponPassThrough}"; }
+                    if (ge > maxGripError) { maxGripError = ge; gripInfo = $"{f.Loadout.grapheme} t={battle.Director.Clock:F2} state={f.Runtime.state} limp={battle.Context.SimTime < f.Runtime.weaponLimpUntil} pass={f.Runtime.weaponPassThrough} opp={f.Opponent.Runtime.state} d={f.DistanceToOpponent:F2} wv={f.WeaponBody.linearVelocity.magnitude:F1} bv={f.Body.linearVelocity.magnitude:F1}"; }
                     if (!f.Runtime.IsDown && f.Runtime.state != FighterState.Recover)
                         maxUprightTilt = Mathf.Max(maxUprightTilt, Mathf.Abs(Mathf.DeltaAngle(0f, f.Body.rotation)));
                     float psi = f.WeaponMotor.MeasurePsi();
