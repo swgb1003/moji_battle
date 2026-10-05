@@ -54,6 +54,19 @@ namespace MojiBattle.Tests
         }
 
         [Test]
+        public void SlamDamageOnlyAfterLift()
+        {
+            Assert.AreEqual(0f, DamageMath.SlamDamage(B.slamMinSpeed - 0.1f, B));
+            Assert.AreEqual((9f - B.slamMinSpeed) * B.slamK, DamageMath.SlamDamage(9f, B), 1e-4f);
+            Assert.AreEqual(B.slamMax, DamageMath.SlamDamage(100f, B));
+            Assert.IsTrue(DamageMath.SlamAllowed(8f, 10f, 9.5f, true, false, B));
+            Assert.IsFalse(DamageMath.SlamAllowed(8f, 10f, 9.5f, false, false, B), "持ち上げられていない（普通の着地）");
+            Assert.IsFalse(DamageMath.SlamAllowed(8f, 10f, 9.5f, true, true, B), "同じ持ち上げで2回目");
+            Assert.IsFalse(DamageMath.SlamAllowed(8f, 10f, 8.0f, true, false, B), "離れてから猶予を過ぎた");
+            Assert.IsFalse(DamageMath.SlamAllowed(B.slamMinSpeed - 0.5f, 10f, 9.5f, true, false, B), "速度不足");
+        }
+
+        [Test]
         public void MatchOutcomeRules()
         {
             Assert.AreEqual(MatchRules.Draw, MatchRules.DecideKo(0f, -3f), "同一ステップで両者0以下は引き分け");

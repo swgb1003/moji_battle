@@ -180,6 +180,14 @@ namespace MojiBattle
         public float knockdownAccumPerImpulse = 1f, legKnockdownBonus = 3f, knockdownAccumThreshold = 16f, knockdownAccumDecayPerSec = 4f;
         public float envDamageMinSpeed = 7f, envDamageK = 1.2f, envDamageMax = 18f, launchWindow = 1.5f;
         public float envAccumPerSpeed = 0.5f;
+
+        [Header("叩きつけ（仕様拡張: 相手の武器で持ち上げられて落とされた時）")]
+        [Tooltip("相手の武器に触れて、上向き速度がこれ以上 / 足がこの高さ以上浮いていたら「持ち上げられている」")]
+        public float liftMinUpSpeed = 2.0f, liftMinHeight = 1.0f;
+        [Tooltip("持ち上げから離れてこの秒数以内の衝突を叩きつけとみなす")]
+        public float slamWindow = 1.5f;
+        [Tooltip("叩きつけダメージ = clamp((vN - slamMinSpeed) × slamK, 0, slamMax)")]
+        public float slamMinSpeed = 5.5f, slamK = 2.0f, slamMax = 20f;
         public float heavyWhiffStaggerMomentum = 40f;
         [Tooltip("安全上限: 本体・武器の最大速度（物理の破綻防止。壁衝突ダメージの閾値7より十分大きい）")]
         public float maxBodySpeed = 22f, maxWeaponSpeed = 30f;

@@ -39,6 +39,7 @@ namespace MojiBattle
         public int duplicateBodyHits;
         public int envDamageEvents;
         public int envDamageOutsideLaunchWindow;
+        public int slams;
         public float longestNoDamageSeconds;
         /// <summary>膠着の指標: 両者とも攻撃を始めなかった最長時間。</summary>
         public float longestIdleSeconds;
@@ -129,9 +130,11 @@ namespace MojiBattle
         void OnEnv(EnvImpactEvent e)
         {
             envDamageEvents++;
-            if (e.timeSinceLaunch > director.Context.Balance.launchWindow || e.timeSinceLaunch < 0f) envDamageOutsideLaunchWindow++;
+            float window = e.slam ? director.Context.Balance.slamWindow : director.Context.Balance.launchWindow;
+            if (e.timeSinceLaunch > window || e.timeSinceLaunch < 0f) envDamageOutsideLaunchWindow++;
+            if (e.slam) slams++;
             NoteDamage();
-            Log($"ENV {Side(e.fighter)} {(e.isWall ? "WALL" : "GROUND")} vN={e.vN:F1} dmg={e.damage:F1} t+{e.timeSinceLaunch:F2}");
+            Log($"ENV{(e.slam ? " SLAM" : "")} {Side(e.fighter)} {(e.isWall ? "WALL" : "GROUND")} vN={e.vN:F1} dmg={e.damage:F1} t+{e.timeSinceLaunch:F2}");
         }
 
         void OnState(StateChangeEvent e)

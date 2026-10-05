@@ -73,7 +73,8 @@ namespace MojiBattle
         void OnEnv(EnvImpactEvent e)
         {
             Burst(e.point, 12, FighterFactory.Ink, 5f, 0.1f);
-            SpawnPopup($"{(e.isWall ? "ドンッ！" : "ズシャ")}\n{e.damage:F0}", e.point + Vector2.up * 0.5f, FighterFactory.Ink, 0.5f);
+            string label = e.slam ? "叩きつけ！" : e.isWall ? "ドンッ！" : "ズシャ";
+            SpawnPopup($"{label}\n{e.damage:F0}", e.point + Vector2.up * 0.5f, FighterFactory.Ink, e.slam ? 0.6f : 0.5f);
             rig?.Shake(0.15f, 0.18f);
         }
 

@@ -33,7 +33,7 @@ namespace MojiBattle.Tests
             int seedsPerPair = int.TryParse(System.Environment.GetEnvironmentVariable("RR_SEEDS"), out var n) ? n : 3;
             var agg = Nine.ToDictionary(c => c.ToString(), c => new GlyphAgg { g = c.ToString() });
             var pairLines = new List<string>();
-            int dup = 0, envOutside = 0, unfinished = 0, draws = 0, zeroDamage = 0, koTotal = 0, total = 0, suddenDeaths = 0;
+            int dup = 0, envOutside = 0, unfinished = 0, draws = 0, zeroDamage = 0, koTotal = 0, total = 0, suddenDeaths = 0, slamTotal = 0;
             float damageTotal = 0f;
             float maxIdle = 0f;
             string maxIdleCase = "";
@@ -56,6 +56,7 @@ namespace MojiBattle.Tests
                     var t = battle.Director.Telemetry;
                     var res = battle.Director.Result;
                     dup += t.duplicateBodyHits;
+                    slamTotal += t.slams;
                     total++;
                     if (res.winner < 0) draws++;
                     if (res.finishReason.StartsWith("SUDDEN_DEATH")) suddenDeaths++;
@@ -112,7 +113,7 @@ namespace MojiBattle.Tests
                 pairLines.Add($"| {Nine[i]} vs {Nine[j]} | {leftWins} - {rightWins} |");
             }
 
-            string summary = $"- matches: {total} / draws: {draws} ({draws * 100f / Mathf.Max(1, total):F0}%) / sudden death: {suddenDeaths} / no damage at all: {zeroDamage} / KO: {koTotal} ({koTotal * 100f / Mathf.Max(1, total):F0}%) / avg total damage per match: {damageTotal / Mathf.Max(1, total):F0}";
+            string summary = $"- matches: {total} / draws: {draws} ({draws * 100f / Mathf.Max(1, total):F0}%) / sudden death: {suddenDeaths} / slams: {slamTotal} / no damage at all: {zeroDamage} / KO: {koTotal} ({koTotal * 100f / Mathf.Max(1, total):F0}%) / avg total damage per match: {damageTotal / Mathf.Max(1, total):F0}";
             WriteReport(agg, pairLines, special.ToString(), dup, envOutside, maxIdle, maxIdleCase, seedsPerPair, summary);
 
             Assert.AreEqual(0, unfinished, "終わらない試合");

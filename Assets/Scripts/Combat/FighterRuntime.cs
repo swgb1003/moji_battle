@@ -34,6 +34,10 @@ namespace MojiBattle
         public float launchOriginX;
         public bool launchTracking;
         public float knockdownStartedAt = -1f;
+
+        // 叩きつけ（相手の武器で持ち上げられた）
+        public bool liftActive, slamUsed;
+        public float liftedAt = -999f, groundedSince, liftPeakY;
         public float settledAt = -1f;
         public float recoverAt = -1f;
 

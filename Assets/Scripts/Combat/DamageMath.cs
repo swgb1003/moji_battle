@@ -24,6 +24,14 @@ namespace MojiBattle
         public static float EnvironmentDamage(float vN, CombatBalance b) =>
             Mathf.Clamp((vN - b.envDamageMinSpeed) * b.envDamageK, 0f, b.envDamageMax);
 
+        /// <summary>叩きつけダメージ（相手の武器で持ち上げられて落とされた時）。</summary>
+        public static float SlamDamage(float vN, CombatBalance b) =>
+            Mathf.Clamp((vN - b.slamMinSpeed) * b.slamK, 0f, b.slamMax);
+
+        /// <summary>叩きつけの可否: 持ち上げられていて、離れてから slamWindow 以内、速度が閾値以上、この持ち上げで未使用。</summary>
+        public static bool SlamAllowed(float vN, float now, float liftedAt, bool liftActive, bool alreadyUsed, CombatBalance b) =>
+            liftActive && !alreadyUsed && vN >= b.slamMinSpeed && now >= liftedAt && now - liftedAt <= b.slamWindow;
+
         /// <summary>壁・地面の追加ダメージ可否（8.3）。</summary>
         public static bool EnvironmentDamageAllowed(float vN, float now, float launchedAt, bool alreadyUsedThisKind, CombatBalance b) =>
             vN >= b.envDamageMinSpeed && now - launchedAt <= b.launchWindow && now >= launchedAt && !alreadyUsedThisKind;

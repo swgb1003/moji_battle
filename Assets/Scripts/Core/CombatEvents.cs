@@ -35,6 +35,8 @@ namespace MojiBattle
         public bool isWall;
         public float vN, damage, timeSinceLaunch, time;
         public Vector2 point;
+        /// <summary>持ち上げからの叩きつけ</summary>
+        public bool slam;
     }
 
     public struct StateChangeEvent

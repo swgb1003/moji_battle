@@ -212,6 +212,12 @@ MonoBehaviour:
   envDamageMax: 18
   launchWindow: 1.5
   envAccumPerSpeed: 0.5
+  liftMinUpSpeed: 2
+  liftMinHeight: 1
+  slamWindow: 1.5
+  slamMinSpeed: 5.5
+  slamK: 2
+  slamMax: 20
   heavyWhiffStaggerMomentum: 40
   maxBodySpeed: 22
   maxWeaponSpeed: 30

@@ -159,6 +159,7 @@ namespace MojiBattle
                 a.AddVelocity(new Vector2(side * 3.5f, 1.5f) - a.Body.linearVelocity);
                 b.AddVelocity(new Vector2(-side * 3.5f, 1.5f) - b.Body.linearVelocity);
                 unstackTop = a; unstackBoth = true;
+                a.CancelLift(); b.CancelLift();
                 Telemetry?.Note("RESOLVE clinch");
                 unstackRestoreAt = Context.SimTime + 0.5f;
                 clinchTime = 0f;
@@ -177,6 +178,7 @@ namespace MojiBattle
                 SetBodyVsWeapon(top, bottom, true);
                 SetBodyVsBody(top, bottom, true); // 頭の上に乗っている場合も落とす
                 top.Runtime.weaponLimpUntil = Context.SimTime + 0.6f;
+                top.CancelLift();
                 Telemetry?.Note($"RESOLVE stacked top={top.Id}");
                 unstackTop = top;
                 unstackRestoreAt = Context.SimTime + 0.6f;
@@ -215,6 +217,7 @@ namespace MojiBattle
                     SetBodyVsBody(f, opp, true);
                     dropRestoreAt[i] = Context.SimTime + 0.6f;
                     f.Runtime.weaponLimpUntil = Context.SimTime + 0.6f;
+                    f.CancelLift();
                     perchedTime[i] = 0f;
                     Telemetry?.Note($"RESOLVE perched {i} y={f.Body.position.y:F2}");
                     continue;
@@ -230,6 +233,7 @@ namespace MojiBattle
                     SetBodyVsBody(f, opp, true);
                     dropRestoreAt[i] = Context.SimTime + 0.5f;
                     f.Runtime.weaponLimpUntil = Context.SimTime + 0.5f; // 自分の字形で体を支えていても落ちるように
+                    f.CancelLift();
                     Telemetry?.Note($"RESOLVE standing-on-weapon {i}");
                     break;
                 }

@@ -359,6 +359,54 @@ namespace MojiBattle.Tests
             Assert.AreEqual(FighterState.Approach, f.Runtime.state);
         }
 
+        /// <summary>
+        /// 叩きつけ: 相手の武器で高く持ち上げられてから落ちるとダメージ。同じ高さから自分で落ちただけならダメージなし。
+        /// 持ち上げ状態は実戦と同じ判定（相手の武器との接触）で作るため、相手の武器を体の真下へ置いて上へ押し上げる。
+        /// </summary>
+        [UnityTest]
+        public IEnumerator LiftedAndDropped_TakesSlamDamage_PlainFallDoesNot()
+        {
+            SimHarness.Begin(false);
+            float[] dmg = new float[2];
+            int[] slams = new int[2];
+            for (int run = 0; run < 2; run++)
+            {
+                bool lift = run == 0;
+                battle = SimHarness.Build(21, countdown: 1000f); // AI 停止
+                var victim = battle.Left;
+                var lifter = battle.Right;
+                TimeController.SetSpectatorSpeed(1f);
+                for (int i = 0; i < 10; i++) yield return null;
+                float hp0 = victim.Runtime.hp;
+                if (lift)
+                {
+                    // 相手の武器を被害者の足元に置き、両方を上へ速く持ち上げてから離す（武器ごと突き上げられた状態）
+                    victim.Body.position = new Vector2(0f, 0.6f);
+                    lifter.Body.position = new Vector2(2.5f, 0.02f);
+                    lifter.WeaponBody.position = new Vector2(0f, 0.2f);
+                    victim.AddVelocity(new Vector2(0f, 9f) - victim.Body.linearVelocity);
+                    lifter.WeaponBody.linearVelocity = new Vector2(0f, 9f);
+                    for (int i = 0; i < 3; i++) yield return null;
+                }
+                else
+                {
+                    victim.Body.position = new Vector2(0f, 4f);
+                    victim.WeaponMotor.ResetPose();
+                }
+                for (int i = 0; i < 150; i++) yield return null;
+                dmg[run] = hp0 - victim.Runtime.hp;
+                slams[run] = victim.Runtime.metrics.slamsTaken;
+                battle.Destroy();
+                battle = null;
+                yield return null;
+            }
+            Debug.Log($"[SLAM] lifted: dmg={dmg[0]:F1} slams={slams[0]} / plain fall: dmg={dmg[1]:F1} slams={slams[1]}");
+            Assert.AreEqual(0f, dmg[1], 1e-4f, "持ち上げられずに落ちただけでダメージが入った");
+            Assert.AreEqual(0, slams[1]);
+            Assert.AreEqual(1, slams[0], "持ち上げられて落ちたのに叩きつけにならない");
+            Assert.Greater(dmg[0], 0f);
+        }
+
         [UnityTest]
         public IEnumerator TimeUp_DecidedByHpRatio()
         {

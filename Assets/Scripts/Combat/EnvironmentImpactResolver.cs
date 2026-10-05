@@ -41,9 +41,25 @@ namespace MojiBattle
                 Vector2 n = c.normal.sqrMagnitude > 1e-6f ? c.normal.normalized : Vector2.up;
                 float vN = Mathf.Max(Mathf.Abs(Vector2.Dot(c.relativeVelocity, n)), Mathf.Abs(Vector2.Dot(f.PreBodyVelocity, n)));
                 bool used = c.isWall ? rt.launchWallUsed : rt.launchGroundUsed;
-                if (!DamageMath.EnvironmentDamageAllowed(vN, time, rt.launchedAt, used, b)) continue;
-                if (c.isWall) rt.launchWallUsed = true; else rt.launchGroundUsed = true;
-                float dmg = DamageMath.EnvironmentDamage(vN, b);
+                bool launchHit = DamageMath.EnvironmentDamageAllowed(vN, time, rt.launchedAt, used, b);
+                // 仕様拡張: 相手の武器で持ち上げられて落とされた（叩きつけ）
+                // 仕様拡張: 相手の武器で持ち上げられて（足が liftMinHeight 以上に達して）落とされた（叩きつけ）
+                bool slam = rt.liftPeakY >= b.liftMinHeight && DamageMath.SlamAllowed(vN, time, rt.liftedAt, rt.liftActive, rt.slamUsed, b);
+                if (!launchHit && !slam) continue;
+                float dmg = 0f;
+                if (launchHit)
+                {
+                    if (c.isWall) rt.launchWallUsed = true; else rt.launchGroundUsed = true;
+                    dmg = DamageMath.EnvironmentDamage(vN, b);
+                }
+                if (slam)
+                {
+                    rt.slamUsed = true;
+                    float slamDmg = DamageMath.SlamDamage(vN, b);
+                    if (slamDmg > dmg) dmg = slamDmg; else slam = false;
+                }
+                if (dmg <= 0f) continue;
+                if (slam) rt.metrics.slamsTaken++;
                 rt.ApplyDamage(dmg);
                 rt.metrics.envDamageTaken += dmg;
                 rt.metrics.envImpacts++;
@@ -55,7 +71,8 @@ namespace MojiBattle
                 ctx.Events.Raise(new EnvImpactEvent
                 {
                     fighter = f.Id, isWall = c.isWall, vN = vN, damage = dmg,
-                    timeSinceLaunch = time - rt.launchedAt, point = c.point, time = time,
+                    timeSinceLaunch = slam ? time - rt.liftedAt : time - rt.launchedAt, point = c.point, time = time,
+                    slam = slam,
                 });
             }
             queue.Clear();

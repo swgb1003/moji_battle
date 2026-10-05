@@ -78,6 +78,8 @@ namespace MojiBattle
         public float damageDealt, damageTaken, envDamageTaken;
         public int attacksStarted, attacksWhiffed, hitsLanded, criticals, grazes, centerHits;
         public int guards, guardBreaks, evades, backsteps, hopOvers, knockdowns, envImpacts, clashes;
+        /// <summary>この選手が叩きつけられた回数</summary>
+        public int slamsTaken;
         public int[] partHits = new int[4];
         public float maxKnockbackDistance;
     }

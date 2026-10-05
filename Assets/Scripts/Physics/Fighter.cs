@@ -114,6 +114,7 @@ namespace MojiBattle
             rt.Decay(dt, b);
             UpdateGrounded();
             TrackLaunch(time);
+            TrackLift(time, dt);
 
             switch (rt.state)
             {
@@ -374,6 +375,50 @@ namespace MojiBattle
                     return;
                 }
             }
+        }
+
+        /// <summary>
+        /// 相手の武器に持ち上げられているかを判定する（叩きつけダメージ用）。
+        /// 相手の武器に触れていて、上向きに動いている／足が高く浮いている時。自分の回避ジャンプ中は除く。
+        /// 持ち上げが終わって接地が 0.3 秒続いたら、その持ち上げは終了。
+        /// </summary>
+        void TrackLift(float time, float dt)
+        {
+            var rt = Runtime;
+            var b = Balance;
+            bool touchingOppWeapon = false, pushedUp = false;
+            if (rt.state != FighterState.Evade)
+            {
+                int n = Body.GetContacts(contactBuffer);
+                for (int i = 0; i < n; i++)
+                {
+                    var c = contactBuffer[i];
+                    var other = c.collider != null && c.collider.attachedRigidbody == Body ? c.otherCollider : c.collider;
+                    if (other == null || other.attachedRigidbody != Opponent.WeaponBody) continue;
+                    touchingOppWeapon = true;
+                    // 相手の武器が接触点で上向きに動いている＝押し上げられている（乗っているだけは含めない）
+                    if (Opponent.WeaponBody.GetPointVelocity(c.point).y >= b.liftMinUpSpeed) pushedUp = true;
+                }
+            }
+            // 開始: 押し上げられて上昇している。継続: 一度持ち上げられた後、相手の武器に触れたまま浮いている
+            bool lifted = (pushedUp && Body.linearVelocity.y >= 1f)
+                          || (rt.liftActive && touchingOppWeapon && Body.position.y >= b.liftMinHeight * 0.5f);
+            if (lifted)
+            {
+                if (!rt.liftActive) { rt.liftActive = true; rt.slamUsed = false; rt.liftPeakY = 0f; }
+                rt.liftedAt = time; // 持ち上げられている間は更新し続け、離れた時点から猶予を数える
+            }
+            if (rt.liftActive) rt.liftPeakY = Mathf.Max(rt.liftPeakY, Body.position.y);
+            bool onGround = Body.position.y < 0.3f && Mathf.Abs(Body.linearVelocity.y) < 0.5f;
+            rt.groundedSince = onGround ? rt.groundedSince + dt : 0f;
+            if (rt.liftActive && !lifted && (rt.groundedSince >= 0.3f || time - rt.liftedAt > b.slamWindow)) rt.liftActive = false;
+        }
+
+        /// <summary>固着解消などで意図的に落とす時は、持ち上げ（叩きつけ判定）を取り消す。</summary>
+        public void CancelLift()
+        {
+            Runtime.liftActive = false;
+            Runtime.slamUsed = true;
         }
 
         void TrackLaunch(float time)
