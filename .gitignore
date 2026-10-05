@@ -18,3 +18,5 @@
 /Reports/*.xml
 /Reports/Seq/
 /Reports/trace_*.txt
+/Assets/InitTestScene*.unity
+/Assets/InitTestScene*.unity.meta
