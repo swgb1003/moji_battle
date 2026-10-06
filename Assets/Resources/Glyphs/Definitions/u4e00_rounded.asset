@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d69669bff785849a623abdad1a673e, type: 3}
+  m_Name: u4e00_rounded
+  m_EditorClassIdentifier: 
+  grapheme: "\u4E00"
+  font: 2
+  mask: {fileID: 2800000, guid: ce4ccc08bdf051440bf09741112f2ed6, type: 3}
+  features:
+    inkRatio: 0.1124132
+    widthRatio: 0.9
+    heightRatio: 0.12916666
+    edgeRatio: 2.0583334
+    balance: 0.99812967
+    centerOfMass: {x: 128.20795, y: 127.49768}
+    colliderRects:
+    - serializedVersion: 2
+      x: 28
+      y: 112
+      width: 203
+      height: 4
+    - serializedVersion: 2
+      x: 24
+      y: 116
+      width: 211
+      height: 4
+    - serializedVersion: 2
+      x: 20
+      y: 120
+      width: 216
+      height: 16
+    - serializedVersion: 2
+      x: 24
+      y: 136
+      width: 208
+      height: 4
+    - serializedVersion: 2
+      x: 28
+      y: 140
+      width: 200
+      height: 4
+    inkBounds:
+      x: 20
+      y: 112
+      width: 216
+      height: 31
+    gripPoint: {x: 33.5, y: 127}
+    componentCount: 1
+    maskSize: 256
+    emSizePx: 240
+    colliderGridUsed: 64
+  fontAssetPath: Assets/Art/Fonts/RoundedGothic/ZenMaruGothic-Bold.ttf
+  fontFamily: Zen Maru Gothic
+  fontHash: fe24426b9c8b5523a0146a8235c8674eccf0493af354a53ec895c3596d9eb745
+  settingsHash: fb8263744cba8b65
+  bakedAt: 2026-10-06T15:03:22
+  unityVersion: 6000.0.61f1

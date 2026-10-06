@@ -32,13 +32,13 @@ namespace MojiBattle.EditorTools
             public string path;
         }
 
-        /// <summary>字体ごとの同梱フォント。P3 で明朝・丸ゴシック・筆文字を追加する。</summary>
+        /// <summary>字体ごとの同梱フォント（すべて SIL OFL 1.1。出典は ThirdPartyNotices.md）。</summary>
         public static readonly FontSource[] Fonts =
         {
             new FontSource { id = FontStyleId.Gothic, path = "Assets/Art/Fonts/Gothic/NotoSansJP-Bold.ttf" },
-            new FontSource { id = FontStyleId.Mincho, path = null },
-            new FontSource { id = FontStyleId.RoundedGothic, path = null },
-            new FontSource { id = FontStyleId.Brush, path = null },
+            new FontSource { id = FontStyleId.Mincho, path = "Assets/Art/Fonts/Mincho/ShipporiMincho-Bold.ttf" },
+            new FontSource { id = FontStyleId.RoundedGothic, path = "Assets/Art/Fonts/RoundedGothic/ZenMaruGothic-Bold.ttf" },
+            new FontSource { id = FontStyleId.Brush, path = "Assets/Art/Fonts/Brush/YujiBoku-Regular.ttf" },
         };
 
         public sealed class Result
@@ -64,6 +64,7 @@ namespace MojiBattle.EditorTools
         [MenuItem("MojiBattle/Glyphs/Bake All (9 chars × fonts)")]
         public static void BakeAllMenu()
         {
+            BuildFontLibrary();
             var results = BakeAll();
             RecomputeCalibration();
             WriteStatsReport();
@@ -73,6 +74,7 @@ namespace MojiBattle.EditorTools
         /// <summary>バッチ実行用。エラーがあれば終了コード 1。</summary>
         public static void BatchBake()
         {
+            BuildFontLibrary();
             var results = BakeAll();
             RecomputeCalibration();
             string report = WriteStatsReport();

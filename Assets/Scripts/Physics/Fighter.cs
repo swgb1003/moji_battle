@@ -26,6 +26,8 @@ namespace MojiBattle
         public System.Action<Collider2D, Collider2D> RestoreCollision;
         /// <summary>武器どうしの衝突の有無を今の状態に合わせて反映する。MatchDirector が設定する。</summary>
         public System.Action ApplyWeaponGate;
+        /// <summary>武器を瞬間的に動かした後、相手に重なった組だけ離れるまで衝突を外す。MatchDirector が設定する。</summary>
+        public System.Action<Fighter> SeparateWeaponOverlaps;
     }
 
     /// <summary>字形から作った武器の幾何情報（握り原点・右向き基準のワールド単位）。</summary>
@@ -740,6 +742,8 @@ namespace MojiBattle
             WeaponBody.position = Body.GetRelativePoint(HandLocal(f));
             WeaponBody.rotation = Body.rotation - rel;
             WeaponBody.angularVelocity = Body.angularVelocity - relW;
+            // 反対側へ移した武器が相手にめり込むと、押し出しで相手が弾き飛ばされる
+            Context.SeparateWeaponOverlaps?.Invoke(this);
         }
 
         void UpdateGrounded()

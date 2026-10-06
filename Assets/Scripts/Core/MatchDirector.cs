@@ -64,6 +64,7 @@ namespace MojiBattle
             Telemetry = new MatchTelemetry(this);
             ctx.RestoreCollision = (x, y) => SetPair(x, y, false);
             ctx.ApplyWeaponGate = UpdateWeaponGate;
+            ctx.SeparateWeaponOverlaps = SeparateWeaponOverlaps;
             foreach (var f in Fighters)
             foreach (var c in f.WeaponColliders) weaponColliderSet.Add(c);
             UpdateWeaponGate();
@@ -462,6 +463,24 @@ namespace MojiBattle
         }
 
         const float StretchLimit = 0.25f, StretchSeconds = 0.3f;
+
+        /// <summary>武器を瞬間的に動かした直後（向きの反転）、相手の体・武器に重なった組は離れるまで衝突を外す。</summary>
+        void SeparateWeaponOverlaps(Fighter f)
+        {
+            var opp = f.Opponent;
+            foreach (var w in f.WeaponColliders)
+            {
+                foreach (var o in opp.BodyColliders) SeparateIfOverlapping(w, o);
+                foreach (var o in opp.WeaponColliders) SeparateIfOverlapping(w, o);
+            }
+        }
+
+        void SeparateIfOverlapping(Collider2D a, Collider2D b)
+        {
+            if (Physics2D.GetIgnoreCollision(a, b)) return;
+            var d = Physics2D.Distance(a, b);
+            if (d.isValid && d.distance < 0f) Separate(a, b);
+        }
 
         /// <summary>離れるまで衝突を外す（ResolveDeepPenetration が 0.05 以上離れたら戻す）。</summary>
         void Separate(Collider2D a, Collider2D b)

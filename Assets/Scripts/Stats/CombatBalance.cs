@@ -153,6 +153,8 @@ namespace MojiBattle
         public float guardLoadPerMomentum = 1.0f, guardBreakThreshold = 70f, guardLoadDecayPerSec = 4f;
         public float guardBreakStagger = 0.7f;
         public float heavyHitDamage = 15f, hitStopSeconds = 0.06f;
+        [Tooltip("1 発の本体ダメージの上限（相手の最大 HP に対する割合）。満タンから一撃で倒れないように")]
+        public float maxHitHpFraction = 0.6f;
 
         [Header("8.3 衝撃・環境")]
         public float impulseFactor = 0.7f, impulseMax = 18f;

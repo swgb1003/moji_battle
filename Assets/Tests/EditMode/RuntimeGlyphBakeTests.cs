@@ -20,7 +20,14 @@ namespace MojiBattle.Tests
             foreach (var ch in "一龍あアWw★%")
                 Assert.IsTrue(e.Has(ch), $"{ch} がフォントに無いと判定された");
             Assert.IsFalse(e.Has(0x0E01), "タイ文字は同梱フォントに無いはず");
-            Assert.IsNull(lib.Get(FontStyleId.Mincho), "明朝は未収録");
+            // 4 字体すべて同梱され、初期 9 文字を自前の字形で持つ
+            foreach (FontStyleId f in System.Enum.GetValues(typeof(FontStyleId)))
+            {
+                var fe = lib.Get(f);
+                Assert.IsNotNull(fe, $"{f} のフォントが無い");
+                foreach (var ch in "一口山火鬱AIOX")
+                    Assert.IsTrue(fe.Has(ch), $"{f} に {ch} が無い");
+            }
         }
 
         [Test]
@@ -69,8 +76,10 @@ namespace MojiBattle.Tests
                 Assert.IsFalse(RuntimeGlyphBaker.TryBake(s, FontStyleId.Gothic, B, C, out _, out var reason), $"「{s}」が通った");
                 Assert.IsNotEmpty(reason);
             }
-            Assert.IsFalse(RuntimeGlyphBaker.TryBake("龍", FontStyleId.Mincho, B, C, out _, out var r2));
-            StringAssert.Contains("未収録", r2);
+            Assert.IsFalse(RuntimeGlyphBaker.TryBake("ก", FontStyleId.Brush, B, C, out _, out var r2));
+            Assert.IsNotEmpty(r2);
+            Assert.IsTrue(RuntimeGlyphBaker.TryBake("龍", FontStyleId.Mincho, B, C, out var mincho, out var r3), r3);
+            Assert.AreEqual(FontStyleId.Mincho, mincho.font);
         }
 
         [Test]

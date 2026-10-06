@@ -263,6 +263,42 @@ namespace MojiBattle.Tests
             }
         }
 
+        /// <summary>明朝・丸ゴシック・筆文字の字形で試合が最後まで成立する（字体ごとに字形・能力が変わる）。</summary>
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator AllFonts_FightToTheEnd()
+        {
+            SimHarness.Begin(false);
+            var pairs = new[]
+            {
+                ("火", FontStyleId.Mincho, "山", FontStyleId.Brush),
+                ("鬱", FontStyleId.RoundedGothic, "A", FontStyleId.Mincho),
+                ("龍", FontStyleId.Brush, "口", FontStyleId.RoundedGothic),
+            };
+            int seed = 9300;
+            foreach (var (l, lf, r, rf) in pairs)
+            {
+                var lb = SimHarness.Custom(l);
+                lb.font = lf;
+                lb.build.fontType = lf;
+                var rb = SimHarness.Custom(r, style: BattleStyle.Defensive);
+                rb.font = rf;
+                rb.build.fontType = rf;
+                var battle = SimHarness.Build(seed++, lb, rb);
+                Assert.AreEqual(lf, battle.Left.Glyph.font);
+                Assert.AreEqual(rf, battle.Right.Glyph.font);
+                GlyphCatalog.TryGet(l, FontStyleId.Gothic, CombatBalance.Default, GlyphCalibration.Default, out var gothic, out _);
+                Assert.AreNotEqual(gothic.features.inkRatio, battle.Left.Glyph.features.inkRatio, $"{l}: 字体で字形が変わっていない");
+                yield return SimHarness.RunToEnd(battle, 10f);
+                Assert.IsTrue(battle.Director.Ended, $"{l}({lf}) vs {r}({rf}): 試合が終わらない");
+                var t = battle.Director.Telemetry;
+                Assert.Greater(t.fighters[0].attackStarts + t.fighters[1].attackStarts, 5, $"{l} vs {r}: ほとんど攻撃しない");
+                Assert.AreEqual(0, t.duplicateBodyHits);
+                battle.Destroy();
+                yield return null;
+            }
+        }
+
         /// <summary>反転して持った武器: 字形・重心が反転し、試合が最後まで成立する。</summary>
         [UnityTest]
         [Timeout(600000)]

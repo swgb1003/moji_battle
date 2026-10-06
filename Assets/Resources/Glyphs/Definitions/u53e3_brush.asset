@@ -1,0 +1,171 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d69669bff785849a623abdad1a673e, type: 3}
+  m_Name: u53e3_brush
+  m_EditorClassIdentifier: 
+  grapheme: "\u53E3"
+  font: 3
+  mask: {fileID: 2800000, guid: e4acd7651b02cb943ab83b6450edd504, type: 3}
+  features:
+    inkRatio: 0.18586805
+    widthRatio: 0.84166664
+    heightRatio: 0.62916666
+    edgeRatio: 4.8416667
+    balance: 0.95969707
+    centerOfMass: {x: 131.3286, y: 126.95984}
+    colliderRects:
+    - serializedVersion: 2
+      x: 60
+      y: 44
+      width: 12
+      height: 4
+    - serializedVersion: 2
+      x: 56
+      y: 48
+      width: 16
+      height: 4
+    - serializedVersion: 2
+      x: 53
+      y: 52
+      width: 43
+      height: 4
+    - serializedVersion: 2
+      x: 172
+      y: 53
+      width: 28
+      height: 3
+    - serializedVersion: 2
+      x: 48
+      y: 56
+      width: 155
+      height: 4
+    - serializedVersion: 2
+      x: 48
+      y: 60
+      width: 152
+      height: 12
+    - serializedVersion: 2
+      x: 48
+      y: 72
+      width: 24
+      height: 80
+    - serializedVersion: 2
+      x: 168
+      y: 72
+      width: 32
+      height: 4
+    - serializedVersion: 2
+      x: 174
+      y: 76
+      width: 29
+      height: 8
+    - serializedVersion: 2
+      x: 176
+      y: 84
+      width: 28
+      height: 28
+    - serializedVersion: 2
+      x: 180
+      y: 112
+      width: 28
+      height: 28
+    - serializedVersion: 2
+      x: 181
+      y: 140
+      width: 31
+      height: 16
+    - serializedVersion: 2
+      x: 44
+      y: 152
+      width: 27
+      height: 8
+    - serializedVersion: 2
+      x: 181
+      y: 156
+      width: 35
+      height: 4
+    - serializedVersion: 2
+      x: 40
+      y: 160
+      width: 30
+      height: 4
+    - serializedVersion: 2
+      x: 180
+      y: 160
+      width: 48
+      height: 4
+    - serializedVersion: 2
+      x: 36
+      y: 164
+      width: 36
+      height: 4
+    - serializedVersion: 2
+      x: 180
+      y: 164
+      width: 52
+      height: 8
+    - serializedVersion: 2
+      x: 33
+      y: 168
+      width: 55
+      height: 4
+    - serializedVersion: 2
+      x: 32
+      y: 172
+      width: 116
+      height: 4
+    - serializedVersion: 2
+      x: 172
+      y: 172
+      width: 59
+      height: 4
+    - serializedVersion: 2
+      x: 32
+      y: 176
+      width: 196
+      height: 4
+    - serializedVersion: 2
+      x: 36
+      y: 180
+      width: 188
+      height: 4
+    - serializedVersion: 2
+      x: 52
+      y: 184
+      width: 164
+      height: 4
+    - serializedVersion: 2
+      x: 76
+      y: 188
+      width: 136
+      height: 4
+    - serializedVersion: 2
+      x: 180
+      y: 192
+      width: 20
+      height: 4
+    inkBounds:
+      x: 31
+      y: 44
+      width: 202
+      height: 151
+    gripPoint: {x: 49.5, y: 68.5}
+    componentCount: 1
+    maskSize: 256
+    emSizePx: 240
+    colliderGridUsed: 64
+  fontAssetPath: Assets/Art/Fonts/Brush/YujiBoku-Regular.ttf
+  fontFamily: Yuji Boku
+  fontHash: 94fda16384f3bdac24376a000c57e99abfa314961bd89ef27badfb7410322003
+  settingsHash: fb8263744cba8b65
+  bakedAt: 2026-10-06T15:03:23
+  unityVersion: 6000.0.61f1

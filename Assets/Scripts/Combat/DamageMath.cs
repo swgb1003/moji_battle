@@ -17,6 +17,10 @@ namespace MojiBattle
         public static float BodyDamage(int attack, int defense, float vN, HitQuality q, BodyPart part, CombatBalance b) =>
             Final(Raw(attack, vN, q, part, b), defense, b);
 
+        /// <summary>1 発の本体ダメージを相手の最大 HP の一定割合までに抑える。</summary>
+        public static float CapHit(float damage, float defenderMaxHp, CombatBalance b) =>
+            Mathf.Min(damage, defenderMaxHp * b.maxHitHpFraction);
+
         /// <summary>式どおりのインパルス量（閾値判定に使う）。実際に加える力は impulseScale 倍。</summary>
         public static float Impulse(float vN, float attackerWeaponMass, float defenderBodyMass, CombatBalance b) =>
             Mathf.Clamp(vN * attackerWeaponMass * b.impulseFactor / (defenderBodyMass + 0.5f), 0f, b.impulseMax);

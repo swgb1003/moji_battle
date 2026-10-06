@@ -8,6 +8,16 @@ namespace MojiBattle.Tests
     {
         static CombatBalance B => CombatBalance.Default;
 
+        /// <summary>1 発のダメージは相手の最大 HP の上限割合を超えない（それ未満はそのまま）。</summary>
+        [Test]
+        public void HitDamage_IsCappedByDefenderMaxHp()
+        {
+            float cap = 73f * B.maxHitHpFraction;
+            Assert.AreEqual(cap, DamageMath.CapHit(84f, 73f, B), 1e-4f);
+            Assert.AreEqual(20f, DamageMath.CapHit(20f, 73f, B), 1e-4f);
+            Assert.Less(B.maxHitHpFraction, 1f, "満タンから一撃で倒れない");
+        }
+
         /// <summary>投げの初速: 指定の速さで、放物線が狙った点を通る（左右どちら向きでも）。</summary>
         [TestCase(4f, 0f, 12f)]
         [TestCase(-6f, -0.3f, 9f)]

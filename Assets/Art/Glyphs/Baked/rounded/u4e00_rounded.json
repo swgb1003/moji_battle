@@ -1,0 +1,72 @@
+﻿{
+    "grapheme": "一",
+    "font": "RoundedGothic",
+    "fontAssetPath": "Assets/Art/Fonts/RoundedGothic/ZenMaruGothic-Bold.ttf",
+    "fontFamily": "Zen Maru Gothic",
+    "fontHash": "fe24426b9c8b5523a0146a8235c8674eccf0493af354a53ec895c3596d9eb745",
+    "settingsHash": "fb8263744cba8b65",
+    "bakedAt": "2026-10-06T15:03:22",
+    "unityVersion": "6000.0.61f1",
+    "features": {
+        "inkRatio": 0.1124131977558136,
+        "widthRatio": 0.8999999761581421,
+        "heightRatio": 0.12916666269302369,
+        "edgeRatio": 2.058333396911621,
+        "balance": 0.998129665851593,
+        "centerOfMass": {
+            "x": 128.20794677734376,
+            "y": 127.4976806640625
+        },
+        "colliderRects": [
+            {
+                "serializedVersion": "2",
+                "x": 28.0,
+                "y": 112.0,
+                "width": 203.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 24.0,
+                "y": 116.0,
+                "width": 211.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 20.0,
+                "y": 120.0,
+                "width": 216.0,
+                "height": 16.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 24.0,
+                "y": 136.0,
+                "width": 208.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 28.0,
+                "y": 140.0,
+                "width": 200.0,
+                "height": 4.0
+            }
+        ],
+        "inkBounds": {
+            "x": 20,
+            "y": 112,
+            "width": 216,
+            "height": 31
+        },
+        "gripPoint": {
+            "x": 33.5,
+            "y": 127.0
+        },
+        "componentCount": 1,
+        "maskSize": 256,
+        "emSizePx": 240.0,
+        "colliderGridUsed": 64
+    }
+}

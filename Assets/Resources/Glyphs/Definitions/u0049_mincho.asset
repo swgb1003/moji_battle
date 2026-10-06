@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d69669bff785849a623abdad1a673e, type: 3}
+  m_Name: u0049_mincho
+  m_EditorClassIdentifier: 
+  grapheme: I
+  font: 1
+  mask: {fileID: 2800000, guid: f89b0b135ead3354cba4f5e0ee0a798f, type: 3}
+  features:
+    inkRatio: 0.11237847
+    widthRatio: 0.3375
+    heightRatio: 0.7375
+    edgeRatio: 2.5583334
+    balance: 0.9985282
+    centerOfMass: {x: 127.92484, y: 125.612465}
+    colliderRects:
+    - serializedVersion: 2
+      x: 88
+      y: 36
+      width: 80
+      height: 8
+    - serializedVersion: 2
+      x: 100
+      y: 44
+      width: 56
+      height: 4
+    - serializedVersion: 2
+      x: 108
+      y: 48
+      width: 40
+      height: 8
+    - serializedVersion: 2
+      x: 112
+      y: 56
+      width: 32
+      height: 140
+    - serializedVersion: 2
+      x: 108
+      y: 196
+      width: 40
+      height: 8
+    - serializedVersion: 2
+      x: 96
+      y: 204
+      width: 64
+      height: 4
+    - serializedVersion: 2
+      x: 86
+      y: 208
+      width: 82
+      height: 4
+    - serializedVersion: 2
+      x: 88
+      y: 212
+      width: 80
+      height: 3
+    inkBounds:
+      x: 87
+      y: 37
+      width: 81
+      height: 177
+    gripPoint: {x: 92.5, y: 40}
+    componentCount: 1
+    maskSize: 256
+    emSizePx: 240
+    colliderGridUsed: 64
+  fontAssetPath: Assets/Art/Fonts/Mincho/ShipporiMincho-Bold.ttf
+  fontFamily: Shippori Mincho
+  fontHash: 63bc4eddc74793f671c3ab827c5175e773ffbe569d0bf50ee65375ea9e3bc286
+  settingsHash: fb8263744cba8b65
+  bakedAt: 2026-10-06T15:03:22
+  unityVersion: 6000.0.61f1

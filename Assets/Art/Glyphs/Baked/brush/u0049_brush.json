@@ -1,0 +1,149 @@
+﻿{
+    "grapheme": "I",
+    "font": "Brush",
+    "fontAssetPath": "Assets/Art/Fonts/Brush/YujiBoku-Regular.ttf",
+    "fontFamily": "Yuji Boku",
+    "fontHash": "94fda16384f3bdac24376a000c57e99abfa314961bd89ef27badfb7410322003",
+    "settingsHash": "fb8263744cba8b65",
+    "bakedAt": "2026-10-06T15:03:24",
+    "unityVersion": "6000.0.61f1",
+    "features": {
+        "inkRatio": 0.05791666731238365,
+        "widthRatio": 0.25,
+        "heightRatio": 0.6666666865348816,
+        "edgeRatio": 1.850000023841858,
+        "balance": 0.9554568529129028,
+        "centerOfMass": {
+            "x": 126.23051452636719,
+            "y": 118.2488021850586
+        },
+        "colliderRects": [
+            {
+                "serializedVersion": "2",
+                "x": 96.0,
+                "y": 36.0,
+                "width": 20.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 97.0,
+                "y": 40.0,
+                "width": 22.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 100.0,
+                "y": 44.0,
+                "width": 20.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 100.0,
+                "y": 48.0,
+                "width": 24.0,
+                "height": 16.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 104.0,
+                "y": 64.0,
+                "width": 24.0,
+                "height": 16.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 106.0,
+                "y": 80.0,
+                "width": 24.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 108.0,
+                "y": 84.0,
+                "width": 24.0,
+                "height": 16.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 112.0,
+                "y": 100.0,
+                "width": 24.0,
+                "height": 16.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 116.0,
+                "y": 116.0,
+                "width": 24.0,
+                "height": 16.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 120.0,
+                "y": 132.0,
+                "width": 24.0,
+                "height": 16.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 124.0,
+                "y": 148.0,
+                "width": 20.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 124.0,
+                "y": 152.0,
+                "width": 24.0,
+                "height": 12.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 126.0,
+                "y": 164.0,
+                "width": 24.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 128.0,
+                "y": 168.0,
+                "width": 24.0,
+                "height": 20.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 126.0,
+                "y": 188.0,
+                "width": 30.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 128.0,
+                "y": 192.0,
+                "width": 28.0,
+                "height": 4.0
+            }
+        ],
+        "inkBounds": {
+            "x": 97,
+            "y": 36,
+            "width": 60,
+            "height": 160
+        },
+        "gripPoint": {
+            "x": 101.5,
+            "y": 45.0
+        },
+        "componentCount": 1,
+        "maskSize": 256,
+        "emSizePx": 240.0,
+        "colliderGridUsed": 64
+    }
+}

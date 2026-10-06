@@ -1,0 +1,93 @@
+﻿{
+    "grapheme": "I",
+    "font": "Mincho",
+    "fontAssetPath": "Assets/Art/Fonts/Mincho/ShipporiMincho-Bold.ttf",
+    "fontFamily": "Shippori Mincho",
+    "fontHash": "63bc4eddc74793f671c3ab827c5175e773ffbe569d0bf50ee65375ea9e3bc286",
+    "settingsHash": "fb8263744cba8b65",
+    "bakedAt": "2026-10-06T15:03:22",
+    "unityVersion": "6000.0.61f1",
+    "features": {
+        "inkRatio": 0.11237847059965134,
+        "widthRatio": 0.3375000059604645,
+        "heightRatio": 0.737500011920929,
+        "edgeRatio": 2.558333396911621,
+        "balance": 0.9985281825065613,
+        "centerOfMass": {
+            "x": 127.92484283447266,
+            "y": 125.61246490478516
+        },
+        "colliderRects": [
+            {
+                "serializedVersion": "2",
+                "x": 88.0,
+                "y": 36.0,
+                "width": 80.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 100.0,
+                "y": 44.0,
+                "width": 56.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 108.0,
+                "y": 48.0,
+                "width": 40.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 112.0,
+                "y": 56.0,
+                "width": 32.0,
+                "height": 140.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 108.0,
+                "y": 196.0,
+                "width": 40.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 96.0,
+                "y": 204.0,
+                "width": 64.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 86.0,
+                "y": 208.0,
+                "width": 82.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 88.0,
+                "y": 212.0,
+                "width": 80.0,
+                "height": 3.0
+            }
+        ],
+        "inkBounds": {
+            "x": 87,
+            "y": 37,
+            "width": 81,
+            "height": 177
+        },
+        "gripPoint": {
+            "x": 92.5,
+            "y": 40.0
+        },
+        "componentCount": 1,
+        "maskSize": 256,
+        "emSizePx": 240.0,
+        "colliderGridUsed": 64
+    }
+}

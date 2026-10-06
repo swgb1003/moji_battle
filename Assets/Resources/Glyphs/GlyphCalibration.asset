@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c8175b37c0e80d41b1d6a48323ed165, type: 3}
   m_Name: GlyphCalibration
   m_EditorClassIdentifier: 
-  provisional: 1
-  referenceSet: "9 chars \xD7 1 fonts (Gothic)"
-  inkRatio: {x: 0.10815972, y: 0.53331596}
-  widthRatio: {x: 0.14583333, y: 0.9458333}
-  heightRatio: {x: 0.12916666, y: 0.9375}
-  edgeRatio: {x: 1.775, y: 17.208334}
-  balance: {x: 0.9514564, y: 1}
+  provisional: 0
+  referenceSet: "9 chars \xD7 4 fonts (Gothic,Mincho,RoundedGothic,Brush)"
+  inkRatio: {x: 0.039722223, y: 0.53331596}
+  widthRatio: {x: 0.11666667, y: 0.95}
+  heightRatio: {x: 0.12916666, y: 0.94166666}
+  edgeRatio: {x: 1.6333333, y: 19}
+  balance: {x: 0.71969295, y: 1}

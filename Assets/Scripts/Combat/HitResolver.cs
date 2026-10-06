@@ -278,7 +278,7 @@ namespace MojiBattle
             Ledger.MarkResolved(rtA.currentAttackId, d.Id);
 
             var stateBefore = rtD.state;
-            float dmg = c.damage;
+            float dmg = DamageMath.CapHit(c.damage, rtD.maxHp, b);
             rtD.ApplyDamage(dmg);
             rtA.metrics.damageDealt += dmg;
             rtA.metrics.hitsLanded++;
