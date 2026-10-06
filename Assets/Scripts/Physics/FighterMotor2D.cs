@@ -24,6 +24,10 @@ namespace MojiBattle
                 case FighterState.Approach:
                     switch (self.Brain.Move)
                     {
+                        case MoveIntent.Advance when rt.WeaponLoose && !float.IsNaN(self.Brain.MoveTargetX):
+                            // 落ちた武器を拾いに行く（近づくほど緩める）
+                            target = walk * Mathf.Clamp((self.Brain.MoveTargetX - self.X) / 0.3f, -1f, 1f);
+                            break;
                         case MoveIntent.Advance: target = walk * toward; break;
                         case MoveIntent.Retreat: target = -walk * 0.85f * toward; break;
                     }
@@ -33,14 +37,15 @@ namespace MojiBattle
                     else target = walk * (self.WeightClass == WeightClass.Heavy ? 0.3f : 0.25f) * toward;
                     break;
                 case FighterState.AttackActive:
-                    if (rt.attackStyle == AttackStyle.Thrust) return; // 踏み込みの勢いを保つ
+                    if (rt.attackStyle == AttackStyle.Thrust || rt.attackStyle == AttackStyle.Bash) return; // 踏み込み・体当たりの勢いを保つ
+                    if (rt.attackStyle == AttackStyle.Spin) { target = 0f; break; } // 回転斬りはその場で回る
                     // 振りの間は踏み込みを維持（重い武器の反動で後ろへ流されないよう踏ん張る）
                     target = Mathf.Max(walk * 0.6f, StatCalculator.Lerp01(b.stepInSpeedLight, b.stepInSpeedHeavy, self.Stats.weightScore)) * toward;
                     break;
             }
 
             // 背後の壁に押し付けない
-            if (Mathf.Sign(target) != toward && target != 0f && self.BackSpace < 0.35f) target = 0f;
+            if (Mathf.Sign(target) != self.Facing && target != 0f && self.BackSpace < 0.35f) target = 0f;
 
             float totalMass = self.Body.mass + self.WeaponBody.mass;
             float vx = self.Body.linearVelocity.x;
@@ -55,6 +60,14 @@ namespace MojiBattle
             float speed = StatCalculator.Lerp01(b.lungeSpeedLight, b.lungeSpeedHeavy, self.Stats.weightScore);
             // 重い・長い武器を抱えた踏み込みは遅い
             if (self.Mods.customized) speed *= Mathf.Sqrt(Mathf.Min(1f, self.Mods.handlingAccel));
+            if (!self.IsGrounded) return;
+            float dv = self.TowardOpponent * speed - self.Body.linearVelocity.x;
+            self.AddVelocity(new Vector2(dv, 0f));
+        }
+
+        /// <summary>盾当ての体当たり。</summary>
+        public void ApplyDash(float speed)
+        {
             if (!self.IsGrounded) return;
             float dv = self.TowardOpponent * speed - self.Body.linearVelocity.x;
             self.AddVelocity(new Vector2(dv, 0f));

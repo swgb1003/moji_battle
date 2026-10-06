@@ -116,8 +116,8 @@ namespace MojiBattle
             var d = a.Opponent;
             var rtA = a.Runtime;
             var b = ctx.Balance;
-            // 攻撃窓外の接触は物理衝突のみ（ダメージなし）
-            if (rtA.state != FighterState.AttackActive) { Diag[attackerId, 0]++; return; }
+            // 攻撃窓外の接触は物理衝突のみ（ダメージなし）。投げた武器は飛んでいる間が攻撃窓
+            if (rtA.state != FighterState.AttackActive && !rtA.throwLive) { Diag[attackerId, 0]++; return; }
             bool resolved = Ledger.IsResolved(rtA.currentAttackId, d.Id);
             if (resolved) Diag[attackerId, 1]++;
             bool guarding = d.Runtime.state == FighterState.Guard;
@@ -131,9 +131,9 @@ namespace MojiBattle
                 Vector2 va = a.PreWeaponPointVelocity(c.point);
                 Vector2 vd = c.targetIsWeapon ? d.PreWeaponPointVelocity(c.point) : d.PreBodyVelocity;
                 float vN = Mathf.Max(Mathf.Abs(Vector2.Dot(va - vd, n)), Mathf.Abs(Vector2.Dot(c.relativeVelocity, n)));
-                // 横振りは奥行き方向の回転なので、平面上の速度の代わりに「奥行きの角速度 × 握りからの水平距離」を使う
-                bool sweep = rtA.attackStyle == AttackStyle.Sweep;
-                if (sweep)
+                // 横薙ぎ・足払い・回転斬りは奥行き方向の回転なので、平面上の速度の代わりに「奥行きの角速度 × 握りからの水平距離」を使う
+                var tech = AttackTechniques.Tuning(rtA.attackStyle, b);
+                if (AttackTechniques.IsYaw(rtA.attackStyle))
                 {
                     float r = Mathf.Abs(a.WeaponLocalPoint(c.point).x);
                     float vSweep = Mathf.Min(Mathf.Abs(rtA.sweepYawRate), b.sweepMaxYawSpeed) * Mathf.Deg2Rad * r * b.sweepSpeedScale;
@@ -145,9 +145,16 @@ namespace MojiBattle
                 else
                 {
                     qualities[i] = ClassifyQuality(a, c.point, n, va, b);
+                    float styleDamage = tech != null ? tech.damage : 1f;
+                    // 刺す: 先端の直撃は中央の当たり（大ダメージ）、柄や側面での接触は弱い
+                    if (rtA.attackStyle == AttackStyle.Thrust)
+                    {
+                        bool tip = IsStabTip(a, c.point, b);
+                        qualities[i] = tip ? HitQuality.Center : HitQuality.Normal;
+                        styleDamage *= tip ? b.stabTipDamage : b.stabShaftDamage;
+                    }
                     // サイズの威力は質量を通じてだけ（Mods.damage = 質量倍率^指数）
-                    cand.damage = DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense, vN, qualities[i], c.part, b) * a.Mods.damage
-                                  * (sweep ? b.sweepDamageMultiplier : 1f);
+                    cand.damage = DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense, vN, qualities[i], c.part, b) * a.Mods.damage * styleDamage;
                 }
                 candidates.Add(cand);
             }
@@ -168,6 +175,10 @@ namespace MojiBattle
                 case HitOutcomeKind.Clash: ApplyClash(a, d, hit, chosen.vN, time); break;
             }
         }
+
+        /// <summary>刺すの先端（握りからの距離が武器の長さの一定割合以上）での接触か。</summary>
+        static bool IsStabTip(Fighter a, Vector2 point, CombatBalance b) =>
+            a.WeaponLocalPoint(point).magnitude >= a.Weapon.length * b.stabTipFraction;
 
         static bool IsFrontal(Fighter defender, Vector2 point, float halfAngle)
         {
@@ -195,7 +206,9 @@ namespace MojiBattle
 
         static Vector2 KnockDirection(Fighter a, Fighter d, Vector2 n, float upBias)
         {
-            float toward = d.X >= a.X ? 1f : -1f;
+            // 投げた武器は飛んできた側から押す
+            float fromX = a.Runtime.throwLive ? a.WeaponBody.worldCenterOfMass.x : a.X;
+            float toward = d.X >= fromX ? 1f : -1f;
             Vector2 dir = n;
             if (dir.x * toward < 0f) dir = -dir;
             dir.x = toward * Mathf.Max(Mathf.Abs(dir.x), 0.35f);
@@ -210,6 +223,7 @@ namespace MojiBattle
             var rtD = d.Runtime;
             rtA.attackHadContact = true;
             float load = vN * a.WeaponBody.mass * b.guardLoadPerMomentum;
+            if (rtA.attackStyle == AttackStyle.Bash) load *= b.bashGuardLoad; // 盾当てはガードごと押し込んで崩す
             rtD.guardLoad += load;
             rtD.metrics.guards++;
             // 持ち方のガード安定性: 崩れにくく、押し込まれにくい
@@ -218,7 +232,8 @@ namespace MojiBattle
             d.Body.AddForce(dir * imp * b.impulseScale, ForceMode2D.Impulse);
             // 武器同士は反発し、重量差があると軽い側の本体も後退する
             float mA = a.WeaponBody.mass, mD = d.WeaponBody.mass;
-            if (mA < mD) a.Body.AddForce(-dir * imp * b.impulseScale * (mD - mA) / (mA + mD), ForceMode2D.Impulse);
+            // 投げた武器の反発は持ち主に届かない
+            if (mA < mD && !rtA.throwLive) a.Body.AddForce(-dir * imp * b.impulseScale * (mD - mA) / (mA + mD), ForceMode2D.Impulse);
             bool broke = rtD.guardLoad >= b.guardBreakThreshold * d.Mods.guardStability;
             // ガードが持ちこたえたらこのスイングの本体ダメージは無し。崩れた場合は同じスイングがそのまま本体に届き得る。
             if (!broke) Ledger.MarkResolved(rtA.currentAttackId, d.Id);
@@ -234,6 +249,21 @@ namespace MojiBattle
                 attacker = a.Id, defender = d.Id, attackId = rtA.currentAttackId,
                 load = load, vN = vN, point = hit.point, broke = broke, time = time,
             });
+            // 刺すの先端はガードの隙間を一部貫く（相手の武器が自分の 2 倍以上重いと貫けない）
+            if (!broke && rtA.attackStyle == AttackStyle.Thrust && IsStabTip(a, hit.point, b) && mD < mA * 2f && vN >= b.minHitRelativeSpeed)
+            {
+                float chip = DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense, vN, HitQuality.Normal, BodyPart.Torso, b) * a.Mods.damage * b.stabGuardPierce;
+                rtD.ApplyDamage(chip);
+                rtA.metrics.damageDealt += chip;
+                ctx.LastDamageTime = time;
+                if (rtD.hp <= 0f) d.Knockdown.EnterKO(time);
+                ctx.Events.Raise(new HitEvent
+                {
+                    attacker = a.Id, defender = d.Id, attackId = rtA.currentAttackId, part = BodyPart.Torso, quality = HitQuality.Graze,
+                    damage = chip, vN = vN, point = hit.point, time = time, defenderStateBefore = FighterState.Guard,
+                    style = AttackStyle.Thrust, pierce = true, knockdown = rtD.hp <= 0f,
+                });
+            }
         }
 
         void ApplyBodyHit(Fighter a, Fighter d, HitContact hit, ContactCandidate c, HitQuality quality, float time)
@@ -256,8 +286,11 @@ namespace MojiBattle
             ctx.LastDamageTime = time;
 
             // 両手持ちはノックバック耐性で衝撃を割る
-            float impulse = DamageMath.Impulse(c.vN, a.WeaponBody.mass, d.Body.mass, b) / d.Mods.knockbackResistance;
-            bool leg = hit.part == BodyPart.Leg;
+            var tech = AttackTechniques.Tuning(rtA.attackStyle, b);
+            float impulse = DamageMath.Impulse(c.vN, a.WeaponBody.mass, d.Body.mass, b) / d.Mods.knockbackResistance
+                            * (tech != null ? tech.impulse : 1f);
+            // 足払いは脚を払う（どこに当たっても転倒の判定は脚扱い）
+            bool leg = hit.part == BodyPart.Leg || rtA.attackStyle == AttackStyle.LowSweep;
             rtD.knockdownAccum += impulse * b.knockdownAccumPerImpulse + (leg ? b.legKnockdownBonus : 0f);
             bool knock = impulse >= b.knockdownImpulse || (leg && impulse >= b.legKnockdownImpulse) || rtD.knockdownAccum >= b.knockdownAccumThreshold;
             bool launch = impulse >= b.launchImpulse;
@@ -269,7 +302,7 @@ namespace MojiBattle
             else if (stagger && !rtD.IsDown && !HeavyArmor(a, d, stateBefore, b)) d.EnterStagger(b.staggerDuration);
             if (launch) d.MarkLaunched(time);
 
-            Vector2 dir = KnockDirection(a, d, hit.normal, b.launchUpBias);
+            Vector2 dir = KnockDirection(a, d, hit.normal, tech != null && tech.upBias >= 0f ? tech.upBias : b.launchUpBias);
             Vector2 force = dir * impulse * b.impulseScale;
             if (rtD.IsDown) d.Body.AddForceAtPosition(force, hit.point, ForceMode2D.Impulse);
             else d.Body.AddForce(force, ForceMode2D.Impulse);
@@ -280,7 +313,7 @@ namespace MojiBattle
                 part = hit.part, quality = quality, damage = dmg, vN = c.vN, impulse = impulse,
                 point = hit.point, critical = hit.part == BodyPart.Head,
                 stagger = stagger, launch = launch, knockdown = knock || rtD.hp <= 0f, time = time,
-                defenderStateBefore = stateBefore,
+                defenderStateBefore = stateBefore, style = rtA.attackStyle,
             });
         }
 
@@ -317,11 +350,11 @@ namespace MojiBattle
             }
             // 勢い負けした側は短くよろける（攻撃中なら中断）。勝った側はその隙に追撃できる
             bool defenderWins = !overpower && momentumD >= momentumA * b.overpowerMomentumRatio && mD * b.overpowerMassRatio > mA;
-            var loser = overpower ? d : defenderWins ? a : null;
+            var loser = overpower ? d : defenderWins && !rtA.throwLive ? a : null;
             if (loser != null && !loser.Runtime.IsDown && loser.Runtime.state != FighterState.Guard && loser.Runtime.state != FighterState.Stagger)
                 loser.EnterStagger(b.clashLoserStagger);
             float push = b.clashPush * Mathf.Abs(mD - mA) / (mA + mD) * Mathf.Min(vN, 12f) * 0.2f;
-            if (push > 0f)
+            if (push > 0f && !(lighter == a && rtA.throwLive))
             {
                 float dir = lighter.X >= heavier.X ? 1f : -1f;
                 lighter.Body.AddForce(new Vector2(dir * push * b.impulseScale, 0.2f), ForceMode2D.Impulse);

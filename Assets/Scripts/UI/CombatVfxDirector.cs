@@ -52,7 +52,9 @@ namespace MojiBattle
             int n = Mathf.Clamp(Mathf.RoundToInt(e.damage * 0.8f), 4, 22);
             Burst(e.point, n, FighterFactory.Ink, 4f + e.vN * 0.4f, 0.09f);
             Burst(e.point, n / 2, team, 5f + e.vN * 0.4f, 0.07f);
-            string label = e.critical ? "CRITICAL!" : e.quality == HitQuality.Graze ? "かすり" : "";
+            // 技の名前（基本の振り下ろし・斬り上げ以外）を出して、どの技が入ったか分かるようにする
+            string tech = e.pierce ? "貫通" : e.style == AttackStyle.Overhead || e.style == AttackStyle.Rising ? "" : AttackTechniques.Label(e.style);
+            string label = e.critical ? "CRITICAL!" : tech.Length > 0 ? tech : e.quality == HitQuality.Graze ? "かすり" : "";
             Color c = e.critical ? new Color32(0xF3, 0xC6, 0x5A, 0xFF) : FighterFactory.Ink;
             SpawnPopup($"{(label.Length > 0 ? label + "\n" : "")}{e.damage:F0}", e.point + Vector2.up * 0.3f, c, e.critical ? 0.5f : 0.36f);
             if (e.damage >= director.Context.Balance.heavyHitDamage)

@@ -12,6 +12,10 @@ namespace MojiBattle
         public Vector2 point;
         public bool critical, stagger, launch, knockdown;
         public FighterState defenderStateBefore;
+        /// <summary>当てた技</summary>
+        public AttackStyle style;
+        /// <summary>刺すの先端がガードを貫いた削り（本体には触れていない）</summary>
+        public bool pierce;
     }
 
     public struct GuardEvent

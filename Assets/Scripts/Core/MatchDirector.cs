@@ -31,6 +31,9 @@ namespace MojiBattle
         readonly float[] dropRestoreAt = { -1f, -1f };
         readonly float[] perchedTime = new float[2];
         readonly float[] stretchTime = new float[2];
+        readonly bool[] yawGhost = new bool[2];
+        /// <summary>落ちている（投げた後の）武器と相手の体の衝突を外しているか</summary>
+        readonly bool[] looseApplied = new bool[2];
         readonly System.Collections.Generic.HashSet<Collider2D> weaponColliderSet = new System.Collections.Generic.HashSet<Collider2D>();
         /// <summary>武器どうしの衝突が今有効か（接触ゲート）</summary>
         public bool WeaponsColliding { get; private set; } = true;
@@ -110,13 +113,16 @@ namespace MojiBattle
             ResolveHingeStretch(dt);
             Fighters[0].Tick(ctx.SimTime, dt);
             Fighters[1].Tick(ctx.SimTime, dt);
+            UpdateLooseWeapons();
             UpdateWeaponGate();
+            UpdateYawGhost();
             Fighters[0].CachePreStep();
             Fighters[1].CachePreStep();
             // 専用物理ワールドを 1 ステップ進める（接触コールバックはこの中で報告キューへ入る）
             if (physicsScene.IsValid()) physicsScene.Simulate(dt);
             Fighters[0].CapturePose();
             Fighters[1].CapturePose();
+            DetectYawHits();
             if (!Ended)
             {
                 Telemetry.Step(dt);
@@ -260,7 +266,8 @@ namespace MojiBattle
             var a = Fighters[0];
             var b = Fighters[1];
             bool want;
-            if (a.Runtime.weaponPassThrough || b.Runtime.weaponPassThrough) want = false;
+            // 落ちている武器は障害物にしない
+            if (a.Runtime.weaponPassThrough || b.Runtime.weaponPassThrough || a.Runtime.WeaponLoose || b.Runtime.WeaponLoose) want = false;
             else if (!Context.Balance.weaponsCollideOnlyWhenEngaged) want = true;
             else want = Blockable(a, b) || Blockable(b, a);
             if (want == WeaponsColliding) return;
@@ -278,16 +285,111 @@ namespace MojiBattle
             }
         }
 
-        static bool Attacking(Fighter f) => f.Runtime.state == FighterState.AttackWindup || f.Runtime.state == FighterState.AttackActive;
+        /// <summary>
+        /// 奥行き方向の技（横薙ぎ・足払い・回転斬り）の間は、自分の武器と相手の体を物理的にはぶつけない。
+        /// 字形の横幅を奥行きの角度で伸び縮みさせるため、伸びた判定が体にめり込むと武器が押し返されて握りがぶれる。
+        /// 当たりは重なりの検出（DetectYawHits）で判定する。
+        /// </summary>
+        void UpdateYawGhost()
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                var f = Fighters[i];
+                var s = f.Runtime.state;
+                bool want = AttackTechniques.IsYaw(f.Runtime.attackStyle) && !f.Runtime.IsDown
+                            && (s == FighterState.AttackWindup || s == FighterState.AttackActive || s == FighterState.AttackRecovery);
+                if (want == yawGhost[i]) continue;
+                yawGhost[i] = want;
+                foreach (var w in f.WeaponColliders)
+                foreach (var bc in f.Opponent.BodyColliders)
+                {
+                    if (want)
+                    {
+                        Physics2D.IgnoreCollision(w, bc, true);
+                        separatedPairs.Remove((w, bc));
+                    }
+                    else SetPair(w, bc, false);
+                }
+            }
+        }
+
+        /// <summary>奥行き方向の技の振り（有効時間）で、武器が相手の体に重なっていれば当たりとして報告する。</summary>
+        void DetectYawHits()
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                var f = Fighters[i];
+                if (!yawGhost[i] || f.Runtime.state != FighterState.AttackActive) continue;
+                var opp = f.Opponent;
+                foreach (var w in f.WeaponColliders)
+                {
+                    var wb = w.bounds;
+                    foreach (var bc in opp.BodyColliders)
+                    {
+                        if (!wb.Intersects(bc.bounds)) continue;
+                        var dist = Physics2D.Distance(w, bc);
+                        if (!dist.isValid || dist.distance > 0f) continue;
+                        var hb = bc.GetComponent<BodyPartHitbox>();
+                        Context.Hits.Report(new HitContact
+                        {
+                            attacker = f, target = opp, targetIsWeapon = false,
+                            part = hb != null ? hb.Part : BodyPart.Torso,
+                            point = dist.pointB, normal = dist.normal, relativeVelocity = Vector2.zero,
+                            myColliderId = w.GetInstanceID(), otherColliderId = bc.GetInstanceID(),
+                        });
+                    }
+                }
+            }
+        }
+
+        static bool Attacking(Fighter f) => f.Runtime.state == FighterState.AttackWindup || f.Runtime.state == FighterState.AttackActive || f.Runtime.throwLive;
+
+        /// <summary>
+        /// 投げた後に落ちている武器は相手の体と衝突させない（踏んで乗る・挟まるのを防ぐ）。拾ったら離れてから戻す。
+        /// </summary>
+        void UpdateLooseWeapons()
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                var f = Fighters[i];
+                bool want = f.Runtime.WeaponLoose;
+                if (want == looseApplied[i]) continue;
+                looseApplied[i] = want;
+                foreach (var w in f.WeaponColliders)
+                foreach (var bc in f.Opponent.BodyColliders)
+                {
+                    if (want)
+                    {
+                        Physics2D.IgnoreCollision(w, bc, true);
+                        separatedPairs.Remove((w, bc));
+                        separatedPairs.Remove((bc, w));
+                    }
+                    else SetPair(w, bc, false);
+                }
+            }
+        }
+
+        /// <summary>落ちている武器と相手の体の組（他の安定化処理が衝突を戻さないようにする）。</summary>
+        bool LooseBlocked(Collider2D x, Collider2D y)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                if (!looseApplied[i]) continue;
+                var f = Fighters[i];
+                if (System.Array.IndexOf(f.WeaponColliders, x) >= 0 && System.Array.IndexOf(f.Opponent.BodyColliders, y) >= 0) return true;
+                if (System.Array.IndexOf(f.WeaponColliders, y) >= 0 && System.Array.IndexOf(f.Opponent.BodyColliders, x) >= 0) return true;
+            }
+            return false;
+        }
 
         /// <summary>attacker の攻撃を defender の武器が受け止められる状態か。</summary>
         static bool Blockable(Fighter attacker, Fighter defender)
         {
             if (!Attacking(attacker)) return false;
             var d = defender.Runtime;
-            if (attacker.Runtime.attackStyle == AttackStyle.Sweep)
+            if (AttackTechniques.IsYaw(attacker.Runtime.attackStyle))
                 return d.state == FighterState.Guard && d.guardAgainstSweep;
-            return d.state == FighterState.Guard || (Attacking(defender) && d.attackStyle != AttackStyle.Sweep);
+            return d.state == FighterState.Guard || (Attacking(defender) && !AttackTechniques.IsYaw(d.attackStyle));
         }
 
         bool IsWeaponPair(Collider2D x, Collider2D y) => weaponColliderSet.Contains(x) && weaponColliderSet.Contains(y);
@@ -302,8 +404,8 @@ namespace MojiBattle
             for (int i = 0; i < 2; i++)
             {
                 var f = Fighters[i];
-                if (!f.Mods.customized || f.Runtime.IsDown) { stretchTime[i] = 0f; continue; }
-                float stretch = (f.WeaponBody.position - f.Body.GetRelativePoint(f.ShoulderLocal(f.Facing))).magnitude;
+                if (!f.Mods.customized || f.Runtime.IsDown || f.Runtime.weaponDetached) { stretchTime[i] = 0f; continue; }
+                float stretch = (f.WeaponBody.position - f.Body.GetRelativePoint(f.HandLocal(f.Facing))).magnitude;
                 stretchTime[i] = stretch > StretchLimit ? stretchTime[i] + dt : 0f;
                 if (stretchTime[i] < StretchSeconds) continue;
                 stretchTime[i] = 0f;
@@ -342,7 +444,7 @@ namespace MojiBattle
                 if (!d.isValid || d.distance > 0.05f)
                 {
                     // 武器どうしは接触ゲートが閉じていれば戻さない
-                    if (!IsWeaponPair(a, b) || WeaponsColliding) Physics2D.IgnoreCollision(a, b, false);
+                    if ((!IsWeaponPair(a, b) || WeaponsColliding) && !LooseBlocked(a, b)) Physics2D.IgnoreCollision(a, b, false);
                     separatedPairs.RemoveAt(i);
                 }
             }
@@ -395,6 +497,7 @@ namespace MojiBattle
         {
             if (ignore) { Physics2D.IgnoreCollision(x, y, true); return; }
             if (IsWeaponPair(x, y) && !WeaponsColliding) return;
+            if (LooseBlocked(x, y)) return;
             var d = Physics2D.Distance(x, y);
             if (d.isValid && d.distance < 0.02f)
             {

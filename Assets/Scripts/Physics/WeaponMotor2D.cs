@@ -46,6 +46,8 @@ namespace MojiBattle
             var rt = self.Runtime;
             var b = self.Balance;
             CurrentPsi = MeasurePsi();
+            // 投げて手を離れている間は何もしない（飛ぶ・転がるのは物理のまま）
+            if (rt.weaponDetached) { LastTorque = 0f; stallTime = 0f; lastTarget = float.NaN; return; }
             float torqueScale;
             float target;
             switch (rt.state)
@@ -143,9 +145,12 @@ namespace MojiBattle
         /// <summary>開始時・起き上がり時のみ、武器を安全姿勢（構え）へ初期化する。</summary>
         public void ResetPose()
         {
+            if (self.Runtime.weaponDetached) return;
             var wb = self.WeaponBody;
             float phi = ReadyPsi - self.Weapon.alpha0Deg;
-            wb.position = self.Body.GetRelativePoint(self.ShoulderLocal(self.Facing));
+            self.Runtime.handOffset = Vector2.zero;
+            self.Hinge.connectedAnchor = self.HandLocal(self.Facing);
+            wb.position = self.Body.GetRelativePoint(self.HandLocal(self.Facing));
             wb.rotation = self.Body.rotation + phi * self.Facing;
             wb.linearVelocity = self.Body.linearVelocity;
             wb.angularVelocity = 0f;

@@ -28,6 +28,8 @@ namespace MojiBattle
         public MoveIntent Move { get; private set; } = MoveIntent.Advance;
         /// <summary>前進が武器に阻まれている間は武器を立てて担ぐ（WeaponMotor2D が参照）。</summary>
         public bool CarryWeapon { get; private set; }
+        /// <summary>落ちた武器を拾いに行く先の x（FighterMotor2D が武器が落ちている間だけ参照）。</summary>
+        public float MoveTargetX { get; private set; } = float.NaN;
         public string LastDecision { get; private set; } = "";
 
         public FighterBrain(Fighter self, MatchRandom rng)
@@ -107,7 +109,7 @@ namespace MojiBattle
                 retreatUntil = time + (styleRetreat ?? Rng.Range(0.4f, 0.8f));
                 RetreatsAfterAttack++;
                 // 軽量級は攻撃後にバックステップで離脱しやすい
-                if (self.WeightClass == WeightClass.Light && time >= Rt.evadeReadyAt && self.BackSpace > B.minBackstepSpace && Rng.Chance(0.5f))
+                if (self.WeightClass == WeightClass.Light && !Rt.weaponDetached && time >= Rt.evadeReadyAt && self.BackSpace > B.minBackstepSpace && Rng.Chance(0.5f))
                 {
                     self.StartEvade(EvadeKind.Backstep, time);
                     LastDecision = "離脱(回避)";
@@ -121,6 +123,7 @@ namespace MojiBattle
         {
             var s = Rt.state;
             if (!Rt.CanBeControlled) return;
+            if (Rt.weaponDetached) { DecideUnarmed(time); return; }
             // 連続ガードの上限（鉄壁）: 上限に達したら一度ガードを解き、しばらくガードしない
             var style = self.Style;
             if (style != null && s == FighterState.Guard && Rt.stateTime >= style.MaxGuardSeconds)
@@ -173,6 +176,35 @@ namespace MojiBattle
                 self.SetState(FighterState.Approach);
             }
 
+            // 1a) 打ち上げで浮かせた相手には、落ちてくるところへ振り下ろしで追撃する
+            var oRt = opp.Runtime;
+            if (s == FighterState.Approach && time >= Rt.attackReadyAt && !opp.IsGrounded && oRt.launchTracking
+                && time - oRt.launchedAt <= B.juggleWindow && d <= self.AttackRange * B.juggleRangeScale && oRt.state != FighterState.KO)
+            {
+                pendingAttackAt = -1f;
+                Rt.comboRemaining = 0;
+                self.StartAttack(time, AttackStyle.Overhead);
+                LastDecision = "追撃(空中)";
+                return;
+            }
+
+            // 1a') 武器を投げて素手の相手は好機: 様子見・離脱・ガードをせず詰めて連撃する
+            if (s == FighterState.Approach && oRt.WeaponLoose && oppAttackable)
+            {
+                pendingAttackAt = -1f;
+                CarryWeapon = false;
+                if (d <= range * 1.05f && d >= CustomMinSpacing && time >= Rt.attackReadyAt)
+                {
+                    Rt.comboRemaining = Rng.RangeInclusive(tend.comboMin, tend.comboMax) - 1;
+                    self.StartAttack(time);
+                    LastDecision = "素手を攻める";
+                    return;
+                }
+                Move = d < CustomMinSpacing ? MoveIntent.Retreat : MoveIntent.Advance;
+                LastDecision = "素手へ詰める";
+                return;
+            }
+
             // 1b) 相手の攻撃後の硬直に差し込む（回避→反撃）。射程外なら踏み込んでから打つ。
             var ort = opp.Runtime;
             // 相手の攻撃後の硬直・よろけ（弾き負けを含む）に差し込む
@@ -212,6 +244,9 @@ namespace MojiBattle
                 }
             }
             else punishing = false;
+
+            // 1c) 中距離の奥の手: 膠着しているか相手に隙があれば、まれに武器を投げる
+            if (TryThrow(time, s, d, range)) return;
 
             // 2) 予約済み攻撃（開始タイミングに ±jitter）
             if (pendingAttackAt >= 0f)
@@ -357,9 +392,64 @@ namespace MojiBattle
             LastDecision = stalemate ? "前進(膠着打開)" : "接近";
         }
 
+        /// <summary>
+        /// 投げ: 射程の外（射程×throwMinRangeScale 〜 throwMaxDistance）で、膠着中か相手に隙（硬直・よろけ・転倒）がある時だけ。
+        /// 乱数は条件をすべて満たした時にだけ引く。重量級は投げにくい。
+        /// </summary>
+        bool TryThrow(float time, FighterState s, float d, float range)
+        {
+            if (s != FighterState.Approach || !self.IsGrounded || pendingAttackAt >= 0f) return false;
+            if (time < Rt.attackReadyAt || time < Rt.throwReadyAt) return false;
+            if (d < range * B.throwMinRangeScale || d > B.throwMaxDistance) return false;
+            var ort = self.Opponent.Runtime;
+            if (ort.state == FighterState.KO) return false;
+            bool stalemate = time - self.Context.LastDamageTime > B.stalemateSeconds;
+            bool oppOpen = ort.state == FighterState.AttackRecovery || ort.state == FighterState.Stagger
+                           || (ort.IsDown && B.allowAttackOnDowned) || ort.weaponDetached;
+            if (!stalemate && !oppOpen) return false;
+            float chance = StatCalculator.Lerp01(B.throwChanceLight, B.throwChanceHeavy, self.Stats.weightScore);
+            if (!Rng.Chance(chance)) return false;
+            Rt.comboRemaining = 0;
+            self.StartAttack(time, AttackStyle.Throw);
+            LastDecision = "投げ";
+            return true;
+        }
+
+        /// <summary>武器を投げた後: 飛んでいる間は見送り、落ちたら拾いに行く。素手では受けられないので攻撃は避けるだけ。</summary>
+        void DecideUnarmed(float time)
+        {
+            var opp = self.Opponent;
+            pendingAttackAt = -1f;
+            Rt.comboRemaining = 0;
+            CarryWeapon = false;
+            if (Rt.state == FighterState.Guard) self.SetState(FighterState.Approach);
+            if (Rt.throwLive) { Move = MoveIntent.Hold; LastDecision = "投げ"; return; }
+            // 素手では受けられないので避けるしかないが、武器を持つ時ほど身軽には動けない
+            if (!opp.Runtime.IsDown && IsThreat(opp, self.DistanceToOpponent, out _) && time >= Rt.evadeReadyAt && Rng.Chance(self.Tendency.reactionChance * B.unarmedEvadeFactor))
+            {
+                var kind = self.BackSpace < B.minBackstepSpace && self.WeightClass != WeightClass.Heavy ? EvadeKind.HopOver : EvadeKind.Backstep;
+                self.StartEvade(kind, time);
+                LastDecision = "回避(素手)";
+                return;
+            }
+            MoveTargetX = self.WeaponBody.worldCenterOfMass.x;
+            Move = MoveIntent.Advance;
+            LastDecision = "武器を拾う";
+        }
+
         bool IsThreat(Fighter opp, float d, out float timeToHit)
         {
             timeToHit = 99f;
+            var thrown = opp.Runtime;
+            if (thrown.throwLive && !thrown.attackHadContact)
+            {
+                // 飛んでくる武器: こちらへ向かっていて、届くまでの時間が反応の窓に入っていれば脅威
+                Vector2 wp = opp.WeaponBody.worldCenterOfMass, wv = opp.WeaponBody.linearVelocity;
+                float dx = self.X - wp.x;
+                if (wv.x * dx <= 0f || Mathf.Abs(dx) > 5f) return false;
+                timeToHit = Mathf.Abs(dx) / Mathf.Max(1f, Mathf.Abs(wv.x));
+                return timeToHit <= B.threatWindow;
+            }
             var os = opp.Runtime.state;
             if (os == FighterState.AttackWindup)
             {
@@ -385,7 +475,11 @@ namespace MojiBattle
             float wEvade = evadeReady ? tend.evadeBias * (back < B.minBackstepSpace ? 0.6f : 1f) * DefenseScale : 0f;
             // ガードの構えが間に合わない（武器を大きく回す必要がある）なら回避を優先
             var oa = self.Opponent.Runtime;
-            float guardTarget = oa.attackStyle == AttackStyle.Overhead ? B.guardPsiHigh : oa.attackStyle == AttackStyle.Sweep ? B.guardPsi : self.GuardPsiLow;
+            float guardTarget = GuardPsiFor(oa.attackStyle);
+            // 技ごとの受け方: 足払いは跳んで避けやすい / 盾当ては受けると崩されるので下がりやすい / 回転斬りは下がって外す
+            if (oa.attackStyle == AttackStyle.LowSweep) { wEvade *= 1.6f; wGuard *= 0.6f; }
+            else if (oa.attackStyle == AttackStyle.Bash) { wEvade *= 1.4f; wGuard *= 0.5f; }
+            else if (oa.attackStyle == AttackStyle.Spin) { wEvade *= 1.3f; }
             float raiseTime = Mathf.Abs(guardTarget - self.WeaponMotor.CurrentPsi) / Mathf.Lerp(700f, 250f, self.Stats.weightScore / 100f);
             if (raiseTime > timeToHit) wGuard *= 0.25f;
             // 距離が射程端に近いほど後退で外しやすい
@@ -409,21 +503,37 @@ namespace MojiBattle
             if (r < wEvade)
             {
                 var kind = back < B.minBackstepSpace && self.WeightClass != WeightClass.Heavy ? EvadeKind.HopOver : EvadeKind.Backstep;
+                // 足払いは跳んで避ける（重量級は跳べない）
+                if (oa.attackStyle == AttackStyle.LowSweep && self.WeightClass != WeightClass.Heavy) kind = EvadeKind.HopOver;
                 self.StartEvade(kind, time);
                 LastDecision = kind == EvadeKind.Backstep ? "回避(後退)" : "回避(跳び越え)";
             }
             else
             {
                 var o = self.Opponent.Runtime;
-                float remain = o.state == FighterState.AttackWindup
+                float remain = o.throwLive ? timeToHit + 0.3f
+                    : o.state == FighterState.AttackWindup
                     ? (o.windupDuration - o.stateTime) + o.activeDuration
                     : Mathf.Max(0f, o.activeDuration - o.stateTime);
                 EnterGuard(time, remain + 0.15f);
                 // 来る攻撃の種類に合わせてガード位置を変える
-                Rt.guardPsiTarget = o.attackStyle == AttackStyle.Overhead ? B.guardPsiHigh : o.attackStyle == AttackStyle.Sweep ? B.guardPsi : self.GuardPsiLow;
-                // 横振りに反応して構えたガードは、回り込む横振りも受け止められる
-                Rt.guardAgainstSweep = o.attackStyle == AttackStyle.Sweep;
-                LastDecision = o.attackStyle == AttackStyle.Overhead ? "上段ガード" : o.attackStyle == AttackStyle.Sweep ? "横振りガード" : "下段ガード";
+                Rt.guardPsiTarget = GuardPsiFor(o.attackStyle);
+                // 奥を回り込む技（横薙ぎ・足払い・回転斬り）は、それに反応して構えたガードでなければ止まらない
+                Rt.guardAgainstSweep = AttackTechniques.IsYaw(o.attackStyle);
+                LastDecision = o.attackStyle == AttackStyle.Overhead ? "上段ガード" : Rt.guardAgainstSweep ? $"{AttackTechniques.Label(o.attackStyle)}をガード" : "下段ガード";
+            }
+        }
+
+        /// <summary>来る技に合わせたガードの角度。</summary>
+        float GuardPsiFor(AttackStyle s)
+        {
+            switch (s)
+            {
+                case AttackStyle.Overhead: return B.guardPsiHigh;
+                case AttackStyle.Sweep:
+                case AttackStyle.Spin:
+                case AttackStyle.Bash: return B.guardPsi;
+                default: return self.GuardPsiLow; // 斬り上げ・刺す・足払い・打ち上げ
             }
         }
 

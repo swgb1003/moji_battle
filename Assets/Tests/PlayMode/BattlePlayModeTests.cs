@@ -44,9 +44,9 @@ namespace MojiBattle.Tests
                 for (int i = 0; i < 2; i++)
                 {
                     var f = fs[i];
-                    Vector2 shoulder = f.Body.GetRelativePoint(f.ShoulderLocal(f.Facing));
-                    float ge = Vector2.Distance(shoulder, f.WeaponBody.position);
-                    if (ge > maxGripError) { maxGripError = ge; gripInfo = $"{f.Loadout.grapheme} t={battle.Director.Clock:F2} state={f.Runtime.state} limp={battle.Context.SimTime < f.Runtime.weaponLimpUntil} pass={f.Runtime.weaponPassThrough} opp={f.Opponent.Runtime.state} d={f.DistanceToOpponent:F2} wv={f.WeaponBody.linearVelocity.magnitude:F1} bv={f.Body.linearVelocity.magnitude:F1}"; }
+                    Vector2 shoulder = f.Body.GetRelativePoint(f.HandLocal(f.Facing)); // 手（刺す・足払いで動く接続点）
+                    float ge = f.Runtime.weaponDetached ? 0f : Vector2.Distance(shoulder, f.WeaponBody.position); // 投げて手を離れている間は対象外
+                    if (ge > maxGripError) { maxGripError = ge; gripInfo = $"{f.Loadout.grapheme} t={battle.Director.Clock:F2} state={f.Runtime.state} style={f.Runtime.attackStyle} hand={f.Runtime.handOffset} anchor={f.Hinge.connectedAnchor} wlocal={f.Body.GetPoint(f.WeaponBody.position)} yaw={f.Runtime.sweepYaw:F0} limp={battle.Context.SimTime < f.Runtime.weaponLimpUntil} pass={f.Runtime.weaponPassThrough} opp={f.Opponent.Runtime.state} d={f.DistanceToOpponent:F2} wv={f.WeaponBody.linearVelocity.magnitude:F1} bv={f.Body.linearVelocity.magnitude:F1}"; }
                     if (!f.Runtime.IsDown && f.Runtime.state != FighterState.Recover)
                         maxUprightTilt = Mathf.Max(maxUprightTilt, Mathf.Abs(Mathf.DeltaAngle(0f, f.Body.rotation)));
                     float psi = f.WeaponMotor.MeasurePsi();
@@ -329,6 +329,56 @@ namespace MojiBattle.Tests
                 yield return null;
             }
             Assert.IsTrue(sawKo, "KO 決着の試合が見つからない");
+        }
+
+        /// <summary>投げ: 離れた相手へ武器を投げて当てる。落ちた武器は拾うまで手に戻らず、拾えば握りへ戻る。</summary>
+        [UnityTest]
+        public IEnumerator Throw_HitsAtRange_WeaponReturnsOnlyWhenPickedUp()
+        {
+            SimHarness.Begin(false);
+            battle = SimHarness.Build(5, countdown: 1000f); // カウントダウン中は AI 停止
+            var l = battle.Left;
+            var r = battle.Right;
+            l.Body.position = new Vector2(r.X - 4.5f, 0.02f);
+            l.WeaponMotor.ResetPose();
+            yield return null;
+            HitEvent? hit = null;
+            battle.Context.Events.Hit += e => { if (e.attacker == 0 && e.style == AttackStyle.Throw) hit = e; };
+            TimeController.SetSpectatorSpeed(1f);
+            float hpBefore = r.Runtime.hp;
+            l.StartAttack(battle.Context.SimTime, AttackStyle.Throw);
+            int frames = 0;
+            while (hit == null && frames++ < 400) yield return null;
+            Assert.IsNotNull(hit, "投げた武器が相手に当たらない");
+            Debug.Log($"[THROW] {l.Loadout.grapheme} dmg={hit.Value.damage:F1} vN={hit.Value.vN:F1} part={hit.Value.part} at d={Mathf.Abs(hit.Value.point.x - l.X):F2}");
+            Assert.Less(r.Runtime.hp, hpBefore);
+            Assert.IsTrue(l.Runtime.weaponDetached);
+            Assert.IsFalse(l.Hinge.enabled, "投げた武器はヒンジから外れている");
+
+            frames = 0;
+            while (l.Runtime.throwLive && frames++ < 400) yield return null;
+            for (int i = 0; i < 90; i++) yield return null;
+            Assert.IsTrue(l.Runtime.weaponDetached, "拾うまでは手に戻らない");
+            Assert.Greater(Vector2.Distance(l.WeaponBody.position, l.Body.GetRelativePoint(l.HandLocal(l.Facing))), 1f, "武器は手元から離れた所に落ちている");
+
+            // 落ちた武器の所へ立つと拾う（相手は離れた所へ移す）
+            Vector2 w = l.WeaponBody.worldCenterOfMass;
+            float half = battle.Context.ArenaHalfWidth;
+            float wx = Mathf.Clamp(w.x, -half + 0.5f, half - 0.5f);
+            if (Mathf.Abs(r.X - wx) < 1.5f)
+            {
+                r.Body.position = new Vector2(wx > 0f ? wx - 3f : wx + 3f, 0.02f);
+                r.Body.linearVelocity = Vector2.zero;
+            }
+            l.Body.position = new Vector2(wx, 0.02f);
+            l.Body.linearVelocity = Vector2.zero;
+            frames = 0;
+            while (l.Runtime.weaponDetached && frames++ < 120) yield return null;
+            Assert.IsFalse(l.Runtime.weaponDetached, "落ちた武器の所へ行っても拾わない");
+            Assert.IsTrue(l.Hinge.enabled);
+            for (int i = 0; i < 30; i++) yield return null;
+            float gripError = Vector2.Distance(l.Body.GetRelativePoint(l.HandLocal(l.Facing)), l.WeaponBody.position);
+            Assert.Less(gripError, 0.2f, "拾った武器が握りに戻る");
         }
 
         /// <summary>壁際で転倒 → 安全位置へ小さく移して 1〜2 秒で復帰し、姿勢が破綻しない。</summary>

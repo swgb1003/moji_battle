@@ -27,8 +27,20 @@ namespace MojiBattle
         public float sweepYawRate;
         /// <summary>このガードは横振りに反応して構えた（回り込む横振りも止められる）</summary>
         public bool guardAgainstSweep;
+        /// <summary>手（ヒンジの接続点）の肩からのずれ（右向き基準）。刺すで腕を伸ばす・足払いで屈む</summary>
+        public Vector2 handOffset;
         /// <summary>この時刻まで武器の保持トルクを抜く（自分の武器を地面に突いて体が浮いた時に落とす）</summary>
         public float weaponLimpUntil = -1f;
+
+        // 投げ
+        /// <summary>武器が手から離れている（投げてから拾うまで）</summary>
+        public bool weaponDetached;
+        /// <summary>投げた武器が飛んでいる（当たり判定あり）。当たるか落ちたら終わり</summary>
+        public bool throwLive;
+        public float thrownAt = -999f;
+        public float throwReadyAt;
+        /// <summary>手を離れて地面に落ちている（拾える。相手とは衝突しない）</summary>
+        public bool WeaponLoose => weaponDetached && !throwLive;
 
         // 防御・転倒
         public float guardLoad;

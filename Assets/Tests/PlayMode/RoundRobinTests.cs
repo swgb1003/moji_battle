@@ -37,6 +37,9 @@ namespace MojiBattle.Tests
             var pairLines = new List<string>();
             int dup = 0, envOutside = 0, unfinished = 0, draws = 0, zeroDamage = 0, koTotal = 0, total = 0, suddenDeaths = 0, slamTotal = 0;
             int sweepTotal = 0, sweepHitTotal = 0, attackTotal = 0, hitTotal = 0;
+            var techStarts = new int[FighterTelemetry.StyleCount];
+            var techHits = new int[FighterTelemetry.StyleCount];
+            var techDamage = new float[FighterTelemetry.StyleCount];
             float secondsTotal = 0f;
             float damageTotal = 0f;
             float maxIdle = 0f;
@@ -63,7 +66,11 @@ namespace MojiBattle.Tests
                     dup += t.duplicateBodyHits;
                     slamTotal += t.slams;
                     secondsTotal += res.elapsedSeconds;
-                    foreach (var ft in t.fighters) { sweepTotal += ft.sweeps; sweepHitTotal += ft.sweepHits; attackTotal += ft.attackStarts; hitTotal += ft.hitDamages.Count; }
+                    foreach (var ft in t.fighters)
+                    {
+                        sweepTotal += ft.sweeps; sweepHitTotal += ft.sweepHits; attackTotal += ft.attackStarts; hitTotal += ft.hitDamages.Count;
+                        for (int k = 0; k < FighterTelemetry.StyleCount; k++) { techStarts[k] += ft.styleStarts[k]; techHits[k] += ft.styleHits[k]; techDamage[k] += ft.styleDamage[k]; }
+                    }
                     total++;
                     if (res.winner < 0) draws++;
                     if (res.finishReason.StartsWith("SUDDEN_DEATH")) suddenDeaths++;
@@ -122,6 +129,14 @@ namespace MojiBattle.Tests
 
             string summary = $"- matches: {total} / draws: {draws} ({draws * 100f / Mathf.Max(1, total):F0}%) / sudden death: {suddenDeaths} / slams: {slamTotal} / no damage at all: {zeroDamage} / KO: {koTotal} ({koTotal * 100f / Mathf.Max(1, total):F0}%) / avg total damage per match: {damageTotal / Mathf.Max(1, total):F0}" +
                 $"\n- avg match seconds: {secondsTotal / Mathf.Max(1, total):F1} / hit rate (body hits / attacks): {hitTotal * 100f / Mathf.Max(1, attackTotal):F0}% / sweeps: {sweepTotal} ({sweepTotal * 100f / Mathf.Max(1, attackTotal):F0}% of attacks, hit {sweepHitTotal * 100f / Mathf.Max(1, sweepTotal):F0}%)";
+            var techTable = new System.Text.StringBuilder("\n\n| 技 | 使用率 | 命中率 | 1発の平均ダメージ | 与ダメの割合 |\n|---|---|---|---|---|");
+            float allDamage = Mathf.Max(1f, techDamage.Sum());
+            for (int k = 0; k < FighterTelemetry.StyleCount; k++)
+            {
+                var st = (AttackStyle)k;
+                techTable.Append($"\n| {AttackTechniques.Label(st)} | {techStarts[k] * 100f / Mathf.Max(1, attackTotal):F0}% | {techHits[k] * 100f / Mathf.Max(1, techStarts[k]):F0}% | {techDamage[k] / Mathf.Max(1, techHits[k]):F1} | {techDamage[k] * 100f / allDamage:F0}% |");
+            }
+            summary += techTable.ToString();
             WriteReport(agg, pairLines, special.ToString(), dup, envOutside, maxIdle, maxIdleCase, seedsPerPair, summary, string.IsNullOrEmpty(only) ? "p2_round_robin.md" : "p2_round_robin_only.md");
 
             Assert.AreEqual(0, unfinished, "終わらない試合");

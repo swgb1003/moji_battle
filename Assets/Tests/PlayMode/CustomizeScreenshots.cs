@@ -63,13 +63,53 @@ namespace MojiBattle.Tests
             Object.Destroy(rt);
         }
 
+        /// <summary>各技の振りの途中を撮る（刺す・足払い・盾当て・打ち上げ・回転斬り）。</summary>
+        [UnityTest]
+        public IEnumerator CaptureTechniques()
+        {
+            Time.captureDeltaTime = TimeController.BaseFixedDelta;
+            var styles = new[] { AttackStyle.Thrust, AttackStyle.LowSweep, AttackStyle.Bash, AttackStyle.Launch, AttackStyle.Spin };
+            var got = new System.Collections.Generic.List<string>();
+            try
+            {
+                for (int k = 0; k < styles.Length; k++)
+                {
+                    var st = styles[k];
+                    Fighter.ForcedStyleForTests = st;
+                    var battle = SimHarness.Build(1300 + k, SimHarness.Custom("火"), SimHarness.Custom("口", style: BattleStyle.Defensive), presentation: true);
+                    battle.CameraRig.Cam.aspect = 16f / 9f;
+
+                    TimeController.SetSpectatorSpeed(1f);
+                    for (int frame = 0; frame < 3000; frame++)
+                    {
+                        yield return null;
+                        var rt = battle.Left.Runtime;
+                        if (rt.attackStyle == st && rt.state == FighterState.AttackActive && rt.stateTime >= rt.activeDuration * 0.5f)
+                        {
+                            Capture($"3{k}_tech_{st}");
+                            got.Add(st.ToString());
+                            break;
+                        }
+                    }
+                    battle.Destroy();
+                    yield return null;
+                }
+            }
+            finally
+            {
+                Fighter.ForcedStyleForTests = null;
+                Time.captureDeltaTime = 0f;
+            }
+            Assert.AreEqual(styles.Length, got.Count, "撮れなかった技がある: " + string.Join(",", got));
+        }
+
         /// <summary>横振りの 3 場面（後ろへ回す溜め / 奥を通る / 前へ振り抜く）を撮る。</summary>
         [UnityTest]
         public IEnumerator CaptureSweep()
         {
             var b = CombatBalance.Default;
-            float saved = b.sweepChance;
-            b.sweepChance = 1f; // 撮影用に必ず横振りを選ばせる
+            float saved = b.sweep.weight, savedCap = b.specialAttackCap;
+            b.sweep.weight = 10f; b.specialAttackCap = 1f; // 撮影用に必ず横振りを選ばせる
             Time.captureDeltaTime = TimeController.BaseFixedDelta;
             var battle = SimHarness.Build(1201, SimHarness.Custom("火", WeaponSize.L), SimHarness.Custom("口"), presentation: true);
             battle.CameraRig.Cam.aspect = 16f / 9f;
@@ -84,7 +124,7 @@ namespace MojiBattle.Tests
                 else if (back && !mid && rt.state == FighterState.AttackActive && rt.sweepYaw < 110f) { Capture("28_sweep_depth"); mid = true; }
                 else if (mid && !front && rt.state == FighterState.AttackActive && rt.sweepYaw < 10f) { Capture("29_sweep_strike"); front = true; }
             }
-            b.sweepChance = saved;
+            b.sweep.weight = saved; b.specialAttackCap = savedCap;
             Time.captureDeltaTime = 0f;
             battle.Destroy();
             Assert.IsTrue(back && mid && front, "横振りの場面を撮れない");

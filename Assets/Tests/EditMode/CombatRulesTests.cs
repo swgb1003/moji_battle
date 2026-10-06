@@ -1,11 +1,27 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace MojiBattle.Tests
 {
     public class CombatRulesTests
     {
         static CombatBalance B => CombatBalance.Default;
+
+        /// <summary>投げの初速: 指定の速さで、放物線が狙った点を通る（左右どちら向きでも）。</summary>
+        [TestCase(4f, 0f, 12f)]
+        [TestCase(-6f, -0.3f, 9f)]
+        [TestCase(2.5f, 0.5f, 8f)]
+        public void BallisticVelocity_PassesThroughTarget(float dx, float dy, float speed)
+        {
+            const float g = 9.81f;
+            var v = Fighter.BallisticVelocity(Vector2.zero, new Vector2(dx, dy), speed, g);
+            Assert.AreEqual(speed, v.magnitude, 1e-3f);
+            Assert.AreEqual(Mathf.Sign(dx), Mathf.Sign(v.x));
+            float t = dx / v.x;
+            float y = v.y * t - 0.5f * g * t * t;
+            Assert.AreEqual(dy, y, 0.02f);
+        }
 
         [Test]
         public void PartMultipliersDiffer()

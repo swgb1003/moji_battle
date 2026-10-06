@@ -61,10 +61,11 @@ namespace MojiBattle
             torso.SetPosition(0, neck);
             torso.SetPosition(1, hip);
 
-            Vector3 grip = weaponPos;
+            // 武器を投げた後は手を前に下ろす
+            Vector3 grip = rt.weaponDetached ? P(0.3f * f.Facing, 1.0f) : (Vector3)weaponPos;
             DrawArm(armFront, shoulder, grip, bodyRot * Vector3.down * 0.12f);
             // 両手持ち: 添え手は握りから重心方向の少し先（表示のみ。物理の接続は握り1点）
-            Vector3 backHand = f.Mods.customized && f.Mods.grip == GripType.TwoHanded ? SecondHand(f, weaponPos, weaponRot) : grip;
+            Vector3 backHand = f.Mods.customized && f.Mods.grip == GripType.TwoHanded && !rt.weaponDetached ? SecondHand(f, weaponPos, weaponRot) : grip;
             DrawArm(armBack, shoulder + bodyRot * new Vector3(-0.05f * f.Facing, -0.02f, 0f), backHand, bodyRot * Vector3.down * 0.2f);
 
             // 脚: 接地中は歩行サイクル、空中は畳む、転倒中は胴に沿って伸ばす
@@ -155,14 +156,33 @@ namespace MojiBattle
             const int n = 18;
             arc.positionCount = n;
             float radius = f.Weapon.length * 0.95f;
-            if (rt.attackStyle == AttackStyle.Sweep)
+            if (rt.attackStyle == AttackStyle.Sweep || rt.attackStyle == AttackStyle.LowSweep)
             {
-                // 横振りの軌道線: 体の後ろから手前を回って前へ（水平の楕円）
+                // 横薙ぎ・足払いの軌道線: 体の後ろから手前を回って前へ（水平の楕円。足払いは膝の高さ）
+                Vector3 c = rt.attackStyle == AttackStyle.LowSweep ? new Vector3(grip.x, feet.y + 0.35f, 0f) : grip;
                 for (int i = 0; i < n; i++)
                 {
                     float a = Mathf.Lerp(Mathf.PI, -0.35f, i / (n - 1f));
-                    arc.SetPosition(i, grip + new Vector3(Mathf.Cos(a) * f.Facing * radius, -Mathf.Sin(a) * 0.22f * radius - 0.05f, 0f));
+                    arc.SetPosition(i, c + new Vector3(Mathf.Cos(a) * f.Facing * radius, -Mathf.Sin(a) * 0.22f * radius - 0.05f, 0f));
                 }
+            }
+            else if (rt.attackStyle == AttackStyle.Spin)
+            {
+                // 回転斬り: 体の周りを一周する楕円
+                for (int i = 0; i < n; i++)
+                {
+                    float a = i / (n - 1f) * Mathf.PI * 2f;
+                    arc.SetPosition(i, grip + new Vector3(Mathf.Cos(a) * radius, Mathf.Sin(a) * 0.22f * radius, 0f));
+                }
+            }
+            else if (rt.attackStyle == AttackStyle.Thrust || rt.attackStyle == AttackStyle.Bash)
+            {
+                // 刺す: 狙いへ一直線 / 盾当て: 胸の高さで前へ
+                float psi = (rt.attackStyle == AttackStyle.Bash ? 0f : rt.swingToPsi) * Mathf.Deg2Rad;
+                Vector3 dir = new Vector3(Mathf.Cos(psi) * f.Facing, Mathf.Sin(psi), 0f);
+                Vector3 from = rt.attackStyle == AttackStyle.Bash ? (Vector3)f.ChestWorld : grip;
+                float len = rt.attackStyle == AttackStyle.Bash ? 1.6f : radius + f.Balance.stabReach + 0.6f;
+                for (int i = 0; i < n; i++) arc.SetPosition(i, from + dir * (len * i / (n - 1f)));
             }
             else
             {

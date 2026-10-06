@@ -142,7 +142,7 @@ namespace MojiBattle
         public float evadeMinTime = 0.25f, evadeMaxTime = 1.1f;
 
         [Header("8.2 ダメージ")]
-        public float damageScale = 0.5f;
+        public float damageScale = 0.47f;
         public float defenseK = 0.45f;
         public float speedDivisor = 6f, speedFactorMin = 0.4f, speedFactorMax = 1.8f;
         public float minHitRelativeSpeed = 1.5f;
@@ -197,22 +197,63 @@ namespace MojiBattle
         [Header("横振り（薙ぎ払い）と武器どうしの接触")]
         [Tooltip("文字どうしがぶつかるのは「防御側がガード中」か「両者が攻撃中（溜め・振り）」の時だけ。構えているだけの文字は盾にならない")]
         public bool weaponsCollideOnlyWhenEngaged = true;
-        [Tooltip("横振りを選ぶ確率（基本 / 相手が構えて待っている時 / 相手の字形が大きい時の加算）")]
-        public float sweepChance = 0.18f, sweepChanceVsGuard = 0.6f, sweepChanceBigWeaponBonus = 0.15f;
-        [Tooltip("横振りの溜め・振りの時間倍率（溜めが長く予兆がはっきりしている）")]
-        public float sweepWindupMultiplier = 1.35f, sweepActiveMultiplier = 1.5f;
+        [Tooltip("横振り: 相手が構えて待っている時の選ぶ重み（下限） / 相手の字形が大きい時の加算")]
+        public float sweepChanceVsGuard = 0.5f, sweepChanceBigWeaponBonus = 0.12f;
         [Tooltip("横振りの振り終わりの奥行き角（前へ振り抜く）")]
         public float sweepFollowThroughYaw = -35f;
         [Tooltip("横振りが当たった時の速さ = min(奥行きの角速度, 上限) × 握りからの距離 × この倍率。体の周りを回す振りは平面の振りより遅い")]
         public float sweepSpeedScale = 0.5f;
         [Tooltip("横振りの奥行きの角速度の上限（度/秒）。軽い武器の短い振りで速さが現実離れしないように")]
         public float sweepMaxYawSpeed = 720f;
-        [Tooltip("横振りの与ダメージ倍率")]
-        public float sweepDamageMultiplier = 1f;
         [Tooltip("重量級は溜め・振りの最中、転倒しない程度の打撃ではひるまない（軽量級の手数で重い一撃が毎回潰されないように）")]
         public bool heavyArmorDuringAttack = true;
         [Tooltip("スーパーアーマーが効くのは、相手の武器質量が自分の武器質量のこの割合未満の時だけ（中量級の重い打撃では崩れる）")]
         public float heavyArmorMassRatio = 0.5f;
+
+        [Header("技（基本の振りを状況に合う技へ置き換える）")]
+        [Tooltip("基本の振りを技へ置き換える確率の上限")]
+        public float specialAttackCap = 0.5f;
+        [Tooltip("刺す: 腕を伸ばして先端で突く。溜めで手を引き、振りで伸ばす")]
+        public TechniqueTuning stab = new TechniqueTuning { weight = 0f, windup = 1.1f, active = 1f, recovery = 1f, damage = 1f, impulse = 1f };
+        public float stabPullBack = 0.25f, stabReach = 0.45f, stabExtendSpeed = 7f;
+        [Tooltip("刺す: 先端（握りからの距離が長さのこの割合以上）での直撃は中央の当たり＋倍率、それ以外はかすり扱い")]
+        public float stabTipFraction = 0.78f, stabTipDamage = 1.0f, stabShaftDamage = 0.6f;
+        [Tooltip("刺す: 先端がガードに当たった時、本体ダメージのこの割合だけ貫く（相手の武器が自分の 2 倍より重いと貫かない）")]
+        public float stabGuardPierce = 0.3f;
+        [Tooltip("横薙ぎ（weight は基本の選ぶ重み）")]
+        public TechniqueTuning sweep = new TechniqueTuning { weight = 0.12f, windup = 1.35f, active = 1.5f, recovery = 1f, damage = 1f, impulse = 1f };
+        [Tooltip("足払い: 屈んで手を膝の高さへ下げ、奥から低く払う。脚に当たり転倒しやすい")]
+        public TechniqueTuning lowSweep = new TechniqueTuning { weight = 0.07f, windup = 1.3f, active = 1.4f, recovery = 1.1f, damage = 0.7f, impulse = 1.1f, upBias = 0.15f };
+        public float lowSweepHandDrop = 0.55f;
+        [Tooltip("盾当て: 字形を前に構えて体当たり。威力は低いが押し込みが強く、ガードを崩す")]
+        public TechniqueTuning bash = new TechniqueTuning { weight = 0.06f, windup = 0.8f, active = 1.6f, recovery = 1.4f, damage = 0.55f, impulse = 1.9f, upBias = 0.1f };
+        public float bashDashSpeed = 6.5f, bashGuardLoad = 3f, bashWallDistance = 2.2f;
+        [Tooltip("打ち上げ: 下から大きく跳ね上げて浮かせる。浮いた相手には追撃する")]
+        public TechniqueTuning launch = new TechniqueTuning { weight = 0.05f, windup = 1.3f, active = 1.2f, recovery = 1.2f, damage = 0.8f, impulse = 1.5f, upBias = 1.6f };
+        [Tooltip("打ち上げで浮かせた相手への追撃: 打ち上げから何秒以内・射程の何倍まで")]
+        public float juggleWindow = 1.0f, juggleRangeScale = 1.4f;
+        [Tooltip("回転斬り: 一回転して前後を払う。振り終わりは目が回って隙が大きい")]
+        public TechniqueTuning spin = new TechniqueTuning { weight = 0.03f, windup = 0.9f, active = 1.7f, recovery = 1.7f, damage = 0.75f, impulse = 1.1f };
+        [Tooltip("投げ: 字形を相手へ投げつける（weight は使わない。AI が中距離の奥の手として選ぶ）。投げた後は拾うまで素手で、攻撃もガードもできない")]
+        public TechniqueTuning throwAttack = new TechniqueTuning { weight = 0f, windup = 1.2f, active = 0.6f, recovery = 0.8f, damage = 0.55f, impulse = 1f, upBias = 0.2f };
+        [Tooltip("投げ: 初速（軽量〜重量）。カスタマイズで扱いにくい武器はさらに遅い")]
+        public float throwSpeedLight = 13f, throwSpeedHeavy = 8.5f;
+        [Tooltip("投げ: 回転の角速度（度/秒、軽量〜重量）")]
+        public float throwSpinLight = 900f, throwSpinHeavy = 360f;
+        [Tooltip("投げ: 振りの有効時間のこの割合で手を離す")]
+        public float throwReleaseFraction = 0.55f;
+        [Tooltip("投げを選ぶ距離: 射程のこの倍率以上、かつこの距離以下")]
+        public float throwMinRangeScale = 1.4f, throwMaxDistance = 8f;
+        [Tooltip("投げ: 条件（膠着 / 相手の隙）を満たした判断 1 回あたりの確率（軽量〜重量）")]
+        public float throwChanceLight = 0.02f, throwChanceHeavy = 0.014f;
+        [Tooltip("投げてから次に投げられるまでの秒数")]
+        public float throwCooldown = 12f;
+        [Tooltip("投げた武器が止まったとみなす速さ / 当たらなくても飛行を終える秒数")]
+        public float throwSettleSpeed = 1f, throwMaxFlight = 2.5f;
+        [Tooltip("落ちた武器を拾える水平距離 / 拾えないまま経過したら手元へ戻す秒数（安全策）")]
+        public float throwPickupRadius = 0.55f, throwRetrieveTimeout = 8f;
+        [Tooltip("投げた後の素手の間、相手の攻撃に反応して避ける確率の倍率（反応率に掛ける。0 なら素手の間は避けない）")]
+        public float unarmedEvadeFactor = 0f;
 
         [Header("8.4 転倒・KO")]
         public float settleSpeed = 0.6f, settleAngularSpeed = 90f;

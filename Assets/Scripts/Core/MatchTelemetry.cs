@@ -7,6 +7,7 @@ namespace MojiBattle
     [Serializable]
     public class FighterTelemetry
     {
+        public static readonly int StyleCount = Enum.GetValues(typeof(AttackStyle)).Length;
         public string grapheme;
         public string weightClass;
         public FighterStats stats;
@@ -38,6 +39,9 @@ namespace MojiBattle
         public int maxComboHits;
         /// <summary>横振りの回数 / 横振りの命中</summary>
         public int sweeps, sweepHits;
+        /// <summary>技ごとの開始回数 / 命中 / 与ダメージ（AttackStyle の順）</summary>
+        public int[] styleStarts = new int[StyleCount], styleHits = new int[StyleCount];
+        public float[] styleDamage = new float[StyleCount];
     }
 
     /// <summary>受け入れ条件の確認用に、イベントと状態時間を集計する。UI・戦闘計算は持たない。</summary>
@@ -123,7 +127,9 @@ namespace MojiBattle
             if (n >= 1) duplicateBodyHits++;
             var t = fighters[e.attacker];
             t.hitImpulses.Add(e.impulse);
-            if (director.Fighters[e.attacker].Runtime.attackStyle == AttackStyle.Sweep) t.sweepHits++;
+            if (e.style == AttackStyle.Sweep) t.sweepHits++;
+            t.styleHits[(int)e.style]++;
+            t.styleDamage[(int)e.style] += e.damage;
             t.hitDamages.Add(e.damage);
             comboCounter[e.attacker]++;
             comboCounter[e.defender] = 0;
@@ -167,7 +173,7 @@ namespace MojiBattle
                 t.peakTipSpeedSum += t.swingPeakOmega * Mathf.Deg2Rad * director.Fighters[e.fighter].Weapon.length;
                 t.peakSwingCount++;
             }
-            if (e.from == FighterState.AttackActive && fr.attackStyle != AttackStyle.Thrust && fr.attackStyle != AttackStyle.Sweep)
+            if (e.from == FighterState.AttackActive && (fr.attackStyle == AttackStyle.Overhead || fr.attackStyle == AttackStyle.Rising))
             {
                 t.swings++;
                 float planned = Mathf.Abs(fr.swingToPsi - fr.swingFromPsi);
@@ -180,7 +186,9 @@ namespace MojiBattle
                 if (idle > longestIdleSeconds) longestIdleSeconds = idle;
                 lastAttackClock = director.Clock;
                 t.attackStarts++;
-                if (director.Fighters[e.fighter].Runtime.attackStyle == AttackStyle.Sweep) t.sweeps++;
+                var st = director.Fighters[e.fighter].Runtime.attackStyle;
+                if (st == AttackStyle.Sweep) t.sweeps++;
+                t.styleStarts[(int)st]++;
                 t.windups.Add(director.Fighters[e.fighter].Runtime.windupDuration);
             }
             if (e.to == FighterState.Knockdown) Log($"KNOCKDOWN {Side(e.fighter)}");
@@ -213,7 +221,8 @@ namespace MojiBattle
                     t.swingPsiMax = Mathf.Max(t.swingPsiMax, psi);
                     t.swingPeakOmega = Mathf.Max(t.swingPeakOmega, Mathf.Abs(f.WeaponBody.angularVelocity - f.Body.angularVelocity));
                 }
-                float stretch = (f.WeaponBody.position - f.Body.GetRelativePoint(f.ShoulderLocal(f.Facing))).magnitude;
+                // 投げて手を離れている武器は握りのずれに数えない
+                float stretch = f.Runtime.weaponDetached ? 0f : (f.WeaponBody.position - f.Body.GetRelativePoint(f.HandLocal(f.Facing))).magnitude;
                 if (stretch > t.maxHingeStretch) t.maxHingeStretch = stretch;
                 if (stretch > 0.2f)
                 {

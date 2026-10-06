@@ -217,8 +217,8 @@ namespace MojiBattle.Tests
                 yield return RunSet(agg, SimHarness.Custom("一", gripPosition: 0.1f, style: st), opp, seeds, 8000);
                 sets[st] = agg;
             }
-            var hor = new Agg { label = "一 M 横持ち 端 猛攻" };
-            yield return RunSet(hor, SimHarness.Custom("一", grip: GripType.Horizontal, gripPosition: 0.1f), opp, seeds, 8000);
+            var hor = new Agg { label = "一 M 横持ち 端 カウンター" };
+            yield return RunSet(hor, SimHarness.Custom("一", grip: GripType.Horizontal, gripPosition: 0.1f, style: BattleStyle.Counter), opp, seeds, 8000);
             report.AppendLine("## 戦闘スタイル（相手: 口 カスタマイズ無し、各 " + seeds + " 試合）").AppendLine().AppendLine(Header);
             foreach (var a in sets.Values) report.AppendLine(Row(a));
             report.AppendLine(Row(hor));
@@ -237,7 +237,7 @@ namespace MojiBattle.Tests
                 if (a != sets[BattleStyle.Defensive]) Assert.Greater(Guard(sets[BattleStyle.Defensive]), Guard(a), $"鉄壁のガードが {a.label} より少ない");
             // カウンターは攻撃のかなりの割合を相手の攻撃直後に出す（他のスタイルは好機を数えないので 0）。
             Assert.Greater(Window(sets[BattleStyle.Counter]), 0.3f, "カウンターの攻撃が相手の攻撃後に集中していない");
-            Assert.Greater(Guard(hor), Guard(agg2), "横持ちはガードが増えるはず");
+            Assert.Greater(Guard(hor), Guard(sets[BattleStyle.Counter]), "横持ちはガードが増えるはず（同じカウンターの片手と比べて）");
         }
 
         /// <summary>入力した任意の文字（実行時に字形化）どうしで、試合が最後まで成立する。</summary>
