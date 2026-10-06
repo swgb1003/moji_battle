@@ -14,6 +14,12 @@ namespace MojiBattle
     {
         static readonly Dictionary<(GlyphDefinitionRuntime, WeaponFlip), GlyphDefinitionRuntime> cache =
             new Dictionary<(GlyphDefinitionRuntime, WeaponFlip), GlyphDefinitionRuntime>();
+        static readonly Dictionary<GlyphDefinitionRuntime, GlyphDefinitionRuntime> sources =
+            new Dictionary<GlyphDefinitionRuntime, GlyphDefinitionRuntime>();
+
+        /// <summary>反転した字形の元の字形（反転していなければ null）。</summary>
+        public static GlyphDefinitionRuntime SourceOf(GlyphDefinitionRuntime glyph) =>
+            glyph != null && sources.TryGetValue(glyph, out var src) ? src : null;
 
         public static GlyphDefinitionRuntime Apply(GlyphDefinitionRuntime src, WeaponFlip flip)
         {
@@ -61,9 +67,14 @@ namespace MojiBattle
                 runtimeBaked = src.runtimeBaked,
             };
             cache[(src, flip)] = def;
+            sources[def] = src;
             return def;
         }
 
-        public static void ClearCache() => cache.Clear();
+        public static void ClearCache()
+        {
+            cache.Clear();
+            sources.Clear();
+        }
     }
 }

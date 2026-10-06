@@ -263,6 +263,44 @@ namespace MojiBattle.Tests
             }
         }
 
+        /// <summary>
+        /// 振り下ろしでは、どこを握っても（反転しても）字形の本体（重心）が頭上の後ろ寄りから正面へ振り下ろされる（後ろへ振り下ろさない）。
+        /// 右側（左向き）の選手で確かめる。
+        /// </summary>
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator Overhead_SwingsGlyphBodyForward()
+        {
+            SimHarness.Begin(false);
+            var fails = new System.Text.StringBuilder();
+            var cases = new System.Collections.Generic.List<(string ch, FontStyleId font, Vector2 grip, WeaponFlip flip)>();
+            foreach (WeaponFlip flip in System.Enum.GetValues(typeof(WeaponFlip)))
+            {
+                cases.Add(("ナ", FontStyleId.Mincho, new Vector2(0.6f, 0.94f), flip));
+                cases.Add(("火", FontStyleId.Gothic, new Vector2(0.1f, 0.1f), flip));
+                cases.Add(("龍", FontStyleId.Gothic, new Vector2(0.9f, 0.5f), flip));
+            }
+            foreach (var (ch, font, grip, flip) in cases)
+            {
+                var rb = new FighterBuildData { character = ch, fontType = font, weaponSize = WeaponSize.S, customGrip = true, gripPoint = grip, weaponFlip = flip }.ToLoadout();
+                var battle = SimHarness.Build(9400, SimHarness.Custom("口"), rb);
+                yield return null;
+                var f = battle.Right;
+                Vector2 Com() { var c = f.WeaponBody.worldCenterOfMass - f.WeaponBody.position; return new Vector2(c.x * f.Facing, c.y); }
+                f.StartAttack(battle.Context.SimTime, AttackStyle.Overhead);
+                int g = 0;
+                while (f.Runtime.state == FighterState.AttackWindup && g++ < 300) yield return null;
+                var top = Com();
+                while (f.Runtime.state == FighterState.AttackActive && g++ < 600) yield return null;
+                var end = Com();
+                string label = $"{ch}({font}) 握り{grip} {flip}: 振りかぶり({top.x:F2},{top.y:F2}) 振り終わり({end.x:F2},{end.y:F2}) lever={f.Weapon.comLocal.magnitude:F2}";
+                if (end.x <= 0f || end.y >= top.y) fails.AppendLine(label);
+                battle.Destroy();
+                yield return null;
+            }
+            Assert.IsEmpty(fails.ToString(), "字形の本体が正面へ振り下ろされない:\n" + fails);
+        }
+
         /// <summary>明朝・丸ゴシック・筆文字の字形で試合が最後まで成立する（字体ごとに字形・能力が変わる）。</summary>
         [UnityTest]
         [Timeout(600000)]

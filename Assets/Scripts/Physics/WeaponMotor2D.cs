@@ -31,14 +31,15 @@ namespace MojiBattle
         /// 端持ち・大型の武器は振り始めが遅く、復帰も遅くなる（数値の時間補正ではなく慣性から）。
         /// </summary>
         float AccelLimit => self.Balance.maxAngularAccel * Mathf.Lerp(1f, self.Balance.heavyAccelFactor, self.Stats.weightScore / 100f)
-                            * self.Mods.handlingAccel;
+                            * self.Mods.handlingAccel * (self.Mods.customized && self.Context.Customize != null ? self.Context.Customize.handlingAccelScale : 1f);
 
         /// <summary>現在の ψ（度）。</summary>
         public float MeasurePsi()
         {
             float rel = Mathf.DeltaAngle(self.Body.rotation, self.WeaponBody.rotation);
             float phi = rel * self.Facing;
-            return phi + self.Weapon.alpha0Deg;
+            // -180〜180° に正規化（基準角が ±180° 付近の字形で読み値が 360° ずれ、逆回りに回り込むのを防ぐ）
+            return Mathf.DeltaAngle(0f, phi + self.Weapon.alpha0Deg);
         }
 
         public void Tick(float dt)
@@ -106,7 +107,7 @@ namespace MojiBattle
             var wb = self.WeaponBody;
             float inertia = self.Weapon.InertiaAtGrip(wb);
             // 目標の相対角（本体基準）。ψ の差を向きで符号変換する。
-            float errDeg = (target - CurrentPsi) * self.Facing;
+            float errDeg = Mathf.DeltaAngle(CurrentPsi, target) * self.Facing;
             float errRad = errDeg * Mathf.Deg2Rad;
             float relOmega = (wb.angularVelocity - self.Body.angularVelocity) * Mathf.Deg2Rad;
             float targetOmega = targetVelDeg * self.Facing * Mathf.Deg2Rad;

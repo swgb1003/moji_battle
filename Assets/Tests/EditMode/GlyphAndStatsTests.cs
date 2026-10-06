@@ -20,6 +20,38 @@ namespace MojiBattle.Tests
 
         static IEnumerable<string> Nine => InitialNine.Select(c => c.ToString());
 
+        /// <summary>
+        /// 反転しても、字形の本体（重心）は振る向きの基準（ψ の 0°）から見て反転前と同じ側にある（本体が手の反対側に付いて逆向きに振られない）。
+        /// 重心が握りにほぼ重なる場合は基準の向きそのものが反転前と同じ。握る位置を変えても同じ。
+        /// </summary>
+        [Test]
+        public void Flip_KeepsSwingReference()
+        {
+            var cb = CustomizeBalance.Default;
+            var fails = new StringBuilder();
+            foreach (var ch in new[] { "火", "一", "I", "鬱", "A" })
+            foreach (var pos in new[] { 0.1f, 0.5f, 0.9f })
+            {
+                var src = Load(ch);
+                var stats = StatCalculator.Compute(src, B);
+                var build = new FighterBuildData { character = ch, gripPosition = pos };
+                build.weaponFlip = WeaponFlip.None;
+                var baseGeo = FighterFactory.ResolveWeapon(build, src, stats, B, cb, out _);
+                foreach (WeaponFlip flip in System.Enum.GetValues(typeof(WeaponFlip)))
+                {
+                    build.weaponFlip = flip;
+                    var g = GlyphFlip.Apply(src, flip);
+                    var geo = FighterFactory.ResolveWeapon(build, g, StatCalculator.Compute(g, B), B, cb, out _);
+                    bool offAxis = baseGeo.comLocal.magnitude > baseGeo.maxSide * 0.05f && geo.comLocal.magnitude > geo.maxSide * 0.05f;
+                    // 振る向きの基準から見た重心の角度（ψ の座標での重心の方向）
+                    float Side(WeaponGeometry w) => Mathf.Atan2(w.comLocal.y, w.comLocal.x) * Mathf.Rad2Deg - w.alpha0Deg;
+                    float diff = offAxis ? Mathf.DeltaAngle(Side(geo), Side(baseGeo)) : Mathf.DeltaAngle(geo.alpha0Deg, baseGeo.alpha0Deg);
+                    if (Mathf.Abs(diff) > 0.5f) fails.AppendLine($"{ch} 握り{pos} {flip}: ずれ {diff:F0}°");
+                }
+            }
+            Assert.IsEmpty(fails.ToString(), "反転で振る向きが変わった:\n" + fails);
+        }
+
         /// <summary>反転: 画像・重心・Collider・握りが同じ鏡映で写り、ステータスは変わらない。2 回反転すると元に戻る。</summary>
         [TestCase(WeaponFlip.Horizontal)]
         [TestCase(WeaponFlip.Vertical)]

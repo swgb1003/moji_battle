@@ -193,18 +193,40 @@ namespace MojiBattle
             }
             weaponMass = WeaponSizeController.WeaponMass(baseStats.weaponMass, build.weaponSize, cb);
             float maxSide = WeaponSizeController.MaxSide(build.weaponSize, b, cb);
-            var gripPx = build.customGrip
+            var geo = BuildGeometry(glyph, maxSide, ResolveGrip(build, glyph, cb), true);
+            // 反転した字形は、字形の本体（重心）が握りから見て反転前と同じ側に来る向きで持つ。
+            // 長い方の軸だけを基準にすると、軸から横にずれた重心が反転で反対側へ移り、本体が手の反対側に付いて逆向きに振られる
+            var src = GlyphFlip.SourceOf(glyph);
+            if (src != null)
+            {
+                var s = BuildGeometry(src, maxSide, ResolveGrip(build, src, cb), true);
+                geo.alpha0Deg = s.alpha0Deg;
+                float minOffset = s.maxSide * FlipMassSideMin;
+                if (s.comLocal.magnitude > minOffset && geo.comLocal.magnitude > minOffset)
+                    geo.alpha0Deg = s.alpha0Deg + Mathf.DeltaAngle(Angle(s.comLocal), Angle(geo.comLocal));
+            }
+            return geo;
+        }
+
+        /// <summary>カスタマイズの握りで、重心が握りからこれ（字形の最大辺に対する割合）未満なら長い方の軸を振る向きの基準にする。</summary>
+        const float LongAxisLeverMin = 0.15f;
+
+        /// <summary>重心が握りからこれ（字形の最大辺に対する割合）以上離れている時だけ、重心の側で反転後の向きを決める（近いと向きが定まらない）。</summary>
+        const float FlipMassSideMin = 0.05f;
+
+        static float Angle(Vector2 v) => Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg;
+
+        static Vector2 ResolveGrip(FighterBuildData build, GlyphDefinitionRuntime glyph, CustomizeBalance cb) =>
+            build.customGrip
                 ? WeaponGripController.GripFromPoint(glyph, build.gripPoint, cb.gripClampMin * 0.5f, 1f - (1f - cb.gripClampMax) * 0.5f)
                 : WeaponGripController.GripPixel(glyph, cb.ClampGrip(build.gripPosition));
-            return BuildGeometry(glyph, maxSide, gripPx, true);
-        }
 
         public static WeaponGeometry BuildGeometry(GlyphDefinitionRuntime glyph, CombatBalance b) =>
             BuildGeometry(glyph, b.weaponMaxSide, glyph.features.gripPoint);
 
         /// <summary>
         /// 最大辺（サイズ）と握り点（握る位置）を指定して作る。表示・Collider・射程・重心はすべてここから決まる。
-        /// 姿勢角 ψ の基準は「握り→重心」。カスタマイズ（longAxis）では握る位置で重心が握りに重なり向きが定まらないため、
+        /// 姿勢角 ψ の基準は「握り→重心」。カスタマイズ（longAxis）で重心が握りに重なり向きが定まらない時だけ、
         /// 「字形の長い方の軸に沿って、握りから遠い側の端へ向かう方向」を基準にする（中央持ちでも字形は傾かずに構える）。
         /// </summary>
         public static WeaponGeometry BuildGeometry(GlyphDefinitionRuntime glyph, float maxSide, Vector2 gripPx, bool longAxis = false)
@@ -230,7 +252,9 @@ namespace MojiBattle
             }
             g.length = len;
             Vector2 axis = g.comLocal;
-            if (longAxis)
+            // 重心が握りから十分離れていれば「握り→重心」を基準にする（字形の本体が振りの先に来る）。
+            // 長い方の軸を使うのは重心が握りに重なって向きが定まらない時だけ（軸から横にずれた本体が後ろを回るため）
+            if (longAxis && g.comLocal.magnitude < g.maxSide * LongAxisLeverMin)
             {
                 var bl = g.boundsLocal;
                 axis = f.inkBounds.width >= f.inkBounds.height

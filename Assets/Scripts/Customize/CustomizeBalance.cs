@@ -92,6 +92,8 @@ namespace MojiBattle
         public float gripClampMin = 0.08f, gripClampMax = 0.92f;
         [Tooltip("扱いにくさ: 同じ筋力（トルク）での角加速度 ∝ (基準の慣性 / 実際の慣性)^この指数。基準 = M サイズ・中央握り・質量補正なし")]
         public float inertiaExponent = 0.5f;
+        [Tooltip("カスタマイズした武器の振りの最大角加速度の倍率。余裕が大きいと慣性の大きい持ち方（端持ち・大型）でも予定の振りに追いつき、扱いにくさが速さに出ない")]
+        public float handlingAccelScale = 0.7f;
         [Tooltip("重量クラス（AI の連撃・間隔・構え）の判定: 字形の重量 + (-ln 扱いやすさ) × この値（下限・上限つき）")]
         public float weightFromHandling = 30f, weightFromHandlingMin = -20f, weightFromHandlingMax = 70f;
         [Tooltip("デバッグ表示用の目安 handlingPenalty = 1 + leverArm × HandlingFactor（戦闘計算には使わない）")]
