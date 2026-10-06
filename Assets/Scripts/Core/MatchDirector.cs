@@ -126,7 +126,7 @@ namespace MojiBattle
             if (physicsScene.IsValid()) physicsScene.Simulate(dt);
             Fighters[0].CapturePose();
             Fighters[1].CapturePose();
-            DetectYawHits();
+            DetectOverlapHits();
             if (!Ended)
             {
                 Telemetry.Step(dt);
@@ -292,7 +292,7 @@ namespace MojiBattle
         /// <summary>
         /// 奥行き方向の技（横薙ぎ・足払い・回転斬り）の間は、自分の武器と相手の体を物理的にはぶつけない。
         /// 字形の横幅を奥行きの角度で伸び縮みさせるため、伸びた判定が体にめり込むと武器が押し返されて握りがぶれる。
-        /// 当たりは重なりの検出（DetectYawHits）で判定する。
+        /// 当たりは重なりの検出（DetectOverlapHits）で判定する。
         /// </summary>
         void UpdateYawGhost()
         {
@@ -319,20 +319,26 @@ namespace MojiBattle
             }
         }
 
-        /// <summary>奥行き方向の技の振り（有効時間）で、武器が相手の体に重なっていれば当たりとして報告する。</summary>
-        void DetectYawHits()
+        /// <summary>
+        /// 攻撃の当たりの時間に、武器が相手の体に重なっていれば当たりとして報告する。
+        /// 衝突を外している組（横振り・打ち上げの素通り、めり込み・乗り上げの解消など）は物理の接触が起きないため、ここで拾う。
+        /// 衝突している組は接触のコールバックで報告されるので対象外（二重に数えない）。
+        /// </summary>
+        void DetectOverlapHits()
         {
             for (int i = 0; i < 2; i++)
             {
                 var f = Fighters[i];
-                if (!yawGhost[i] || f.Runtime.state != FighterState.AttackActive) continue;
+                if (!f.InAttackWindow) continue;
                 var opp = f.Opponent;
+                if (Context.Hits.Ledger.IsResolved(f.Runtime.currentAttackId, opp.Id)) continue;
                 foreach (var w in f.WeaponColliders)
                 {
                     var wb = w.bounds;
                     foreach (var bc in opp.BodyColliders)
                     {
                         if (!wb.Intersects(bc.bounds)) continue;
+                        if (!yawGhost[i] && !Physics2D.GetIgnoreCollision(w, bc)) continue;
                         var dist = Physics2D.Distance(w, bc);
                         if (!dist.isValid || dist.distance > 0f) continue;
                         var hb = bc.GetComponent<BodyPartHitbox>();

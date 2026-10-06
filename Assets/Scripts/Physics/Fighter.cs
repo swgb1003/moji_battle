@@ -124,6 +124,22 @@ namespace MojiBattle
             AttackRange + StatCalculator.Lerp01(Balance.stepInSpeedLight, Balance.stepInSpeedHeavy, Stats.weightScore)
             * ActiveTime;
 
+        /// <summary>
+        /// 攻撃が当たりになる時間: 振り（有効時間）、振り終わり直後の振り抜き（勢いが残っている間）、投げた武器の飛行中。
+        /// 溜め（振りかぶり・引き）の接触は技を出す前の構えなので当たりにしない。
+        /// </summary>
+        public bool InAttackWindow
+        {
+            get
+            {
+                var rt = Runtime;
+                if (rt.throwLive) return true;
+                if (rt.state == FighterState.AttackActive) return true;
+                return rt.state == FighterState.AttackRecovery && rt.stateTime <= Balance.followThroughHitSeconds
+                       && rt.attackStyle != AttackStyle.Throw && !rt.weaponDetached;
+            }
+        }
+
         public void SetState(FighterState s)
         {
             var rt = Runtime;

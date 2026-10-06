@@ -31,6 +31,9 @@ namespace MojiBattle
         public bool frontal;
         public float vN;
         public float damage;
+        /// <summary>当たりの判定に使う速さ（すれ違う速さも含む）。0 なら vN で判定する</summary>
+        public float speed;
+        public float GateSpeed => speed > 0f ? speed : vN;
     }
 
     /// <summary>
@@ -90,7 +93,7 @@ namespace MojiBattle
             for (int i = 0; i < list.Count; i++)
             {
                 var c = list[i];
-                if (c.vN < minSpeed) continue;
+                if (c.GateSpeed < minSpeed) continue;
                 if (c.isWeapon)
                 {
                     if (defenderGuarding && c.frontal)
@@ -116,8 +119,8 @@ namespace MojiBattle
             var d = a.Opponent;
             var rtA = a.Runtime;
             var b = ctx.Balance;
-            // 攻撃窓外の接触は物理衝突のみ（ダメージなし）。投げた武器は飛んでいる間が攻撃窓
-            if (rtA.state != FighterState.AttackActive && !rtA.throwLive) { Diag[attackerId, 0]++; return; }
+            // 攻撃窓外の接触は物理衝突のみ（ダメージなし）。攻撃窓 = 振り・振り抜き・投げた武器の飛行中
+            if (!a.InAttackWindow) { Diag[attackerId, 0]++; return; }
             bool resolved = Ledger.IsResolved(rtA.currentAttackId, d.Id);
             if (resolved) Diag[attackerId, 1]++;
             bool guarding = d.Runtime.state == FighterState.Guard;
@@ -142,7 +145,9 @@ namespace MojiBattle
                 // 叩き落としは当たりの速さを固定する（浮いた相手への判定は武器の回転速度に左右されない）
                 bool smashHit = rtA.attackStyle == AttackStyle.Smash && !c.targetIsWeapon;
                 if (smashHit) { vN = b.smashHitSpeed; va = n * vN; }
-                var cand = new ContactCandidate { isWeapon = c.targetIsWeapon, vN = vN };
+                // 当たりの判定は接触面に垂直な速さだけでなく、かすめる（すれ違う）速さも含める。威力は垂直な速さ（vN）で決まる
+                float glancing = Mathf.Max((va - vd).magnitude, c.relativeVelocity.magnitude);
+                var cand = new ContactCandidate { isWeapon = c.targetIsWeapon, vN = vN, speed = c.targetIsWeapon ? 0f : Mathf.Max(vN, glancing) };
                 // 横持ちはガードの正面角が広い
                 if (c.targetIsWeapon) cand.frontal = IsFrontal(d, c.point, Mathf.Min(180f, b.guardHalfAngle * d.Mods.guardRange));
                 else
@@ -163,7 +168,7 @@ namespace MojiBattle
             }
 
             bool anyBody = false, anyWeapon = false, anyFast = false;
-            foreach (var c in candidates) { if (c.isWeapon) anyWeapon = true; else anyBody = true; if (c.vN >= b.minHitRelativeSpeed) anyFast = true; }
+            foreach (var c in candidates) { if (c.isWeapon) anyWeapon = true; else anyBody = true; if (c.GateSpeed >= b.minHitRelativeSpeed) anyFast = true; }
             if (anyBody) Diag[attackerId, 2]++;
             if (anyWeapon) Diag[attackerId, 3]++;
             if (!anyFast) Diag[attackerId, 4]++;

@@ -146,6 +146,8 @@ namespace MojiBattle
         public float defenseK = 0.45f;
         public float speedDivisor = 6f, speedFactorMin = 0.4f, speedFactorMax = 1.8f;
         public float minHitRelativeSpeed = 1.5f;
+        [Tooltip("振り終わり直後（硬直の始め）のこの秒数は、勢いの残った振り抜きの接触も当たりにする")]
+        public float followThroughHitSeconds = 0.12f;
         public float qualityCenter = 1.3f, qualityNormal = 1.0f, qualityGraze = 0.55f;
         public float grazeEdgeFraction = 0.07f, grazeTipFraction = 0.95f, centerFraction = 0.3f;
         public float headMultiplier = 1.5f, torsoMultiplier = 1.0f, armMultiplier = 0.7f, legMultiplier = 0.8f;
