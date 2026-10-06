@@ -23,14 +23,14 @@ namespace MojiBattle.Tests
         [Test]
         public void DamageFormulaMatchesSpec()
         {
-            // raw = 攻撃 × speedFactor × hitQuality × 部位倍率 × 0.22 ; final = max(1, raw × 100/(100+K×防御))
-            // K は仕様初期値 0.6、P1 調整後は CombatBalance.defenseK
-            float raw = 100f * (9f / 6f) * 1.3f * 1.0f * 0.22f;
+            // raw = 攻撃 × speedFactor × hitQuality × 部位倍率 × damageScale ; final = max(1, raw × 100/(100+K×防御))
+            // damageScale は仕様初期値 0.22、KO を増やす調整後は CombatBalance.damageScale。K も同様に CombatBalance.defenseK
+            float raw = 100f * (9f / 6f) * 1.3f * 1.0f * B.damageScale;
             float expected = raw * 100f / (100f + B.defenseK * 50f);
             Assert.AreEqual(expected, DamageMath.BodyDamage(100, 50, 9f, HitQuality.Center, BodyPart.Torso, B), 1e-3f);
             Assert.AreEqual(0.4f, DamageMath.SpeedFactor(0.5f, B), 1e-5f);
             Assert.AreEqual(1.8f, DamageMath.SpeedFactor(50f, B), 1e-5f);
-            Assert.AreEqual(1f, DamageMath.BodyDamage(20, 100, 0.1f, HitQuality.Graze, BodyPart.Arm, B), 1e-5f, "最低1");
+            Assert.AreEqual(1f, DamageMath.BodyDamage(5, 100, 0.1f, HitQuality.Graze, BodyPart.Arm, B), 1e-5f, "最低1");
         }
 
         [Test]

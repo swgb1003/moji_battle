@@ -15,6 +15,22 @@ namespace MojiBattle.EditorTools
 
         public bool Has(int codepoint) => codepoints.Contains(codepoint);
 
+        /// <summary>字形を持つコードポイントを連続範囲（開始・終了を含む、昇順）にまとめる。</summary>
+        public void ToRanges(out int[] starts, out int[] ends)
+        {
+            var sorted = new List<int>(codepoints);
+            sorted.Sort();
+            var s = new List<int>();
+            var e = new List<int>();
+            foreach (int c in sorted)
+            {
+                if (e.Count > 0 && c == e[e.Count - 1] + 1) e[e.Count - 1] = c;
+                else { s.Add(c); e.Add(c); }
+            }
+            starts = s.ToArray();
+            ends = e.ToArray();
+        }
+
         TrueTypeCmap(byte[] d)
         {
             int numTables = U16(d, 4);

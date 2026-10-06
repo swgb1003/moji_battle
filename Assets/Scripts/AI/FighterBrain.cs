@@ -256,7 +256,8 @@ namespace MojiBattle
             if (inRange && d >= MinStrikeDistance && oppAttackable && time >= Rt.attackReadyAt && time >= retreatUntil && !WouldBeOutpaced())
             {
                 float styleBonus = style != null ? style.AttackWillingnessBonus(time) : 0f;
-                float willingness = tend.attackWillingness + (stalemate ? 0.2f : 0f) + B.lateAttackBonus * Urgency + styleBonus;
+                float pressure = style != null ? style.PressureScale : 1f;
+                float willingness = tend.attackWillingness + ((stalemate ? 0.2f : 0f) + B.lateAttackBonus * Urgency) * pressure + styleBonus;
                 if (Rng.Chance(willingness))
                 {
                     Rt.comboRemaining = Rng.RangeInclusive(tend.comboMin, tend.comboMax) - 1;
@@ -384,7 +385,7 @@ namespace MojiBattle
             float wEvade = evadeReady ? tend.evadeBias * (back < B.minBackstepSpace ? 0.6f : 1f) * DefenseScale : 0f;
             // ガードの構えが間に合わない（武器を大きく回す必要がある）なら回避を優先
             var oa = self.Opponent.Runtime;
-            float guardTarget = oa.attackStyle == AttackStyle.Overhead ? B.guardPsiHigh : self.GuardPsiLow;
+            float guardTarget = oa.attackStyle == AttackStyle.Overhead ? B.guardPsiHigh : oa.attackStyle == AttackStyle.Sweep ? B.guardPsi : self.GuardPsiLow;
             float raiseTime = Mathf.Abs(guardTarget - self.WeaponMotor.CurrentPsi) / Mathf.Lerp(700f, 250f, self.Stats.weightScore / 100f);
             if (raiseTime > timeToHit) wGuard *= 0.25f;
             // 距離が射程端に近いほど後退で外しやすい
@@ -419,14 +420,17 @@ namespace MojiBattle
                     : Mathf.Max(0f, o.activeDuration - o.stateTime);
                 EnterGuard(time, remain + 0.15f);
                 // 来る攻撃の種類に合わせてガード位置を変える
-                Rt.guardPsiTarget = o.attackStyle == AttackStyle.Overhead ? B.guardPsiHigh : self.GuardPsiLow;
-                LastDecision = o.attackStyle == AttackStyle.Overhead ? "上段ガード" : "下段ガード";
+                Rt.guardPsiTarget = o.attackStyle == AttackStyle.Overhead ? B.guardPsiHigh : o.attackStyle == AttackStyle.Sweep ? B.guardPsi : self.GuardPsiLow;
+                // 横振りに反応して構えたガードは、回り込む横振りも受け止められる
+                Rt.guardAgainstSweep = o.attackStyle == AttackStyle.Sweep;
+                LastDecision = o.attackStyle == AttackStyle.Overhead ? "上段ガード" : o.attackStyle == AttackStyle.Sweep ? "横振りガード" : "下段ガード";
             }
         }
 
         void EnterGuard(float time, float duration)
         {
             Rt.guardPsiTarget = float.NaN;
+            Rt.guardAgainstSweep = false;
             holdGuardUntil = time + Mathf.Max(B.guardMinDwell, duration);
             pendingAttackAt = -1f;
             Rt.comboRemaining = 0;

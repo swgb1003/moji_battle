@@ -37,6 +37,31 @@ namespace MojiBattle
             return f.gripPoint;
         }
 
+        /// <summary>
+        /// クリックで選んだ場所（外接矩形内の正規化座標）に最も近い画線上の画素を握る。端ギリギリは Clamp（物理の安定のため）。
+        /// </summary>
+        public static Vector2 GripFromPoint(GlyphDefinitionRuntime glyph, Vector2 normalized, float clampMin, float clampMax)
+        {
+            var f = glyph.features;
+            var b = f.inkBounds;
+            var tex = glyph.texture;
+            if (tex == null || !tex.isReadable) return f.gripPoint;
+            float tx = Mathf.Lerp(b.xMin, b.xMax, Mathf.Clamp(normalized.x, clampMin, clampMax));
+            float ty = Mathf.Lerp(b.yMin, b.yMax, Mathf.Clamp(normalized.y, clampMin, clampMax));
+            var px = tex.GetPixels32();
+            int w = tex.width;
+            float best = float.MaxValue;
+            Vector2 grip = f.gripPoint;
+            for (int y = b.yMin; y < b.yMax; y++)
+            for (int x = b.xMin; x < b.xMax; x++)
+            {
+                if (px[y * w + x].a < 128) continue;
+                float d = (x + 0.5f - tx) * (x + 0.5f - tx) + (y + 0.5f - ty) * (y + 0.5f - ty);
+                if (d < best) { best = d; grip = new Vector2(x + 0.5f, y + 0.5f); }
+            }
+            return grip;
+        }
+
         /// <summary>列（または行）上のインクの連続のうち、重心に最も近いものの中央。</summary>
         static bool TryCenterOfRun(int line, bool alongX, RectInt b, Vector2 com, System.Func<int, int, bool> ink, out Vector2 grip)
         {

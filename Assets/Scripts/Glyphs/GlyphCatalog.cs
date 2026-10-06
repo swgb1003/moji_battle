@@ -13,16 +13,20 @@ namespace MojiBattle
         public Texture2D texture;
         public GlyphFeatures features;
         public NormalizedGlyphFeatures normalized;
+        /// <summary>入力された文字を実行時に字形化した（ベイク済みアセットではない）</summary>
+        public bool runtimeBaked;
     }
 
     /// <summary>
     /// 文字×字体から字形を引く。ファイル名は Unicode コードポイント列から決めるため、文字IDを決め打ちしない。
     /// ベイク済みの GlyphDefinition（Resources/Glyphs/Definitions/u{hex}_{font}）を読み、正規化だけ実行時に行う。
+    /// ベイク済みに無い文字は、同梱フォントから実行時に字形化する（RuntimeGlyphBaker。描画・解析はエディタのベイクと同じ）。
     /// </summary>
     public static class GlyphCatalog
     {
         const string Folder = "Glyphs/Definitions/";
         static readonly Dictionary<(string, FontStyleId), GlyphDefinitionRuntime> cache = new Dictionary<(string, FontStyleId), GlyphDefinitionRuntime>();
+        static readonly Dictionary<(string, FontStyleId), string> failed = new Dictionary<(string, FontStyleId), string>();
 
         /// <summary>ベイク済みで使える文字（字体ごと）。</summary>
         public static List<string> AvailableGraphemes(FontStyleId font)
@@ -78,14 +82,20 @@ namespace MojiBattle
             def = null;
             if (string.IsNullOrEmpty(grapheme)) { reason = "文字が空です"; return false; }
             var normalized = grapheme.Normalize(NormalizationForm.FormC);
-            if (new StringInfo(normalized).LengthInTextElements != 1) { reason = "1文字だけ入力してください"; return false; }
+            if (new StringInfo(normalized).LengthInTextElements != 1) { reason = "1 文字だけ入力してください"; return false; }
             if (cache.TryGetValue((normalized, font), out def)) { reason = null; return true; }
 
+            if (failed.TryGetValue((normalized, font), out reason)) return false;
             var baked = Resources.Load<GlyphDefinition>(Folder + ResourceName(normalized, font));
             if (baked == null || baked.mask == null)
             {
-                reason = $"「{normalized}」{FontDisplayName(font)} の字形がありません。この試作版で使える文字: {string.Join(" ", AvailableGraphemes(font))}";
-                return false;
+                if (!RuntimeGlyphBaker.TryBake(normalized, font, balance, calibration, out def, out reason))
+                {
+                    failed[(normalized, font)] = reason;
+                    return false;
+                }
+                cache[(normalized, font)] = def;
+                return true;
             }
             if (baked.features.colliderRects == null || baked.features.colliderRects.Length == 0) { reason = "字形が空です（欠字）"; return false; }
             def = new GlyphDefinitionRuntime
@@ -101,6 +111,10 @@ namespace MojiBattle
             return true;
         }
 
-        public static void ClearCache() => cache.Clear();
+        public static void ClearCache()
+        {
+            cache.Clear();
+            failed.Clear();
+        }
     }
 }

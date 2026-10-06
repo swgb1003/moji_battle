@@ -1,4 +1,4 @@
-// フォントアトラスの字形アルファを、そのまま白マスクとして書き出す（ブレンドしない）。GlyphBaker 専用。
+// フォントアトラスの字形アルファを、そのまま白マスクとして書き出す（ブレンドしない）。字形ベイク（エディタ・実行時）用。
 Shader "Hidden/MojiBattle/GlyphCopy"
 {
     Properties { _MainTex ("Font Texture", 2D) = "white" {} }

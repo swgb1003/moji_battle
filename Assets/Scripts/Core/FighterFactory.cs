@@ -94,17 +94,20 @@ namespace MojiBattle
             geoRoot.SetParent(weaponGo.transform, false);
             fighter.WeaponGeometryRoot = geoRoot;
             var weaponColliders = new List<Collider2D>();
+            var colliderBase = new List<Vector4>();
             var colliderHost = geoRoot.gameObject;
             foreach (var r in glyph.features.colliderRects)
             {
                 var box = colliderHost.AddComponent<BoxCollider2D>();
                 Vector2 center = geo.PxToLocal(r.center);
                 box.offset = new Vector2(center.x * facing, center.y);
+                colliderBase.Add(new Vector4(center.x, center.y, r.width * geo.scale, r.height * geo.scale));
                 box.size = new Vector2(r.width * geo.scale, r.height * geo.scale);
                 box.sharedMaterial = weaponMaterial;
                 weaponColliders.Add(box);
             }
             fighter.WeaponColliders = weaponColliders.ToArray();
+            fighter.WeaponColliderBase = colliderBase.ToArray();
 
             // 表示用 Sprite は Rigidbody の子にせず、StickmanView が補間した姿勢へ毎フレーム置く
             var spriteGo = new GameObject("WeaponSprite_" + glyph.grapheme);
@@ -190,7 +193,9 @@ namespace MojiBattle
             }
             weaponMass = WeaponSizeController.WeaponMass(baseStats.weaponMass, build.weaponSize, cb);
             float maxSide = WeaponSizeController.MaxSide(build.weaponSize, b, cb);
-            var gripPx = WeaponGripController.GripPixel(glyph, cb.ClampGrip(build.gripPosition));
+            var gripPx = build.customGrip
+                ? WeaponGripController.GripFromPoint(glyph, build.gripPoint, cb.gripClampMin * 0.5f, 1f - (1f - cb.gripClampMax) * 0.5f)
+                : WeaponGripController.GripPixel(glyph, cb.ClampGrip(build.gripPosition));
             return BuildGeometry(glyph, maxSide, gripPx, true);
         }
 

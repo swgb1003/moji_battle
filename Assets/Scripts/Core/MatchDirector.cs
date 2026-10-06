@@ -31,6 +31,9 @@ namespace MojiBattle
         readonly float[] dropRestoreAt = { -1f, -1f };
         readonly float[] perchedTime = new float[2];
         readonly float[] stretchTime = new float[2];
+        readonly System.Collections.Generic.HashSet<Collider2D> weaponColliderSet = new System.Collections.Generic.HashSet<Collider2D>();
+        /// <summary>武器どうしの衝突が今有効か（接触ゲート）</summary>
+        public bool WeaponsColliding { get; private set; } = true;
         readonly System.Collections.Generic.List<(Collider2D a, Collider2D b)> separatedPairs = new System.Collections.Generic.List<(Collider2D, Collider2D)>();
         readonly ContactPoint2D[] footContacts = new ContactPoint2D[24];
         int pendingWinner;
@@ -55,6 +58,10 @@ namespace MojiBattle
             CountdownRemaining = countdown;
             Telemetry = new MatchTelemetry(this);
             ctx.RestoreCollision = (x, y) => SetPair(x, y, false);
+            ctx.ApplyWeaponGate = UpdateWeaponGate;
+            foreach (var f in Fighters)
+            foreach (var c in f.WeaponColliders) weaponColliderSet.Add(c);
+            UpdateWeaponGate();
             foreach (var f in Fighters) f.CachePreStep();
         }
 
@@ -103,6 +110,7 @@ namespace MojiBattle
             ResolveHingeStretch(dt);
             Fighters[0].Tick(ctx.SimTime, dt);
             Fighters[1].Tick(ctx.SimTime, dt);
+            UpdateWeaponGate();
             Fighters[0].CachePreStep();
             Fighters[1].CachePreStep();
             // 専用物理ワールドを 1 ステップ進める（接触コールバックはこの中で報告キューへ入る）
@@ -243,6 +251,48 @@ namespace MojiBattle
         }
 
         /// <summary>
+        /// 武器どうしの接触ゲート。文字どうしがぶつかるのは「防御側がガード中」か「両者が攻撃中（溜め・振り）」の時だけ
+        /// （構えているだけの文字は盾にならない）。横振りは奥を回り込むので、横振りに反応して構えたガードでしか止まらない。
+        /// 振り抜き（passThrough）中も外す。weaponsCollideOnlyWhenEngaged が無効なら従来どおり常に衝突する。
+        /// </summary>
+        void UpdateWeaponGate()
+        {
+            var a = Fighters[0];
+            var b = Fighters[1];
+            bool want;
+            if (a.Runtime.weaponPassThrough || b.Runtime.weaponPassThrough) want = false;
+            else if (!Context.Balance.weaponsCollideOnlyWhenEngaged) want = true;
+            else want = Blockable(a, b) || Blockable(b, a);
+            if (want == WeaponsColliding) return;
+            WeaponsColliding = want;
+            foreach (var x in a.WeaponColliders)
+            foreach (var y in b.WeaponColliders)
+            {
+                if (want) SetPair(x, y, false);
+                else
+                {
+                    Physics2D.IgnoreCollision(x, y, true);
+                    separatedPairs.Remove((x, y));
+                    separatedPairs.Remove((y, x));
+                }
+            }
+        }
+
+        static bool Attacking(Fighter f) => f.Runtime.state == FighterState.AttackWindup || f.Runtime.state == FighterState.AttackActive;
+
+        /// <summary>attacker の攻撃を defender の武器が受け止められる状態か。</summary>
+        static bool Blockable(Fighter attacker, Fighter defender)
+        {
+            if (!Attacking(attacker)) return false;
+            var d = defender.Runtime;
+            if (attacker.Runtime.attackStyle == AttackStyle.Sweep)
+                return d.state == FighterState.Guard && d.guardAgainstSweep;
+            return d.state == FighterState.Guard || (Attacking(defender) && d.attackStyle != AttackStyle.Sweep);
+        }
+
+        bool IsWeaponPair(Collider2D x, Collider2D y) => weaponColliderSet.Contains(x) && weaponColliderSet.Contains(y);
+
+        /// <summary>
         /// カスタマイズした武器（小さすぎて相手の字形の穴に挟まる・長すぎて押さえ込まれる）が引っ掛かり、
         /// 握り（ヒンジ）が大きくずれたままになったら、相手との衝突を離れるまで外し、武器の保持トルクを一瞬抜いて外す。
         /// カスタマイズ無しの試合は P1/P2 の検証どおりのまま（対象外）。
@@ -291,7 +341,8 @@ namespace MojiBattle
                 var d = Physics2D.Distance(a, b);
                 if (!d.isValid || d.distance > 0.05f)
                 {
-                    Physics2D.IgnoreCollision(a, b, false);
+                    // 武器どうしは接触ゲートが閉じていれば戻さない
+                    if (!IsWeaponPair(a, b) || WeaponsColliding) Physics2D.IgnoreCollision(a, b, false);
                     separatedPairs.RemoveAt(i);
                 }
             }
@@ -343,6 +394,7 @@ namespace MojiBattle
         void SetPair(Collider2D x, Collider2D y, bool ignore)
         {
             if (ignore) { Physics2D.IgnoreCollision(x, y, true); return; }
+            if (IsWeaponPair(x, y) && !WeaponsColliding) return;
             var d = Physics2D.Distance(x, y);
             if (d.isValid && d.distance < 0.02f)
             {

@@ -1,69 +1,49 @@
 ﻿# P1 一 vs 鬱 seed sweep (Gothic, provisional glyph masks)
 
-- matches: 40 / 一 wins 10 / 鬱 wins 30 / draws 0 (一 win rate 25%)
-- finishes: KO 11 / time up 29
-- duplicate body hits: 0 / env damage events 46 (outside launch window 0)
-- longest gap with no attack started by either side (stalemate metric, max over matches): 6.6s
-- longest no-damage gap (max over matches): 35.4s
-- knockdown recoveries: 19 (settle→stand 1.12–1.98s, timeouts 1, safe shifts 2)
-- script cost per fixed step: avg 0.084 ms / max 15.05 ms
+- matches: 20 / 一 wins 7 / 鬱 wins 13 / draws 0 (一 win rate 35%)
+- finishes: KO 20 / time up 0
+- duplicate body hits: 0 / env damage events 5 (outside launch window 0)
+- longest gap with no attack started by either side (stalemate metric, max over matches): 6.1s
+- longest no-damage gap (max over matches): 20.3s
+- knockdown recoveries: 2 (settle→stand 1.30–1.30s, timeouts 1, safe shifts 0)
+- script cost per fixed step: avg 0.156 ms / max 7.76 ms
 
 | metric (avg per match) | 一 (left) | 鬱 (right) |
 |---|---|---|
-| attacks started | 17.6 | 9.9 |
-| body hits landed | 8.6 | 2.0 |
-| damage dealt by hits | 56.3 | 63.8 |
-| successful guards | 0.3 | 1.1 |
-| evades | 4.1 | 1.4 |
-| max combo hits | 6.4 | 1.2 |
-| avg windup (s) | 0.21 | 1.20 |
-| avg hit impulse | 2.95 | 9.57 |
-| guard time fraction | 1.0% | 4.0% |
-| guard entries per attack sequence | 0.06 | 0.31 |
-| attacks per sequence (combo length) | 1.54 | 1.00 |
-| jammed swings (moved < 40% of planned arc) | 49.5% | 1.6% |
-| approach/hold time fraction | 70.3% | 48.4% |
-| attack time fraction | 17.9% | 43.0% |
+| attacks started | 13.0 | 5.1 |
+| body hits landed | 4.9 | 1.8 |
+| damage dealt by hits | 81.6 | 61.8 |
+| successful guards | 0.5 | 0.6 |
+| evades | 2.9 | 1.5 |
+| max combo hits | 3.6 | 1.1 |
+| avg windup (s) | 0.23 | 1.29 |
+| avg hit impulse | 2.42 | 5.22 |
+| guard time fraction | 2.7% | 8.3% |
+| guard entries per attack sequence | 0.13 | 0.65 |
+| attacks per sequence (combo length) | 1.69 | 1.00 |
+| jammed swings (moved < 40% of planned arc) | 47.2% | 6.8% |
+| approach/hold time fraction | 65.8% | 44.4% |
+| attack time fraction | 24.8% | 43.6% |
 
 | seed | result | time | HP 一 | HP 鬱 | hits 一/鬱 | guards 一/鬱 | evades 一/鬱 | env | no-dmg gap | idle gap |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1037 | 鬱 TIME_UP | 60.0 | 30 | 82 | 10/2 | 0/2 | 4/2 | 2 | 26.4 | 6.1 |
-| 1074 | 鬱 TIME_UP | 60.0 | 50 | 92 | 7/1 | 1/1 | 8/2 | 0 | 20.2 | 6.1 |
-| 1111 | 鬱 TIME_UP | 60.0 | 3 | 95 | 7/2 | 0/1 | 5/2 | 2 | 22.5 | 6.1 |
-| 1148 | 一 TIME_UP | 60.0 | 74 | 65 | 11/1 | 0/3 | 6/1 | 1 | 11.9 | 5.5 |
-| 1185 | 鬱 KO | 55.2 | 0 | 87 | 7/4 | 1/3 | 5/0 | 3 | 16.4 | 4.5 |
-| 1222 | 鬱 KO | 39.1 | 0 | 109 | 4/3 | 0/2 | 2/1 | 1 | 16.6 | 6.1 |
-| 1259 | 鬱 TIME_UP | 60.0 | 21 | 64 | 12/4 | 0/2 | 4/1 | 3 | 14.8 | 5.9 |
-| 1296 | 一 TIME_UP | 60.0 | 40 | 51 | 10/2 | 0/0 | 7/1 | 1 | 11.0 | 6.1 |
-| 1333 | 鬱 TIME_UP | 60.0 | 29 | 94 | 10/3 | 0/0 | 4/1 | 2 | 15.2 | 6.1 |
-| 1370 | 鬱 TIME_UP | 60.0 | 38 | 118 | 9/3 | 0/3 | 6/1 | 2 | 21.2 | 4.8 |
-| 1407 | 鬱 KO | 40.0 | 0 | 97 | 6/3 | 0/0 | 4/2 | 1 | 10.5 | 5.3 |
-| 1444 | 一 TIME_UP | 60.0 | 88 | 71 | 12/1 | 0/0 | 5/5 | 2 | 8.3 | 4.8 |
-| 1481 | 鬱 TIME_UP | 60.0 | 16 | 119 | 5/2 | 0/0 | 3/3 | 1 | 26.2 | 6.1 |
-| 1518 | 一 TIME_UP | 60.0 | 68 | 62 | 11/1 | 0/0 | 4/1 | 0 | 12.9 | 5.1 |
-| 1555 | 鬱 KO | 46.5 | 0 | 84 | 7/2 | 0/0 | 3/0 | 2 | 22.1 | 5.6 |
-| 1592 | 鬱 KO | 51.4 | 0 | 86 | 8/3 | 0/0 | 5/0 | 0 | 12.4 | 4.8 |
-| 1629 | 鬱 KO | 56.7 | 0 | 76 | 9/3 | 0/1 | 3/1 | 2 | 23.2 | 6.1 |
-| 1666 | 鬱 TIME_UP | 60.0 | 12 | 65 | 12/2 | 0/1 | 2/0 | 0 | 12.8 | 6.1 |
-| 1703 | 一 TIME_UP | 60.0 | 65 | 95 | 9/1 | 0/5 | 2/1 | 0 | 16.1 | 6.6 |
-| 1740 | 一 TIME_UP | 60.0 | 98 | 58 | 10/0 | 1/1 | 3/2 | 2 | 20.0 | 6.1 |
-| 1777 | 鬱 TIME_UP | 60.0 | 49 | 123 | 5/3 | 1/0 | 5/2 | 1 | 35.4 | 6.1 |
-| 1814 | 一 TIME_UP | 60.0 | 86 | 87 | 9/1 | 0/4 | 2/3 | 0 | 23.5 | 5.6 |
-| 1851 | 鬱 TIME_UP | 60.0 | 39 | 71 | 11/2 | 0/0 | 5/3 | 3 | 11.9 | 5.4 |
-| 1888 | 鬱 KO | 45.4 | 0 | 124 | 6/3 | 3/2 | 3/1 | 2 | 16.3 | 5.0 |
-| 1925 | 鬱 TIME_UP | 60.0 | 53 | 105 | 7/2 | 0/1 | 12/3 | 1 | 16.1 | 4.8 |
-| 1962 | 鬱 KO | 19.8 | 0 | 126 | 3/2 | 0/0 | 0/0 | 1 | 12.5 | 6.1 |
-| 1999 | 鬱 TIME_UP | 60.0 | 58 | 109 | 7/1 | 1/0 | 4/2 | 1 | 31.8 | 5.8 |
-| 2036 | 鬱 TIME_UP | 60.0 | 32 | 68 | 12/2 | 0/2 | 4/2 | 1 | 12.0 | 6.1 |
-| 2073 | 鬱 TIME_UP | 60.0 | 33 | 101 | 5/2 | 0/0 | 6/3 | 0 | 32.7 | 5.6 |
-| 2110 | 鬱 TIME_UP | 60.0 | 13 | 77 | 9/2 | 0/0 | 6/0 | 1 | 10.6 | 5.3 |
-| 2147 | 鬱 KO | 21.6 | 0 | 120 | 3/2 | 0/0 | 2/0 | 1 | 10.5 | 4.2 |
-| 2184 | 鬱 TIME_UP | 60.0 | 31 | 70 | 11/2 | 0/1 | 4/0 | 1 | 12.0 | 6.1 |
-| 2221 | 鬱 TIME_UP | 60.0 | 38 | 98 | 8/2 | 1/3 | 5/1 | 1 | 10.3 | 6.1 |
-| 2258 | 一 TIME_UP | 60.0 | 67 | 70 | 12/1 | 0/0 | 4/2 | 0 | 17.6 | 5.9 |
-| 2295 | 一 TIME_UP | 60.0 | 98 | 69 | 11/0 | 0/0 | 4/1 | 1 | 17.2 | 5.3 |
-| 2332 | 鬱 KO | 58.2 | 0 | 77 | 12/4 | 0/3 | 2/1 | 0 | 13.7 | 6.1 |
-| 2369 | 一 TIME_UP | 60.0 | 98 | 85 | 7/0 | 0/0 | 2/3 | 1 | 20.2 | 6.1 |
-| 2406 | 鬱 KO | 37.0 | 0 | 119 | 4/3 | 0/0 | 3/1 | 0 | 12.1 | 5.3 |
-| 2443 | 鬱 TIME_UP | 60.0 | 11 | 68 | 15/2 | 1/3 | 4/2 | 2 | 11.3 | 6.1 |
-| 2480 | 鬱 TIME_UP | 60.0 | 31 | 106 | 10/2 | 0/0 | 3/0 | 1 | 18.8 | 6.1 |
+| 1037 | 鬱 KO | 24.8 | 0 | 20 | 3/2 | 1/1 | 4/2 | 1 | 10.3 | 4.6 |
+| 1074 | 鬱 KO | 21.6 | 0 | 31 | 6/1 | 0/0 | 3/0 | 0 | 10.7 | 4.2 |
+| 1111 | 一 KO | 36.5 | 61 | 0 | 9/1 | 2/1 | 1/1 | 0 | 9.9 | 6.1 |
+| 1148 | 鬱 KO | 41.0 | 0 | 22 | 6/3 | 1/1 | 3/1 | 0 | 11.6 | 5.6 |
+| 1185 | 鬱 KO | 22.6 | 0 | 8 | 7/3 | 0/0 | 1/0 | 0 | 8.5 | 4.0 |
+| 1222 | 鬱 KO | 17.3 | 0 | 90 | 1/2 | 1/0 | 0/1 | 1 | 8.3 | 5.1 |
+| 1259 | 鬱 KO | 43.8 | 0 | 27 | 5/2 | 1/1 | 3/2 | 0 | 16.6 | 5.8 |
+| 1296 | 鬱 KO | 39.5 | 0 | 68 | 2/3 | 0/0 | 3/2 | 0 | 15.3 | 4.8 |
+| 1333 | 鬱 KO | 4.8 | 0 | 106 | 0/1 | 0/0 | 0/0 | 0 | 4.8 | 3.2 |
+| 1370 | 一 KO | 33.2 | 35 | 0 | 6/1 | 1/0 | 3/3 | 0 | 14.7 | 5.0 |
+| 1407 | 一 KO | 44.2 | 67 | 0 | 6/0 | 0/0 | 5/2 | 0 | 20.3 | 4.6 |
+| 1444 | 一 KO | 48.7 | 38 | 0 | 6/1 | 0/1 | 7/1 | 2 | 12.6 | 5.0 |
+| 1481 | 一 KO | 39.5 | 40 | 0 | 5/2 | 0/0 | 5/1 | 0 | 11.3 | 6.1 |
+| 1518 | 一 KO | 19.0 | 42 | 0 | 6/1 | 0/0 | 1/2 | 0 | 7.4 | 4.0 |
+| 1555 | 鬱 KO | 38.8 | 0 | 34 | 4/3 | 0/1 | 5/2 | 0 | 16.1 | 5.4 |
+| 1592 | 鬱 KO | 38.0 | 0 | 27 | 5/2 | 0/0 | 3/4 | 1 | 9.8 | 5.9 |
+| 1629 | 一 KO | 27.5 | 30 | 0 | 7/1 | 0/3 | 3/1 | 0 | 5.3 | 4.2 |
+| 1666 | 鬱 KO | 25.0 | 0 | 73 | 2/2 | 1/0 | 2/2 | 0 | 9.0 | 3.9 |
+| 1703 | 鬱 KO | 20.7 | 0 | 20 | 9/3 | 0/1 | 1/0 | 0 | 4.5 | 4.2 |
+| 1740 | 鬱 KO | 32.6 | 0 | 28 | 4/2 | 1/2 | 4/3 | 0 | 10.0 | 5.1 |

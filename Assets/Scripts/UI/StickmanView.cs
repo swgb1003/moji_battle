@@ -47,6 +47,8 @@ namespace MojiBattle
             Vector2 weaponPos = Vector2.Lerp(f.PrevWeaponPos, f.CurrWeaponPos, alpha);
             var weaponRot = Quaternion.Euler(0f, 0f, Mathf.LerpAngle(f.PrevWeaponRot, f.CurrWeaponRot, alpha));
             f.WeaponSprite.transform.SetPositionAndRotation(weaponPos, weaponRot);
+            // 横振り: 縦軸まわりに回る字形（奥・手前を向く間は細く、後ろ向きは鏡像）
+            f.WeaponSprite.transform.localScale = new Vector3(Mathf.Cos(rt.sweepYaw * Mathf.Deg2Rad), 1f, 1f);
             Vector3 P(float x, float y) => (Vector3)bodyPos + bodyRot * new Vector3(x, y, 0f);
 
             Vector3 hip = P(0f, 0.86f), neck = P(0f, 1.42f), headC = P(0f, 1.62f), shoulder = P(0f, 1.34f);
@@ -150,14 +152,26 @@ namespace MojiBattle
                 return;
             }
             float progress = Mathf.Clamp01(rt.stateTime / Mathf.Max(0.01f, rt.windupDuration));
-            // 武器の軌道線（ψ: 振りかぶり → 振り下ろし）
             const int n = 18;
             arc.positionCount = n;
             float radius = f.Weapon.length * 0.95f;
-            for (int i = 0; i < n; i++)
+            if (rt.attackStyle == AttackStyle.Sweep)
             {
-                float psi = Mathf.Lerp(rt.swingFromPsi, rt.swingToPsi, i / (n - 1f)) * Mathf.Deg2Rad;
-                arc.SetPosition(i, grip + new Vector3(Mathf.Cos(psi) * f.Facing, Mathf.Sin(psi), 0f) * radius);
+                // 横振りの軌道線: 体の後ろから手前を回って前へ（水平の楕円）
+                for (int i = 0; i < n; i++)
+                {
+                    float a = Mathf.Lerp(Mathf.PI, -0.35f, i / (n - 1f));
+                    arc.SetPosition(i, grip + new Vector3(Mathf.Cos(a) * f.Facing * radius, -Mathf.Sin(a) * 0.22f * radius - 0.05f, 0f));
+                }
+            }
+            else
+            {
+                // 武器の軌道線（ψ: 振りかぶり → 振り下ろし）
+                for (int i = 0; i < n; i++)
+                {
+                    float psi = Mathf.Lerp(rt.swingFromPsi, rt.swingToPsi, i / (n - 1f)) * Mathf.Deg2Rad;
+                    arc.SetPosition(i, grip + new Vector3(Mathf.Cos(psi) * f.Facing, Mathf.Sin(psi), 0f) * radius);
+                }
             }
             var team = FighterFactory.TeamColor(f.Id);
             arc.startColor = arc.endColor = new Color(team.r, team.g, team.b, 0.25f + 0.5f * progress);

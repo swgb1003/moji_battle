@@ -68,7 +68,18 @@ namespace MojiBattle
 
         public void SetSize(WeaponSize s) { Current.weaponSize = s; Commit(); }
         public void SetGrip(GripType g) { Current.gripType = g; Commit(); }
-        public void SetGripPosition(float p) { Current.gripPosition = Mathf.Clamp01(p); Commit(); }
+        public void SetGripPosition(float p) { Current.gripPosition = Mathf.Clamp01(p); Current.customGrip = false; Commit(); }
+
+        /// <summary>プレビューの字形をクリックして選んだ場所を握る（外接矩形内の正規化座標）。</summary>
+        public void SetGripPoint(Vector2 normalized)
+        {
+            Current.gripPoint = new Vector2(Mathf.Clamp01(normalized.x), Mathf.Clamp01(normalized.y));
+            Current.customGrip = true;
+            Commit();
+        }
+
+        /// <summary>握る場所を中央（長軸の中央）に戻す。</summary>
+        public void ResetGrip() => SetGripPosition(0.5f);
         public void SetStyle(BattleStyle s) { Current.battleStyle = s; Commit(); }
 
         void Commit()

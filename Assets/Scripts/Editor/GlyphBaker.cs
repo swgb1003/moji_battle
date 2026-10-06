@@ -18,15 +18,13 @@ namespace MojiBattle.EditorTools
     {
         /// <summary>初期 9 文字（UI・データ生成の対象範囲。解析器は文字を決め打ちしない）</summary>
         public const string Characters = "一口山火鬱AIOX";
-        public const int MaskSize = 256;
-        /// <summary>em 枠の左下の余白（em 枠 = [8, 8+em]）</summary>
-        public const int Margin = 8;
-        /// <summary>em 枠の下端は基準線の 0.12 em 下（CJK の仮想ボディ）</summary>
-        public const float IdeographicDescent = 0.12f;
+        public const int MaskSize = GlyphRenderer.MaskSize;
         public const int MinEdgeMargin = 4;
         public const string DefinitionFolder = "Assets/Resources/Glyphs/Definitions";
         public const string MaskFolder = "Assets/Art/Glyphs/Baked";
         public const string CalibrationPath = "Assets/Resources/Glyphs/GlyphCalibration.asset";
+        public const string FontLibraryPath = "Assets/Resources/Glyphs/GlyphFontLibrary.asset";
+        public const string CopyMaterialPath = "Assets/Resources/Glyphs/GlyphCopy.mat";
 
         public struct FontSource
         {
@@ -125,7 +123,7 @@ namespace MojiBattle.EditorTools
                 r.errors.Add($"欠字（U+{codepoint:X4} がフォントに無い。代替グリフになる）");
                 return r;
             }
-            var pixels = Render(font, grapheme[0], Mathf.RoundToInt(b.emSizePx), out string renderError);
+            var pixels = GlyphRenderer.Render(font, grapheme[0], Mathf.RoundToInt(b.emSizePx), CopyMaterial(), out string renderError);
             if (pixels == null)
             {
                 r.errors.Add(renderError);
@@ -133,7 +131,7 @@ namespace MojiBattle.EditorTools
             }
 
             var mask = GlyphMask.FromAlpha(pixels, MaskSize, b.alphaThreshold);
-            if (!InkBounds(mask, out var bounds)) { r.errors.Add("空マスク"); return r; }
+            if (!GlyphRenderer.InkBounds(mask, out var bounds)) { r.errors.Add("空マスク"); return r; }
             if (bounds.xMin < MinEdgeMargin || bounds.yMin < MinEdgeMargin ||
                 bounds.xMax > MaskSize - MinEdgeMargin || bounds.yMax > MaskSize - MinEdgeMargin)
                 r.errors.Add($"マスク端からの余白が {MinEdgeMargin}px 未満（字形が切れている可能性）: {bounds}");
@@ -186,66 +184,50 @@ namespace MojiBattle.EditorTools
             return r;
         }
 
-        /// <summary>
-        /// フォントアトラスの字形を 256×256 へ描画する。em 枠は [Margin, Margin+em]、基準線は em 枠下端から 0.12 em 上。
-        /// 横方向は送り幅（advance）の中心を em 枠の中心に合わせる（全角は em と一致、欧文は中央寄せ）。横伸縮はしない。
-        /// </summary>
-        static Color32[] Render(Font font, char ch, int emSize, out string error)
+        /// <summary>字形コピー用マテリアル（Resources に置き、実行時ベイクとビルドでも使う）。</summary>
+        public static Material CopyMaterial()
         {
-            error = null;
-            string s = ch.ToString();
-            font.RequestCharactersInTexture(s, emSize, FontStyle.Normal);
-            if (!font.GetCharacterInfo(ch, out var ci, emSize, FontStyle.Normal))
+            if (copyMaterial != null) return copyMaterial;
+            copyMaterial = AssetDatabase.LoadAssetAtPath<Material>(CopyMaterialPath);
+            if (copyMaterial == null)
             {
-                error = "字形情報を取得できない";
-                return null;
+                Directory.CreateDirectory(Path.GetDirectoryName(CopyMaterialPath));
+                copyMaterial = new Material(Shader.Find(GlyphRenderer.CopyShaderName));
+                AssetDatabase.CreateAsset(copyMaterial, CopyMaterialPath);
             }
-            if (copyMaterial == null) copyMaterial = new Material(Shader.Find("Hidden/MojiBattle/GlyphCopy"));
-            copyMaterial.mainTexture = font.material.mainTexture;
-
-            var rt = RenderTexture.GetTemporary(MaskSize, MaskSize, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-            var prev = RenderTexture.active;
-            RenderTexture.active = rt;
-            GL.Clear(true, true, new Color(0f, 0f, 0f, 0f));
-            GL.PushMatrix();
-            GL.LoadPixelMatrix(0, MaskSize, 0, MaskSize);
-            copyMaterial.SetPass(0);
-            float originX = Mathf.Round(Margin + (emSize - ci.advance) * 0.5f);
-            float baseline = Mathf.Round(Margin + IdeographicDescent * emSize);
-            float x0 = originX + ci.minX, x1 = originX + ci.maxX;
-            float y0 = baseline + ci.minY, y1 = baseline + ci.maxY;
-            GL.Begin(GL.QUADS);
-            GL.TexCoord(ci.uvBottomLeft); GL.Vertex3(x0, y0, 0f);
-            GL.TexCoord(ci.uvTopLeft); GL.Vertex3(x0, y1, 0f);
-            GL.TexCoord(ci.uvTopRight); GL.Vertex3(x1, y1, 0f);
-            GL.TexCoord(ci.uvBottomRight); GL.Vertex3(x1, y0, 0f);
-            GL.End();
-            GL.PopMatrix();
-
-            var tex = new Texture2D(MaskSize, MaskSize, TextureFormat.RGBA32, false, true);
-            tex.ReadPixels(new Rect(0, 0, MaskSize, MaskSize), 0, 0);
-            tex.Apply();
-            RenderTexture.active = prev;
-            RenderTexture.ReleaseTemporary(rt);
-            var px = tex.GetPixels32();
-            UnityEngine.Object.DestroyImmediate(tex);
-            return px;
+            return copyMaterial;
         }
 
-        static bool InkBounds(GlyphMask m, out RectInt bounds)
+        /// <summary>
+        /// 実行時ベイク用のフォント一覧（字体ごとのフォントと、cmap から求めた字形を持つ文字の範囲）を作る。
+        /// </summary>
+        public static GlyphFontLibrary BuildFontLibrary()
         {
-            int x0 = int.MaxValue, y0 = int.MaxValue, x1 = -1, y1 = -1;
-            for (int y = 0; y < m.Size; y++)
-            for (int x = 0; x < m.Size; x++)
+            var lib = AssetDatabase.LoadAssetAtPath<GlyphFontLibrary>(FontLibraryPath);
+            if (lib == null)
             {
-                if (!m[x, y]) continue;
-                if (x < x0) x0 = x;
-                if (x > x1) x1 = x;
-                if (y < y0) y0 = y;
-                if (y > y1) y1 = y;
+                Directory.CreateDirectory(Path.GetDirectoryName(FontLibraryPath));
+                lib = ScriptableObject.CreateInstance<GlyphFontLibrary>();
+                AssetDatabase.CreateAsset(lib, FontLibraryPath);
             }
-            bounds = x1 < 0 ? default : new RectInt(x0, y0, x1 - x0 + 1, y1 - y0 + 1);
-            return x1 >= 0;
+            var entries = new List<GlyphFontLibrary.Entry>();
+            foreach (var src in Fonts)
+            {
+                if (string.IsNullOrEmpty(src.path)) continue;
+                var font = AssetDatabase.LoadAssetAtPath<Font>(src.path);
+                if (font == null) continue;
+                TrueTypeCmap.Load(src.path).ToRanges(out var starts, out var ends);
+                entries.Add(new GlyphFontLibrary.Entry
+                {
+                    style = src.id, font = font, rangeStart = starts, rangeEnd = ends,
+                    fontFamily = font.fontNames != null && font.fontNames.Length > 0 ? font.fontNames[0] : font.name,
+                });
+            }
+            lib.fonts = entries.ToArray();
+            lib.copyMaterial = CopyMaterial();
+            EditorUtility.SetDirty(lib);
+            AssetDatabase.SaveAssets();
+            return lib;
         }
 
         public static List<GlyphDefinition> LoadDefinitions() =>
@@ -333,7 +315,7 @@ namespace MojiBattle.EditorTools
 
         public static string SettingsHash(CombatBalance b)
         {
-            string s = $"{MaskSize}|{Margin}|{IdeographicDescent}|{b.emSizePx}|{b.alphaThreshold}|{b.colliderGrid}|{b.cellOccupancy}|{b.maxColliders}|{b.minComponentPixels}|{b.dilateForColliders}";
+            string s = $"{MaskSize}|{GlyphRenderer.Margin}|{GlyphRenderer.IdeographicDescent}|{b.emSizePx}|{b.alphaThreshold}|{b.colliderGrid}|{b.cellOccupancy}|{b.maxColliders}|{b.minComponentPixels}|{b.dilateForColliders}";
             return Sha256(Encoding.UTF8.GetBytes(s)).Substring(0, 16);
         }
 

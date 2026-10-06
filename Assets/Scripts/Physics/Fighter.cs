@@ -24,6 +24,8 @@ namespace MojiBattle
         public float LastAttackStartTime;
         /// <summary>衝突の復帰（重なっていれば離れてから戻す）。MatchDirector が設定する。</summary>
         public System.Action<Collider2D, Collider2D> RestoreCollision;
+        /// <summary>武器どうしの衝突の有無を今の状態に合わせて反映する。MatchDirector が設定する。</summary>
+        public System.Action ApplyWeaponGate;
     }
 
     /// <summary>字形から作った武器の幾何情報（握り原点・右向き基準のワールド単位）。</summary>
@@ -62,6 +64,9 @@ namespace MojiBattle
         public Transform WeaponGeometryRoot;
         public SpriteRenderer WeaponSprite;
         public Collider2D[] BodyColliders, WeaponColliders;
+        /// <summary>武器 Collider の基準（右向き・横振りの奥行き 0 の時の 中心x, 中心y, 幅, 高さ）</summary>
+        public Vector4[] WeaponColliderBase;
+        float appliedYawCos = 1f;
         public Fighter Opponent;
         public MatchContext Context;
         public FighterRuntime Runtime;
@@ -170,6 +175,7 @@ namespace MojiBattle
                     break;
             }
 
+            UpdateSweep(dt);
             ClampSpeeds();
             if (Context.MatchOver || !Context.AiEnabled) Brain.Idle();
             else Brain.Tick(time);
@@ -197,7 +203,7 @@ namespace MojiBattle
             if (!Mods.customized) return true;
             var rt = Runtime;
             var cb = Context.Customize;
-            if (rt.attackHadContact || rt.attackStyle == AttackStyle.Thrust || WeaponMotor.Stalled || rt.stateTime >= rt.activeDuration * cb.maxPhaseStretch) return true;
+            if (rt.attackHadContact || rt.attackStyle == AttackStyle.Thrust || rt.attackStyle == AttackStyle.Sweep || WeaponMotor.Stalled || rt.stateTime >= rt.activeDuration * cb.maxPhaseStretch) return true;
             float span = rt.swingToPsi - rt.swingFromPsi;
             if (Mathf.Abs(span) < 1f) return true;
             float progress = (WeaponMotor.CurrentPsi - rt.swingFromPsi) / span;
@@ -243,11 +249,24 @@ namespace MojiBattle
             if (DistanceToOpponent < AttackRange * 0.6f) pThrust = 0f;
             rt.attackStyle = Brain.Rng.Chance(pThrust) ? AttackStyle.Thrust
                 : Brain.Rng.Chance(pRising) ? AttackStyle.Rising : AttackStyle.Overhead;
+            // 横振り: 構えて待つ相手・大きな字形の相手ほど選びやすい（正面の字形を奥から回り込む）
+            if (Brain.Rng.Chance(SweepChance())) rt.attackStyle = AttackStyle.Sweep;
             // 相手がガードを構えていれば、その逆の高さを狙う
-            if (Opponent.Runtime.state == FighterState.Guard && Brain.Rng.Chance(0.7f))
+            if (rt.attackStyle != AttackStyle.Sweep && Opponent.Runtime.state == FighterState.Guard && Brain.Rng.Chance(0.7f))
             {
                 float g = float.IsNaN(Opponent.Runtime.guardPsiTarget) ? b.guardPsi : Opponent.Runtime.guardPsiTarget;
                 rt.attackStyle = g < 30f ? AttackStyle.Overhead : (pThrust > 0.3f ? AttackStyle.Thrust : AttackStyle.Rising);
+            }
+            if (rt.attackStyle == AttackStyle.Sweep)
+            {
+                // 横振り: 字形を立てたまま（ψ = 字形の基準角）、奥行き方向に後ろ→前へ回す。溜めが長く予兆がはっきりしている
+                rt.windupDuration *= b.sweepWindupMultiplier;
+                rt.activeDuration *= b.sweepActiveMultiplier;
+                rt.swingFromPsi = rt.swingToPsi = Weapon.alpha0Deg;
+                rt.metrics.attacksStarted++;
+                Context.LastAttackStartTime = time;
+                SetState(FighterState.AttackWindup);
+                return;
             }
             Vector2 target;
             if (rt.attackStyle == AttackStyle.Thrust)
@@ -298,17 +317,80 @@ namespace MojiBattle
             SetState(FighterState.AttackWindup);
         }
 
+        float SweepChance()
+        {
+            var b = Balance;
+            var o = Opponent;
+            float p = b.sweepChance;
+            // 構えて待っている相手（反応ではなく先に構えたガード）には回り込む横振りが有効
+            if (o.Runtime.state == FighterState.Guard && !o.Runtime.guardAgainstSweep) p = Mathf.Max(p, b.sweepChanceVsGuard);
+            if (o.Weapon.maxSide > b.weaponMaxSide * 1.1f) p += b.sweepChanceBigWeaponBonus;
+            return Mathf.Clamp01(p);
+        }
+
+        /// <summary>
+        /// 横振りの奥行き角を進める。溜めで後ろへ回し（0→180°）、振りで前へ（180°→振り抜き）、硬直で戻す。
+        /// 字形は縦軸まわりに回るので、表示と Collider の横幅が cos(角度) で伸び縮みする（奥・手前を向く間は細い）。
+        /// </summary>
+        void UpdateSweep(float dt)
+        {
+            var rt = Runtime;
+            var b = Balance;
+            float prev = rt.sweepYaw;
+            bool sweeping = rt.attackStyle == AttackStyle.Sweep;
+            float yaw;
+            switch (rt.state)
+            {
+                case FighterState.AttackWindup when sweeping:
+                {
+                    float t = Mathf.Clamp01(rt.stateTime / Mathf.Max(0.05f, rt.windupDuration));
+                    yaw = 180f * t * t * (3f - 2f * t);
+                    break;
+                }
+                case FighterState.AttackActive when sweeping:
+                {
+                    float t = Mathf.Clamp01(rt.stateTime / Mathf.Max(0.02f, rt.activeDuration));
+                    yaw = Mathf.Lerp(180f, b.sweepFollowThroughYaw, t * t);
+                    break;
+                }
+                case FighterState.AttackRecovery when sweeping:
+                {
+                    float t = Mathf.Clamp01(rt.stateTime / Mathf.Max(0.05f, rt.recoveryDuration * 0.6f));
+                    yaw = Mathf.Lerp(b.sweepFollowThroughYaw, 0f, t * t * (3f - 2f * t));
+                    break;
+                }
+                default:
+                    yaw = Mathf.MoveTowards(prev, 0f, 720f * dt);
+                    break;
+            }
+            rt.sweepYaw = yaw;
+            rt.sweepYawRate = (yaw - prev) / Mathf.Max(1e-4f, dt);
+            ApplyWeaponYaw(false);
+        }
+
+        /// <summary>武器 Collider を向き（左右）と横振りの奥行き角に合わせる。</summary>
+        public void ApplyWeaponYaw(bool force)
+        {
+            if (WeaponColliderBase == null) return;
+            float c = Mathf.Cos(Runtime.sweepYaw * Mathf.Deg2Rad);
+            if (!force && Mathf.Abs(c - appliedYawCos) < 1e-3f) return;
+            appliedYawCos = c;
+            for (int i = 0; i < WeaponColliders.Length; i++)
+            {
+                var box = (BoxCollider2D)WeaponColliders[i];
+                var basis = WeaponColliderBase[i];
+                box.offset = new Vector2(basis.x * Facing * c, basis.y);
+                box.size = new Vector2(Mathf.Max(0.02f, basis.z * Mathf.Abs(c)), basis.w);
+            }
+        }
+
         /// <summary>このスイングの間だけ相手の武器との衝突を外す（叩き落として振り抜く / ガード崩しの追撃）。</summary>
         public void SetWeaponPassThrough(bool on)
         {
             if (Runtime.weaponPassThrough == on) return;
             Runtime.weaponPassThrough = on;
-            foreach (var mine in WeaponColliders)
-            foreach (var theirs in Opponent.WeaponColliders)
-            {
-                if (on || Context.RestoreCollision == null) Physics2D.IgnoreCollision(mine, theirs, on);
-                else Context.RestoreCollision(mine, theirs);
-            }
+            // 実際の衝突の切り替えは MatchDirector の武器接触ゲート（物理ステップ直前に反映）
+            Context.ApplyWeaponGate?.Invoke();
         }
 
         void EndActive(float time)
@@ -417,7 +499,7 @@ namespace MojiBattle
             float relW = WeaponBody.angularVelocity - Body.angularVelocity;
             Facing = f;
             // Collider は offset を左右反転（Transform を介さないので補間中の姿勢を物理へ書き戻さない）
-            foreach (var c in WeaponColliders) c.offset = new Vector2(-c.offset.x, c.offset.y);
+            ApplyWeaponYaw(true);
             WeaponSprite.flipX = f < 0;
             WeaponBody.centerOfMass = new Vector2(Weapon.comLocal.x * f, Weapon.comLocal.y);
             Hinge.connectedAnchor = ShoulderLocal(f);

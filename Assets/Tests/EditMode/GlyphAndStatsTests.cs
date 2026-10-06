@@ -196,9 +196,12 @@ namespace MojiBattle.Tests
             GlyphCatalog.ClearCache();
             Assert.IsFalse(GlyphCatalog.TryGet("", FontStyleId.Gothic, B, GlyphCalibration.Default, out _, out var r1));
             Assert.IsFalse(GlyphCatalog.TryGet("一鬱", FontStyleId.Gothic, B, GlyphCalibration.Default, out _, out var r2));
-            Assert.IsFalse(GlyphCatalog.TryGet("猫", FontStyleId.Gothic, B, GlyphCalibration.Default, out _, out var r3));
+            // ベイク済みに無い文字は実行時に字形化される。同梱フォントに字形の無い文字だけを理由付きで断る
+            Assert.IsTrue(GlyphCatalog.TryGet("猫", FontStyleId.Gothic, B, GlyphCalibration.Default, out _, out _));
+            Assert.IsFalse(GlyphCatalog.TryGet("\u0E01", FontStyleId.Gothic, B, GlyphCalibration.Default, out _, out var r3));
             Assert.IsNotEmpty(r1); Assert.IsNotEmpty(r2);
-            StringAssert.Contains("鬱", r3, "使える文字の一覧を示す");
+            StringAssert.Contains("字形がありません", r3);
+            GlyphCatalog.ClearCache();
         }
     }
 }

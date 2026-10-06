@@ -40,7 +40,7 @@ namespace MojiBattle
         public float defW = 0.50f, defA = 0.30f, defM = 0.20f, defMin = 20f, defMax = 85f;
         public float spdBase = 105f, spdM = 0.85f, spdC = 0.10f, spdB = 0.05f, spdMin = 10f, spdMax = 100f;
         public float durA = 0.50f, durM = 0.30f, durB = 0.20f, durMin = 20f, durMax = 100f;
-        public float hpBase = 78f, hpPerDurability = 0.85f;
+        public float hpBase = 50f, hpPerDurability = 0.7f;
         public float weaponMassBase = 1.1f, weaponMassPerM = 0.035f;
         public float bodyMassBase = 2.0f, bodyMassPerDurability = 0.008f;
         public float lightMaxWeight = 35f, heavyMinWeight = 70f;
@@ -142,7 +142,7 @@ namespace MojiBattle
         public float evadeMinTime = 0.25f, evadeMaxTime = 1.1f;
 
         [Header("8.2 ダメージ")]
-        public float damageScale = 0.22f;
+        public float damageScale = 0.5f;
         public float defenseK = 0.45f;
         public float speedDivisor = 6f, speedFactorMin = 0.4f, speedFactorMax = 1.8f;
         public float minHitRelativeSpeed = 1.5f;
@@ -193,6 +193,26 @@ namespace MojiBattle
         public float heavyWhiffStaggerMomentum = 40f;
         [Tooltip("安全上限: 本体・武器の最大速度（物理の破綻防止。壁衝突ダメージの閾値7より十分大きい）")]
         public float maxBodySpeed = 22f, maxWeaponSpeed = 30f;
+
+        [Header("横振り（薙ぎ払い）と武器どうしの接触")]
+        [Tooltip("文字どうしがぶつかるのは「防御側がガード中」か「両者が攻撃中（溜め・振り）」の時だけ。構えているだけの文字は盾にならない")]
+        public bool weaponsCollideOnlyWhenEngaged = true;
+        [Tooltip("横振りを選ぶ確率（基本 / 相手が構えて待っている時 / 相手の字形が大きい時の加算）")]
+        public float sweepChance = 0.18f, sweepChanceVsGuard = 0.6f, sweepChanceBigWeaponBonus = 0.15f;
+        [Tooltip("横振りの溜め・振りの時間倍率（溜めが長く予兆がはっきりしている）")]
+        public float sweepWindupMultiplier = 1.35f, sweepActiveMultiplier = 1.5f;
+        [Tooltip("横振りの振り終わりの奥行き角（前へ振り抜く）")]
+        public float sweepFollowThroughYaw = -35f;
+        [Tooltip("横振りが当たった時の速さ = min(奥行きの角速度, 上限) × 握りからの距離 × この倍率。体の周りを回す振りは平面の振りより遅い")]
+        public float sweepSpeedScale = 0.5f;
+        [Tooltip("横振りの奥行きの角速度の上限（度/秒）。軽い武器の短い振りで速さが現実離れしないように")]
+        public float sweepMaxYawSpeed = 720f;
+        [Tooltip("横振りの与ダメージ倍率")]
+        public float sweepDamageMultiplier = 1f;
+        [Tooltip("重量級は溜め・振りの最中、転倒しない程度の打撃ではひるまない（軽量級の手数で重い一撃が毎回潰されないように）")]
+        public bool heavyArmorDuringAttack = true;
+        [Tooltip("スーパーアーマーが効くのは、相手の武器質量が自分の武器質量のこの割合未満の時だけ（中量級の重い打撃では崩れる）")]
+        public float heavyArmorMassRatio = 0.5f;
 
         [Header("8.4 転倒・KO")]
         public float settleSpeed = 0.6f, settleAngularSpeed = 90f;

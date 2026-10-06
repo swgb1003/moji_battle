@@ -288,7 +288,8 @@ namespace MojiBattle.Tests
             Assert.AreEqual(a.metrics[0].hitsLanded, b.metrics[0].hitsLanded);
             Assert.AreEqual(a.metrics[1].hitsLanded, b.metrics[1].hitsLanded);
             Assert.AreEqual(TimeController.BaseFixedDelta, Time.fixedDeltaTime, 1e-6f);
-            Assert.AreEqual(1f, Time.timeScale, 1e-6f);
+            // 試合が早く決着すると観戦速度の操作の途中で終わるため、時間倍率が観戦速度どおりであることだけを見る
+            Assert.AreEqual(TimeController.SpectatorSpeed, Time.timeScale, 1e-6f);
         }
 
         /// <summary>KO 時は timeScale=0.25 で約0.7秒の演出、解除後は基準値へ戻る。</summary>
@@ -373,6 +374,9 @@ namespace MojiBattle.Tests
             {
                 bool lift = run == 0;
                 battle = SimHarness.Build(21, countdown: 1000f); // AI 停止
+                // この確認は武器ごと突き上げる状況を作るため、武器どうしを常に衝突させる（接触ゲートを開ける）
+                CombatBalance.Default.weaponsCollideOnlyWhenEngaged = false;
+                battle.Context.ApplyWeaponGate();
                 var victim = battle.Left;
                 var lifter = battle.Right;
                 TimeController.SetSpectatorSpeed(1f);
@@ -398,6 +402,7 @@ namespace MojiBattle.Tests
                 slams[run] = victim.Runtime.metrics.slamsTaken;
                 battle.Destroy();
                 battle = null;
+                CombatBalance.Default.weaponsCollideOnlyWhenEngaged = true;
                 yield return null;
             }
             Debug.Log($"[SLAM] lifted: dmg={dmg[0]:F1} slams={slams[0]} / plain fall: dmg={dmg[1]:F1} slams={slams[1]}");

@@ -38,8 +38,8 @@ MonoBehaviour:
   durB: 0.2
   durMin: 20
   durMax: 100
-  hpBase: 78
-  hpPerDurability: 0.85
+  hpBase: 50
+  hpPerDurability: 0.7
   weaponMassBase: 1.1
   weaponMassPerM: 0.035
   bodyMassBase: 2
@@ -160,7 +160,7 @@ MonoBehaviour:
   hopOverSpeedY: 7.8
   evadeMinTime: 0.25
   evadeMaxTime: 1.1
-  damageScale: 0.22
+  damageScale: 0.5
   defenseK: 0.45
   speedDivisor: 6
   speedFactorMin: 0.4
@@ -221,6 +221,18 @@ MonoBehaviour:
   heavyWhiffStaggerMomentum: 40
   maxBodySpeed: 22
   maxWeaponSpeed: 30
+  weaponsCollideOnlyWhenEngaged: 1
+  sweepChance: 0.18
+  sweepChanceVsGuard: 0.6
+  sweepChanceBigWeaponBonus: 0.15
+  sweepWindupMultiplier: 1.35
+  sweepActiveMultiplier: 1.5
+  sweepFollowThroughYaw: -35
+  sweepSpeedScale: 0.5
+  sweepMaxYawSpeed: 720
+  sweepDamageMultiplier: 1
+  heavyArmorDuringAttack: 1
+  heavyArmorMassRatio: 0.5
   settleSpeed: 0.6
   settleAngularSpeed: 90
   recoverDelayMin: 1

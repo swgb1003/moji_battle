@@ -10,6 +10,19 @@ namespace MojiBattle.Tests
     public class CustomizeFlowTests
     {
         FighterBuildData savedLeft, savedRight;
+        static Vector2 pickedGripPx;
+
+        static RectInt GlyphInk(FighterPreviewController p)
+        {
+            GlyphCatalog.TryGet(p.Build.character, p.Build.fontType, CombatBalance.Default, GlyphCalibration.Default, out var g, out _);
+            return g.features.inkBounds;
+        }
+
+        static Texture2D GlyphTexture(FighterPreviewController p)
+        {
+            GlyphCatalog.TryGet(p.Build.character, p.Build.fontType, CombatBalance.Default, GlyphCalibration.Default, out var g, out _);
+            return g.texture;
+        }
 
         [SetUp]
         public void SetUp()
@@ -54,13 +67,36 @@ namespace MojiBattle.Tests
             c.SetGrip(GripType.TwoHanded);
             Assert.AreEqual(GripType.TwoHanded, preview.Mods.grip, "持ち方がプレビューに反映されない");
             c.SetStyle(BattleStyle.HitAndAway);
-            Assert.IsFalse(c.SetCharacter("あ"), "未収録の文字が通った");
+            // 字形の無い文字・2 文字・空白は理由を出して受け付けない
+            Assert.IsFalse(c.SetCharacter("\u0E01"), "フォントに無い文字が通った");
             Assert.IsNotEmpty(c.CharacterError);
+            Assert.IsFalse(c.SetCharacter("ab"));
+            Assert.IsFalse(c.SetCharacter(" "));
+            // ベイク済みでない好きな文字を入力すると、その場で字形化されてプレビューに出る
+            Assert.IsTrue(c.SetCharacter("龍"), c.CharacterError);
+            Assert.AreEqual("龍", preview.Build.character);
+            Assert.Greater(preview.Geometry.colliderCount, 0);
             Assert.IsTrue(c.SetCharacter("火"));
             Assert.AreEqual("火", preview.Build.character);
             // P2: 鬱・逆手・カウンター
             c.SelectSide(1);
-            c.SetCharacter("鬱");
+            Assert.IsTrue(c.SetCharacter("剣"), c.CharacterError);
+            // 握る場所: プレビューの字形をクリックした位置 → 最も近い画線上の点を握る
+            yield return null;
+            var ink = preview.Build != null ? GlyphInk(preview) : default;
+            var clickPx = new Vector2(ink.xMin + ink.width * 0.85f, ink.yMin + ink.height * 0.3f);
+            Assert.IsTrue(preview.TryPickGrip(preview.PixelToWorld(clickPx), out var picked, 40f), "字形の上のクリックが拾えない");
+            Assert.AreEqual(0.85f, picked.x, 0.02f);
+            Assert.AreEqual(0.3f, picked.y, 0.02f);
+            Assert.IsFalse(preview.TryPickGrip(preview.PixelToWorld(new Vector2(ink.xMax + 60f, ink.yMax + 60f)), out _), "字形の外のクリックを拾った");
+            screen.PickGripAt(picked);
+            yield return null;
+            Assert.IsTrue(preview.Build.customGrip);
+            var gp = preview.Geometry.gripPx;
+            Assert.Greater((gp.x - ink.xMin) / ink.width, 0.6f, "クリックした側を握っていない");
+            var px = preview.Build != null ? GlyphTexture(preview).GetPixel(Mathf.FloorToInt(gp.x), Mathf.FloorToInt(gp.y)) : default;
+            Assert.GreaterOrEqual(px.a, 0.5f, "握り点が画線の外");
+            pickedGripPx = gp;
             c.SetGrip(GripType.Reverse);
             c.SetStyle(BattleStyle.Counter);
             Assert.AreEqual(1, preview.Side);
@@ -76,8 +112,9 @@ namespace MojiBattle.Tests
 
             // 数秒戦わせる（例外・継続エラーが出ないこと）
             TimeController.SetSpectatorSpeed(2f);
-            for (int i = 0; i < 120; i++) yield return null;
-            Assert.Greater(boot.Battle.Director.StepCount, 10);
+            float t0 = Time.realtimeSinceStartup;
+            while (boot.Battle.Director.StepCount < 200 && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.GreaterOrEqual(boot.Battle.Director.StepCount, 200, "試合が進まない");
 
             // リザルト: 同じ設定でもう一度
             boot.RematchSameBuild();
@@ -102,7 +139,10 @@ namespace MojiBattle.Tests
             Assert.AreEqual(GripType.TwoHanded, b.Left.Mods.grip);
             Assert.AreEqual(BattleStyle.HitAndAway, b.Left.Style.Style);
             Assert.AreEqual(0.1f, b.Left.Mods.gripPosition, 0.001f);
-            Assert.AreEqual("鬱", b.Right.Loadout.grapheme);
+            Assert.AreEqual("剣", b.Right.Loadout.grapheme);
+            Assert.AreEqual(pickedGripPx, b.Right.Weapon.gripPx, "プレビューで選んだ握り点と戦闘の握り点が違う");
+            StringAssert.Contains("横85%", b.Right.Mods.gripLabel);
+            Assert.IsTrue(b.Right.Glyph.runtimeBaked, "入力した文字が実行時に字形化されていない");
             Assert.AreEqual(GripType.Reverse, b.Right.Mods.grip);
             Assert.AreEqual(BattleStyle.Counter, b.Right.Style.Style);
         }

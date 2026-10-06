@@ -131,6 +131,14 @@ namespace MojiBattle
                 Vector2 va = a.PreWeaponPointVelocity(c.point);
                 Vector2 vd = c.targetIsWeapon ? d.PreWeaponPointVelocity(c.point) : d.PreBodyVelocity;
                 float vN = Mathf.Max(Mathf.Abs(Vector2.Dot(va - vd, n)), Mathf.Abs(Vector2.Dot(c.relativeVelocity, n)));
+                // 横振りは奥行き方向の回転なので、平面上の速度の代わりに「奥行きの角速度 × 握りからの水平距離」を使う
+                bool sweep = rtA.attackStyle == AttackStyle.Sweep;
+                if (sweep)
+                {
+                    float r = Mathf.Abs(a.WeaponLocalPoint(c.point).x);
+                    float vSweep = Mathf.Min(Mathf.Abs(rtA.sweepYawRate), b.sweepMaxYawSpeed) * Mathf.Deg2Rad * r * b.sweepSpeedScale;
+                    if (vSweep > vN) { vN = vSweep; va = n * vSweep; }
+                }
                 var cand = new ContactCandidate { isWeapon = c.targetIsWeapon, vN = vN };
                 // 横持ちはガードの正面角が広い
                 if (c.targetIsWeapon) cand.frontal = IsFrontal(d, c.point, Mathf.Min(180f, b.guardHalfAngle * d.Mods.guardRange));
@@ -138,7 +146,8 @@ namespace MojiBattle
                 {
                     qualities[i] = ClassifyQuality(a, c.point, n, va, b);
                     // サイズの威力は質量を通じてだけ（Mods.damage = 質量倍率^指数）
-                    cand.damage = DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense, vN, qualities[i], c.part, b) * a.Mods.damage;
+                    cand.damage = DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense, vN, qualities[i], c.part, b) * a.Mods.damage
+                                  * (sweep ? b.sweepDamageMultiplier : 1f);
                 }
                 candidates.Add(cand);
             }
@@ -256,7 +265,8 @@ namespace MojiBattle
 
             if (rtD.hp <= 0f) d.Knockdown.EnterKO(time);
             else if (knock) d.Knockdown.EnterKnockdown(time);
-            else if (stagger && !rtD.IsDown) d.EnterStagger(b.staggerDuration);
+            // 重量級のスーパーアーマー: 溜め・振りの最中は、ずっと軽い武器の転倒に至らない打撃ではひるまずに振り切る（受けながら一撃）
+            else if (stagger && !rtD.IsDown && !HeavyArmor(a, d, stateBefore, b)) d.EnterStagger(b.staggerDuration);
             if (launch) d.MarkLaunched(time);
 
             Vector2 dir = KnockDirection(a, d, hit.normal, b.launchUpBias);
@@ -273,6 +283,11 @@ namespace MojiBattle
                 defenderStateBefore = stateBefore,
             });
         }
+
+        static bool HeavyArmor(Fighter a, Fighter d, FighterState defenderState, CombatBalance b) =>
+            b.heavyArmorDuringAttack && d.WeightClass == WeightClass.Heavy
+            && (defenderState == FighterState.AttackWindup || defenderState == FighterState.AttackActive)
+            && a.WeaponBody.mass < d.WeaponBody.mass * b.heavyArmorMassRatio;
 
         void ApplyClash(Fighter a, Fighter d, HitContact hit, float vN, float time)
         {

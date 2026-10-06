@@ -14,6 +14,8 @@ namespace MojiBattle
         public GripType grip;
         public BattleStyle style;
         public float gripPosition;
+        /// <summary>HUD 等の表示用の握る場所</summary>
+        public string gripLabel;
 
         public float sizeScale, weaponMassMultiplier;
         /// <summary>溜め・振り・硬直の速さ（サイズ × 持ち方）</summary>
@@ -59,6 +61,7 @@ namespace MojiBattle
             m.grip = build.gripType;
             m.style = build.battleStyle;
             m.gripPosition = cb.ClampGrip(build.gripPosition);
+            m.gripLabel = CustomizeLabels.GripPlace(build);
             m.sizeScale = size.scale;
             m.weaponMassMultiplier = size.massMultiplier;
             m.attackSpeed = size.attackSpeed * grip.attackSpeed;

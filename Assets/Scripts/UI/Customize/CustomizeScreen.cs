@@ -16,14 +16,13 @@ namespace MojiBattle
         FighterPreviewController preview;
         Canvas canvas;
         readonly UguiKit.ChoiceButton[] sideTabs = new UguiKit.ChoiceButton[2];
-        readonly List<(UguiKit.ChoiceButton b, string ch)> glyphButtons = new List<(UguiKit.ChoiceButton, string)>();
         readonly List<(UguiKit.ChoiceButton b, FontStyleId f)> fontButtons = new List<(UguiKit.ChoiceButton, FontStyleId)>();
         readonly List<(UguiKit.ChoiceButton b, WeaponSize s)> sizeButtons = new List<(UguiKit.ChoiceButton, WeaponSize)>();
         readonly List<(UguiKit.ChoiceButton b, GripType g)> gripButtons = new List<(UguiKit.ChoiceButton, GripType)>();
         readonly List<(UguiKit.ChoiceButton b, BattleStyle s)> styleButtons = new List<(UguiKit.ChoiceButton, BattleStyle)>();
         InputField charInput;
-        Text charError, gripValue, styleNote, gripNote, info, previewTitle;
-        Slider gripSlider;
+        Text charError, charHint, gripValue, styleNote, gripNote, info, previewTitle;
+
         GameObject vsPanel;
         Text vsTitle, vsLeft, vsRight;
         bool refreshing;
@@ -73,18 +72,13 @@ namespace MojiBattle
             }
             y += 76f;
             Section(root, "文字", y);
-            charInput = UguiKit.InputBox(root, "CharInput", PanelX + 220f, y - 8f, 110f, 96f, 64, s =>
-            {
-                if (!refreshing && !string.IsNullOrEmpty(s)) customizer.SetCharacter(s);
-            });
-            float gx = PanelX + 350f;
-            foreach (var ch in FighterCustomizer.AvailableCharacters(FontStyleId.Gothic))
-            {
-                string c = ch;
-                glyphButtons.Add((UguiKit.Choice(root, "Glyph_" + c, c, gx, y - 8f, 54f, 46f, 30, () => customizer.SetCharacter(c)), c));
-                gx += 58f;
-            }
-            charError = UguiKit.Label(root, "CharError", "", PanelX + 350f, y + 42f, 520f, 46f, 20, new Color(0.75f, 0.1f, 0.1f), TextAnchor.UpperLeft, false);
+            // 好きな文字を 1 つ入力（確定した時点で字形化して武器にする。入力中の変換は待つ）
+            charInput = UguiKit.InputBox(root, "CharInput", PanelX + 220f, y - 8f, 110f, 96f, 64, OnCharacterEntered);
+            charInput.characterLimit = 1;
+            charInput.onValueChanged.AddListener(OnCharacterEntered);
+            charHint = UguiKit.Label(root, "CharHint", "好きな文字を 1 つ入力（漢字・かな・英数字・記号）\n例: 龍 剣 刀 鬼 あ ア W ★",
+                PanelX + 350f, y - 8f, 520f, 56f, 22, NoteColor, TextAnchor.UpperLeft);
+            charError = UguiKit.Label(root, "CharError", "", PanelX + 350f, y + 52f, 520f, 40f, 22, new Color(0.75f, 0.1f, 0.1f), TextAnchor.UpperLeft);
             y += 104f;
             Section(root, "FONT", y);
             float fx = PanelX + 220f;
@@ -116,10 +110,9 @@ namespace MojiBattle
             gripNote = UguiKit.Label(root, "GripNote", "", PanelX + 220f, y + 62f, 660f, 34f, 22, NoteColor, TextAnchor.UpperLeft);
             y += 112f;
             Section(root, "GRIP POSITION", y);
-            UguiKit.Label(root, "GripLeft", "端", PanelX + 220f, y, 50f, 56f, 24, null, TextAnchor.MiddleCenter);
-            gripSlider = UguiKit.SliderBar(root, "GripSlider", PanelX + 270f, y, 440f, 56f, v => { if (!refreshing) customizer.SetGripPosition(v); });
-            UguiKit.Label(root, "GripRight", "端", PanelX + 715f, y, 50f, 56f, 24, null, TextAnchor.MiddleCenter);
-            gripValue = UguiKit.Label(root, "GripValue", "", PanelX + 770f, y, 110f, 56f, 28, null, TextAnchor.MiddleLeft);
+            // 握る場所は左のプレビューの字形をクリック（ドラッグ）して選ぶ
+            gripValue = UguiKit.Label(root, "GripValue", "", PanelX + 220f, y - 4f, 470f, 64f, 22, null, TextAnchor.MiddleLeft);
+            UguiKit.Choice(root, "GripReset", "中央に戻す", PanelX + 700f, y, 160f, 56f, 24, () => customizer.ResetGrip());
             y += 80f;
             Section(root, "BATTLE STYLE", y);
             float bx = PanelX + 220f;
@@ -190,8 +183,7 @@ namespace MojiBattle
             var b = customizer.Current;
             int side = customizer.Side;
             for (int i = 0; i < 2; i++) sideTabs[i].SetSelected(i == side);
-            charInput.text = b.character;
-            foreach (var (btn, ch) in glyphButtons) { btn.accent = FighterFactory.TeamColor(side); btn.SetSelected(ch == b.character); }
+            charInput.SetTextWithoutNotify(b.character);
             foreach (var (btn, f) in fontButtons)
             {
                 bool ok = FighterCustomizer.IsAvailable(b.character, f, out _);
@@ -203,12 +195,12 @@ namespace MojiBattle
             foreach (var (btn, s) in sizeButtons) btn.SetSelected(s == b.weaponSize);
             foreach (var (btn, g) in gripButtons) btn.SetSelected(g == b.gripType);
             foreach (var (btn, s) in styleButtons) btn.SetSelected(s == b.battleStyle);
-            gripSlider.SetValueWithoutNotify(b.gripPosition);
-            gripValue.text = $"{Mathf.RoundToInt(b.gripPosition * 100f)}%";
+            gripValue.text = "← 左の文字をクリックして持つ場所を選ぶ\n" + CustomizeLabels.GripPlace(b);
             charError.text = customizer.CharacterError ?? "";
             gripNote.text = GripNote(b.gripType);
             styleNote.text = StyleNote(b.battleStyle);
             preview.Show(b, side);
+            FitPreviewCamera();
             previewTitle.text = $"{(side == 0 ? "P1" : "P2")}「{b.character}」  {b.weaponSize} / {CustomizeLabels.Grip(b.gripType)} / {CustomizeLabels.Style(b.battleStyle)}";
             previewTitle.color = FighterFactory.TeamColor(side);
             info.text = preview.Describe() + "\n<color=#555555>橙の丸 = 握り点 / 青の× = 重心 / 緑の枠 = 当たり判定</color>";
@@ -216,11 +208,17 @@ namespace MojiBattle
             refreshing = false;
         }
 
+        void OnCharacterEntered(string s)
+        {
+            if (refreshing || string.IsNullOrEmpty(s) || s == customizer.Current.character) return;
+            if (!customizer.SetCharacter(s)) charInput.SetTextWithoutNotify(s); // 使えない文字は入力欄に残して理由を出す
+        }
+
         static string GripNote(GripType g)
         {
             switch (g)
             {
-                case GripType.TwoHanded: return "遅いが強い振り・崩れにくいガード・吹き飛びにくい（重い武器向け）";
+                case GripType.TwoHanded: return "遅いが強い振り・崩れにくいガード・吹き飛びにくい";
                 case GripType.Reverse: return "速い・近距離。回避直後の切り返しが速い。ガードは弱い";
                 case GripType.Horizontal: return "字形を前へ水平に構えて盾にする。ガードが広く崩れにくい";
                 default: return "標準。やや速いが、ガードはやや不安定";
@@ -238,8 +236,46 @@ namespace MojiBattle
             }
         }
 
+        /// <summary>
+        /// 大きな字形でもプレビューに収まるよう、字形の最大辺に合わせてカメラを引く。
+        /// 握る場所では変えない（クリック・ドラッグ中に字形の大きさが揺れないように）。
+        /// </summary>
+        void FitPreviewCamera()
+        {
+            var cam = Camera.main;
+            if (cam == null || preview.Geometry == null) return;
+            float top = CombatBalance.Default.shoulderLocal.y + preview.Geometry.maxSide + 0.3f;
+            cam.orthographicSize = Mathf.Max(2.9f, (top - cam.transform.position.y) / 0.8f);
+        }
+
+        /// <summary>左のプレビューの字形をクリック・ドラッグして握る場所を選ぶ。右の設定パネル上の操作は対象外。</summary>
+        void UpdateGripPicking()
+        {
+            var cam = Camera.main;
+            if (cam == null || preview == null || VsVisible) return;
+            Vector3 mouse = Input.mousePosition;
+            bool overUi = UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+            bool inPreview = !overUi && mouse.x < Screen.width * (PanelX - 20f) / 1920f && mouse.y > 0f && mouse.y < Screen.height;
+            Vector3 world = cam.ScreenToWorldPoint(new Vector3(mouse.x, mouse.y, -cam.transform.position.z));
+            world.z = 0f;
+            Vector2 normalized = default;
+            bool onGlyph = inPreview && preview.TryPickGrip(world, out normalized);
+            preview.Paused = inPreview;
+            preview.ShowHover(onGlyph ? world : (Vector3?)null);
+            if (onGlyph && Input.GetMouseButton(0)) PickGripAt(normalized);
+        }
+
+        /// <summary>握る場所を設定（テストからも使う）。</summary>
+        public void PickGripAt(Vector2 normalized)
+        {
+            var cur = customizer.Current;
+            if (cur.customGrip && (cur.gripPoint - normalized).sqrMagnitude < 1e-5f) return;
+            customizer.SetGripPoint(normalized);
+        }
+
         void Update()
         {
+            UpdateGripPicking();
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (VsVisible) HideVs();

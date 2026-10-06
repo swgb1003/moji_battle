@@ -26,6 +26,7 @@ namespace MojiBattle
             self.Opponent.Runtime.state == FighterState.AttackRecovery || time - oppAttackEndedAt <= cb.counterWindow;
 
         public override float AttackWillingnessBonus(float time) => InWindow(time) ? 1f : 0f;
+        public override float PressureScale => 0.25f;
         public override bool StrikeImmediately(float time) => InWindow(time);
 
         public override bool PreferWait(float time, float distance) =>

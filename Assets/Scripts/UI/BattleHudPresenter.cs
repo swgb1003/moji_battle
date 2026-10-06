@@ -46,7 +46,7 @@ namespace MojiBattle
                 names[i] = MakeText($"{f.Loadout.grapheme}  {GlyphCatalog.FontDisplayName(f.Loadout.font)}  [{side}]", team, i == 0 ? 64 : 1856, 26, 40, anchor);
                 var s = f.Stats;
                 // カスタマイズの試合はビルド（サイズ / 持ち方 / スタイル）を小さく表示（カスタマイズ仕様 19）
-                string build = f.Mods.customized ? $"{f.Mods.size} / {CustomizeLabels.Grip(f.Mods.grip)} / 握り{Mathf.RoundToInt(f.Mods.gripPosition * 100f)}% / {CustomizeLabels.Style(f.Mods.style)}" : "";
+                string build = f.Mods.customized ? $"{f.Mods.size} / {CustomizeLabels.Grip(f.Mods.grip)} / {f.Mods.gripLabel} / {CustomizeLabels.Style(f.Mods.style)}" : "";
                 buildText[i] = MakeText(build, team, i == 0 ? 64 : 1856, 150, 26, anchor);
                 statsText[i] = MakeText($"攻{s.attack} 防{s.defense} 速{s.speed} 耐{s.durability}  重量{new string('★', s.WeightStars)}  {f.WeightClass}",
                     FighterFactory.Ink, i == 0 ? 64 : 1856, 116, 24, anchor);

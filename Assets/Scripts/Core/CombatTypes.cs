@@ -15,8 +15,10 @@ namespace MojiBattle
     public enum MoveIntent { Advance, Hold, Retreat }
     public enum HitQuality { Graze, Normal, Center }
     public enum EvadeKind { Backstep, HopOver }
-    /// <summary>振り下ろし（上から）/ 斬り上げ（下から）/ 突き（踏み込み）。狙いの上下位置に対応。</summary>
-    public enum AttackStyle { Overhead, Rising, Thrust }
+    /// <summary>
+    /// 振り下ろし（上から）/ 斬り上げ（下から）/ 突き（踏み込み）/ 横振り（薙ぎ払い。画面の奥を回り込んで前へ振る）。
+    /// </summary>
+    public enum AttackStyle { Overhead, Rising, Thrust, Sweep }
 
     [Serializable]
     public struct GlyphFeatures

@@ -58,6 +58,9 @@ namespace MojiBattle
         /// <summary>間合い内で攻撃を選ぶ確率への加算（好機）。</summary>
         public virtual float AttackWillingnessBonus(float time) => 0f;
 
+        /// <summary>試合後半・膠着時に攻撃意欲を足す補正の効き方（カウンターは待ちを崩しにくい）。</summary>
+        public virtual float PressureScale => 1f;
+
         /// <summary>好機なので攻撃開始の揺らぎを待たずに打つ。</summary>
         public virtual bool StrikeImmediately(float time) => false;
 

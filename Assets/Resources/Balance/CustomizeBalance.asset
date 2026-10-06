@@ -115,7 +115,7 @@ MonoBehaviour:
     counterBias: 0
     waitsNearCenter: 0
   counter:
-    attackWillingness: 0.25
+    attackWillingness: 0.08
     guardBiasScale: 1.3
     evadeBiasScale: 1.3
     proactiveGuard: 0.1

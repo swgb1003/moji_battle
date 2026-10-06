@@ -36,6 +36,11 @@ namespace MojiBattle
         Demo demo;
         float demoTime, psi, omega;
         public float CurrentPsi => psi;
+        /// <summary>握る場所を選んでいる間は試し振りを止める</summary>
+        public bool Paused { get; set; }
+        Vector3 shownGrip;
+        Quaternion shownRot = Quaternion.identity;
+        LineRenderer hoverMarker;
 
         void Awake()
         {
@@ -49,6 +54,7 @@ namespace MojiBattle
             ground = UiKit.Line(transform, "Ground", ink, 0.06f, 1);
             gripMarker = UiKit.Line(transform, "GripPoint", new Color(1f, 0.55f, 0f, 1f), 0.035f, 9, loop: true);
             comMarker = UiKit.Line(transform, "CenterOfMass", new Color(0f, 0.45f, 1f, 1f), 0.035f, 9);
+            hoverMarker = UiKit.Line(transform, "HoverGrip", new Color(1f, 0.55f, 0f, 0.6f), 0.03f, 9, loop: true);
             var go = new GameObject("WeaponSprite");
             go.transform.SetParent(transform, false);
             weapon = go.AddComponent<SpriteRenderer>();
@@ -95,6 +101,15 @@ namespace MojiBattle
         {
             if (Geometry == null) return;
             float dt = Time.deltaTime;
+            if (Paused)
+            {
+                // 握る場所を選ぶ間は構えのまま止める（クリックした場所がずれないように）
+                psi = Mathf.MoveTowards(psi, ReadyPsi, 360f * dt);
+                omega = 0f;
+                demo = Demo.Hold;
+                demoTime = 0f;
+                return;
+            }
             demoTime += dt;
             float strikeTo = Mathf.Max(-5f, GroundPsi);
             float target;
@@ -151,6 +166,8 @@ namespace MojiBattle
             float phi = psi - Geometry.alpha0Deg;
             var rot = Quaternion.Euler(0f, 0f, phi);
             weapon.transform.SetPositionAndRotation(grip, rot);
+            shownGrip = grip;
+            shownRot = rot;
             Line(armFront, shoulder, Vector3.Lerp(shoulder, grip, 0.5f) + Vector3.down * 0.12f, grip);
             Vector3 back = grip;
             if (Mods.grip == GripType.TwoHanded)
@@ -178,6 +195,49 @@ namespace MojiBattle
                 ColliderDebugView.DrawComMarker(comMarker, grip + rot * (Vector3)Geometry.comLocal + Vector3.back * 0.1f, 0.09f);
             }
             else { gripMarker.positionCount = 0; comMarker.positionCount = 0; }
+        }
+
+        /// <summary>
+        /// ワールド座標の点を、表示中の字形の外接矩形内の正規化座標（x: 左0→右1、y: 下0→上1）へ変換する。
+        /// 字形の上（画線から snapPx 画素以内）でなければ false。
+        /// </summary>
+        public bool TryPickGrip(Vector3 world, out Vector2 normalized, float snapPx = 14f)
+        {
+            normalized = default;
+            if (Geometry == null || glyph == null) return false;
+            Vector2 local = Quaternion.Inverse(shownRot) * (world - shownGrip);
+            Vector2 px = local / Geometry.scale + Geometry.gripPx;
+            var b = glyph.features.inkBounds;
+            if (px.x < b.xMin - snapPx || px.x > b.xMax + snapPx || px.y < b.yMin - snapPx || px.y > b.yMax + snapPx) return false;
+            if (!NearInk(px, snapPx)) return false;
+            normalized = new Vector2((px.x - b.xMin) / Mathf.Max(1f, b.width), (px.y - b.yMin) / Mathf.Max(1f, b.height));
+            return true;
+        }
+
+        bool NearInk(Vector2 px, float radius)
+        {
+            var tex = glyph.texture;
+            if (tex == null || !tex.isReadable) return true;
+            int r = Mathf.CeilToInt(radius);
+            int cx = Mathf.FloorToInt(px.x), cy = Mathf.FloorToInt(px.y);
+            for (int y = cy - r; y <= cy + r; y += 2)
+            for (int x = cx - r; x <= cx + r; x += 2)
+            {
+                if (x < 0 || y < 0 || x >= tex.width || y >= tex.height) continue;
+                if ((x - px.x) * (x - px.x) + (y - px.y) * (y - px.y) > radius * radius) continue;
+                if (tex.GetPixel(x, y).a >= 0.5f) return true;
+            }
+            return false;
+        }
+
+        /// <summary>字形の画素（マスク画素空間）が今表示されているワールド座標（テスト・確認用）。</summary>
+        public Vector3 PixelToWorld(Vector2 px) => shownGrip + shownRot * (Vector3)((px - Geometry.gripPx) * Geometry.scale);
+
+        /// <summary>カーソルが字形の上にある時、握れる場所として丸を出す。</summary>
+        public void ShowHover(Vector3? world)
+        {
+            if (world == null) { hoverMarker.positionCount = 0; return; }
+            ColliderDebugView.DrawGripMarker(hoverMarker, world.Value + Vector3.back * 0.1f, 0.1f);
         }
 
         static void Line(LineRenderer lr, params Vector3[] pts)

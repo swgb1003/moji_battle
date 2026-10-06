@@ -124,7 +124,7 @@ namespace MojiBattle
         };
         public StyleProfile counter = new StyleProfile
         {
-            attackWillingness = 0.25f, guardBiasScale = 1.3f, evadeBiasScale = 1.3f, proactiveGuard = 0.1f, retreatAfterAttack = 0.5f,
+            attackWillingness = 0.08f, guardBiasScale = 1.3f, evadeBiasScale = 1.3f, proactiveGuard = 0.1f, retreatAfterAttack = 0.5f,
             comboBonus = 0, reactionBonus = 0.25f, counterBias = 0f, waitsNearCenter = 1,
         };
         public StyleProfile defensive = new StyleProfile

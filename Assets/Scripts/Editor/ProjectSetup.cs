@@ -25,6 +25,7 @@ namespace MojiBattle.EditorTools
             var balance = EnsureAsset<CombatBalance>(BalancePath);
             var calibration = EnsureAsset<GlyphCalibration>(CalibrationPath);
             EnsureAsset<CustomizeBalance>(CustomizeBalancePath);
+            GlyphBaker.BuildFontLibrary(); // 実行時に任意の文字を字形化するためのフォント一覧
             Directory.CreateDirectory("Assets/Scenes");
             CreateUiScene<TitleScreen>(TitleScenePath, "TitleScreen");
             CreateUiScene<CustomizeScreen>(CustomizeScenePath, "CustomizeScreen");

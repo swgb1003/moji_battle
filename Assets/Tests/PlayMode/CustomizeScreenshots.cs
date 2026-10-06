@@ -63,6 +63,33 @@ namespace MojiBattle.Tests
             Object.Destroy(rt);
         }
 
+        /// <summary>横振りの 3 場面（後ろへ回す溜め / 奥を通る / 前へ振り抜く）を撮る。</summary>
+        [UnityTest]
+        public IEnumerator CaptureSweep()
+        {
+            var b = CombatBalance.Default;
+            float saved = b.sweepChance;
+            b.sweepChance = 1f; // 撮影用に必ず横振りを選ばせる
+            Time.captureDeltaTime = TimeController.BaseFixedDelta;
+            var battle = SimHarness.Build(1201, SimHarness.Custom("火", WeaponSize.L), SimHarness.Custom("口"), presentation: true);
+            battle.CameraRig.Cam.aspect = 16f / 9f;
+            TimeController.SetSpectatorSpeed(1f);
+            bool back = false, mid = false, front = false;
+            for (int frame = 0; frame < 3000 && !(back && mid && front); frame++)
+            {
+                yield return null;
+                var rt = battle.Left.Runtime;
+                if (rt.attackStyle != AttackStyle.Sweep) continue;
+                if (!back && rt.state == FighterState.AttackWindup && rt.sweepYaw > 150f) { Capture("27_sweep_windup"); back = true; }
+                else if (back && !mid && rt.state == FighterState.AttackActive && rt.sweepYaw < 110f) { Capture("28_sweep_depth"); mid = true; }
+                else if (mid && !front && rt.state == FighterState.AttackActive && rt.sweepYaw < 10f) { Capture("29_sweep_strike"); front = true; }
+            }
+            b.sweepChance = saved;
+            Time.captureDeltaTime = 0f;
+            battle.Destroy();
+            Assert.IsTrue(back && mid && front, "横振りの場面を撮れない");
+        }
+
         [UnityTest]
         public IEnumerator CaptureCustomizeFlow()
         {
@@ -76,10 +103,10 @@ namespace MojiBattle.Tests
             var screen = Object.FindAnyObjectByType<CustomizeScreen>();
             var c = screen.Customizer;
             c.SelectSide(0);
-            c.SetCharacter("一");
+            c.SetCharacter("木");
             c.SetSize(WeaponSize.XL);
             c.SetGrip(GripType.TwoHanded);
-            c.SetGripPosition(0f);
+            screen.PickGripAt(new Vector2(0.15f, 0.6f)); // 字形の左の払いの辺りをクリックした想定
             c.SetStyle(BattleStyle.Aggressive);
             for (int i = 0; i < 30; i++) yield return null;
             Capture("21_customize_xl_two_hand_edge");
@@ -90,7 +117,7 @@ namespace MojiBattle.Tests
             for (int i = 0; i < 30; i++) yield return null;
             Capture("22_customize_s_reverse_center");
             c.SelectSide(1);
-            c.SetCharacter("鬱");
+            c.SetCharacter("龍");
             c.SetSize(WeaponSize.L);
             c.SetGrip(GripType.Horizontal);
             c.SetStyle(BattleStyle.Defensive);

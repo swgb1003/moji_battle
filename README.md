@@ -2,7 +2,8 @@
 
 仕様書「文字武器オートバトル — プロトタイプ開発仕様書 v1.0」の P0（物理箱庭）・P1（戦闘の芯）・P2（字形パイプライン）と、
 「カスタマイズ機能①〜④ 実装仕様書」（持ち方・戦闘スタイル・握る位置・文字サイズ）を実装した Unity プロジェクト。
-ゴシックの 9 文字（一 口 山 火 鬱 A I O X）から武器を生成し、カスタマイズして完全オートの戦闘を観戦できる。
+好きな 1 文字（同梱のゴシック体フォントにある漢字・かな・英数字・記号）から武器を生成し、カスタマイズして完全オートの戦闘を観戦できる。
+ゴシックの 9 文字（一 口 山 火 鬱 A I O X）はベイク済みアセット、それ以外は実行時に同じ処理で字形化する。
 
 - Unity 6000.0.61f1（`ProjectSettings/ProjectVersion.txt`）、Built-in レンダーパイプライン、Unity 2D Physics
 - 確認結果: [P1](Assets/Documentation/P1_Verification.md) / [P2](Assets/Documentation/P2_Verification.md) / [カスタマイズ](Assets/Documentation/Customize_Verification.md)
@@ -11,7 +12,8 @@
 ## 動かし方
 
 Unity Hub でこのフォルダを開き、`Assets/Scenes/Title.unity` を開いて Play。
-START → カスタマイズ（P1/P2 それぞれ文字・サイズ・持ち方・握る位置・戦闘スタイル）→ BATTLE → VS 確認 → 観戦。
+START → カスタマイズ（P1/P2 それぞれ、好きな文字を 1 つ入力・サイズ・持ち方・握る位置・戦闘スタイル）→ BATTLE → VS 確認 → 観戦。
+入力した文字はその場で同梱フォントから字形化される（フォントに字形の無い文字・絵文字・空白は使えない）。
 リザルトで「同じ設定でもう一度」/「カスタマイズへ戻る」。設定は次回起動時も残る。
 
 `Assets/Scenes/Battle.unity` を直接 Play すると、カスタマイズ無し（P1/P2 検証どおり）の一 vs 鬱 になる。
@@ -31,6 +33,7 @@ START → カスタマイズ（P1/P2 それぞれ文字・サイズ・持ち方�
 ## 字形のベイク
 
 メニュー **MojiBattle → Glyphs → Glyph Bake Window** →「すべてベイク」。フォントや解析設定を変えたら再ベイクする。
+実行時の字形化に使うフォント一覧（`Resources/Glyphs/GlyphFontLibrary.asset`、cmap の範囲を含む）は ProjectSetup が作る。
 結果の能力一覧は `Reports/glyph_stats.md`。
 
 ## テスト
@@ -76,6 +79,8 @@ Assets/
 - 戦闘を成立させるために追加した要素: 突き・斬り上げの攻撃種別、上段/下段ガード、重い武器による叩き落とし、
   重なり・密着の自動解消、AI の反応率など（詳細は BalanceNotes）。
 - 試合規則の変更: 時間切れで残 HP 割合が同じなら延長戦（先にダメージを入れた方の勝ち、最大 30 秒）。
+- 戦闘テンポの見直し（仕様外の追加）: 構えているだけの字形は盾にならない（字形どうしの衝突はガード中・攻撃どうしの時だけ）、
+  横振り（奥を回り込む薙ぎ払い）、火力・HP の見直し、重量級の攻撃中のスーパーアーマー。詳細は BalanceNotes。
 - 武器の最大辺は 2.2 → 1.8（字形が棒人間より大きく弾き合い・引き分けが多かったため。検証は BalanceNotes）。
 - カスタマイズの仕様との差分（握る位置を長軸に沿わせる、攻撃の段階を武器の実際の角度で進める等）は
   [Customize_Verification](Assets/Documentation/Customize_Verification.md) の 4 章。
