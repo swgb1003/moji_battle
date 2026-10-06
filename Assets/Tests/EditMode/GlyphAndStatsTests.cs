@@ -20,6 +20,41 @@ namespace MojiBattle.Tests
 
         static IEnumerable<string> Nine => InitialNine.Select(c => c.ToString());
 
+        /// <summary>反転: 画像・重心・Collider・握りが同じ鏡映で写り、ステータスは変わらない。2 回反転すると元に戻る。</summary>
+        [TestCase(WeaponFlip.Horizontal)]
+        [TestCase(WeaponFlip.Vertical)]
+        [TestCase(WeaponFlip.Both)]
+        public void Flip_MirrorsShapeAndKeepsStats(WeaponFlip flip)
+        {
+            var src = Load("火");
+            var f = GlyphFlip.Apply(src, flip);
+            Assert.AreNotSame(src, f);
+            Assert.AreSame(f, GlyphFlip.Apply(src, flip), "同じ反転はキャッシュを返す");
+            Assert.AreSame(src, GlyphFlip.Apply(src, WeaponFlip.None));
+            bool h = flip != WeaponFlip.Vertical, v = flip != WeaponFlip.Horizontal;
+            int w = src.texture.width, ht = src.texture.height;
+            var a = src.features;
+            var b = f.features;
+            Assert.AreEqual(h ? w - a.centerOfMass.x : a.centerOfMass.x, b.centerOfMass.x, 1e-3f);
+            Assert.AreEqual(v ? ht - a.centerOfMass.y : a.centerOfMass.y, b.centerOfMass.y, 1e-3f);
+            Assert.AreEqual(a.colliderRects.Length, b.colliderRects.Length);
+            Assert.AreEqual(a.inkBounds.size, b.inkBounds.size);
+            // 反転した画像のインクは、反転後の外接矩形の中にある
+            var px = f.texture.GetPixels32();
+            for (int y = 0; y < ht; y++)
+            for (int x = 0; x < w; x++)
+                if (px[y * w + x].a >= 128) Assert.IsTrue(b.inkBounds.Contains(new Vector2Int(x, y)), $"({x},{y}) が外接矩形の外");
+            // 握り点はインクの上
+            int gx = Mathf.FloorToInt(b.gripPoint.x), gy = Mathf.FloorToInt(b.gripPoint.y);
+            Assert.GreaterOrEqual(px[gy * w + gx].a, 128, "握りが画線の上にない");
+            var sa = StatCalculator.Compute(src, B);
+            var sb = StatCalculator.Compute(f, B);
+            Assert.AreEqual(sa.ToString(), sb.ToString(), "反転でステータスは変わらない");
+            var back = GlyphFlip.Apply(f, flip).features;
+            Assert.AreEqual(a.centerOfMass.x, back.centerOfMass.x, 1e-3f);
+            Assert.AreEqual(a.inkBounds, back.inkBounds);
+        }
+
         [Test]
         public void InitialNineAreBakedForGothic()
         {

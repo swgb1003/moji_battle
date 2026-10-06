@@ -113,6 +113,7 @@ namespace MojiBattle
 
         public static void ClearCache()
         {
+            GlyphFlip.ClearCache();
             cache.Clear();
             failed.Clear();
         }

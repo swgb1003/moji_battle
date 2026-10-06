@@ -67,6 +67,7 @@ namespace MojiBattle
             Build = build.Clone();
             Side = side;
             if (!GlyphCatalog.TryGet(build.character, build.fontType, B, GlyphCalibration.Default, out glyph, out _)) return;
+            glyph = GlyphFlip.Apply(glyph, build.weaponFlip);
             var stats = StatCalculator.Compute(glyph, B);
             Stats = stats;
             Geometry = FighterFactory.ResolveWeapon(Build, glyph, stats, B, CB, out float mass);

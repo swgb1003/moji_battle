@@ -263,6 +263,37 @@ namespace MojiBattle.Tests
             }
         }
 
+        /// <summary>反転して持った武器: 字形・重心が反転し、試合が最後まで成立する。</summary>
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator FlippedWeapons_FightToTheEnd()
+        {
+            SimHarness.Begin(false);
+            var pairs = new[] { ("火", WeaponFlip.Horizontal, "山", WeaponFlip.Vertical), ("龍", WeaponFlip.Both, "鬼", WeaponFlip.None) };
+            int seed = 9200;
+            foreach (var (l, lf, r, rf) in pairs)
+            {
+                var lb = SimHarness.Custom(l);
+                lb.build.weaponFlip = lf;
+                var rb = SimHarness.Custom(r, style: BattleStyle.Defensive);
+                rb.build.weaponFlip = rf;
+                var battle = SimHarness.Build(seed++, lb, rb);
+                GlyphCatalog.TryGet(l, FontStyleId.Gothic, CombatBalance.Default, GlyphCalibration.Default, out var plain, out _);
+                var flipped = battle.Left.Glyph;
+                Assert.AreNotSame(plain, flipped, $"{l}: 反転した字形を使っていない");
+                int w = plain.texture.width;
+                if (lf != WeaponFlip.Vertical)
+                    Assert.AreEqual(w - plain.features.centerOfMass.x, flipped.features.centerOfMass.x, 1e-3f, $"{l}: 重心が左右反転していない");
+                yield return SimHarness.RunToEnd(battle, 10f);
+                Assert.IsTrue(battle.Director.Ended, $"{l} vs {r}: 試合が終わらない");
+                var t = battle.Director.Telemetry;
+                Assert.Greater(t.fighters[0].attackStarts + t.fighters[1].attackStarts, 5, $"{l} vs {r}: ほとんど攻撃しない");
+                Assert.AreEqual(0, t.duplicateBodyHits);
+                battle.Destroy();
+                yield return null;
+            }
+        }
+
         /// <summary>診断用: カスタマイズ構成 1 試合の詳細ログ（Reports/trace_custom.txt）。</summary>
         [UnityTest, Explicit("診断用")]
         public IEnumerator TraceCustom()

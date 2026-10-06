@@ -81,6 +81,7 @@ namespace MojiBattle
         /// <summary>握る場所を中央（長軸の中央）に戻す。</summary>
         public void ResetGrip() => SetGripPosition(0.5f);
         public void SetStyle(BattleStyle s) { Current.battleStyle = s; Commit(); }
+        public void SetFlip(WeaponFlip f) { Current.weaponFlip = f; Commit(); }
 
         void Commit()
         {

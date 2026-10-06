@@ -25,6 +25,8 @@ namespace MojiBattle
         [Tooltip("握る場所。字形の外接矩形内の正規化座標（x: 左0→右1、y: 下0→上1）")]
         public Vector2 gripPoint = new Vector2(0.5f, 0.5f);
         public BattleStyle battleStyle = BattleStyle.Aggressive;
+        [Tooltip("字形を反転して持つ（なし / 左右 / 上下 / 両方 = 180°回転）。握る場所は反転後の字形で選ぶ")]
+        public WeaponFlip weaponFlip = WeaponFlip.None;
 
         public static FighterBuildData Default(string character) => new FighterBuildData { character = character };
 
@@ -33,7 +35,7 @@ namespace MojiBattle
         public FighterLoadout ToLoadout() => new FighterLoadout(character, fontType) { build = Clone() };
 
         public override string ToString() =>
-            $"{character} {CustomizeLabels.Size(weaponSize)} / {CustomizeLabels.Grip(gripType)} / {CustomizeLabels.GripPlace(this)} / {CustomizeLabels.Style(battleStyle)}";
+            $"{character} {CustomizeLabels.Size(weaponSize)} / {CustomizeLabels.Grip(gripType)} / {CustomizeLabels.GripPlace(this)} / {CustomizeLabels.Flip(weaponFlip)} / {CustomizeLabels.Style(battleStyle)}";
     }
 
     /// <summary>UI 表示名。</summary>
@@ -54,6 +56,17 @@ namespace MojiBattle
                 case GripType.Reverse: return "逆手";
                 case GripType.Horizontal: return "横持ち";
                 default: return "片手";
+            }
+        }
+
+        public static string Flip(WeaponFlip f)
+        {
+            switch (f)
+            {
+                case WeaponFlip.Horizontal: return "左右反転";
+                case WeaponFlip.Vertical: return "上下反転";
+                case WeaponFlip.Both: return "180°回転";
+                default: return "反転なし";
             }
         }
 

@@ -20,6 +20,7 @@ namespace MojiBattle
         readonly List<(UguiKit.ChoiceButton b, WeaponSize s)> sizeButtons = new List<(UguiKit.ChoiceButton, WeaponSize)>();
         readonly List<(UguiKit.ChoiceButton b, GripType g)> gripButtons = new List<(UguiKit.ChoiceButton, GripType)>();
         readonly List<(UguiKit.ChoiceButton b, BattleStyle s)> styleButtons = new List<(UguiKit.ChoiceButton, BattleStyle)>();
+        readonly List<(UguiKit.ChoiceButton b, WeaponFlip f)> flipButtons = new List<(UguiKit.ChoiceButton, WeaponFlip)>();
         InputField charInput;
         Text charError, charHint, gripValue, styleNote, gripNote, info, previewTitle;
 
@@ -123,6 +124,15 @@ namespace MojiBattle
                 bx += 160f;
             }
             styleNote = UguiKit.Label(root, "StyleNote", "", PanelX + 220f, y + 62f, 660f, 60f, 22, NoteColor, TextAnchor.UpperLeft);
+            y += 140f;
+            Section(root, "FLIP", y);
+            float flx = PanelX + 220f;
+            foreach (WeaponFlip f in System.Enum.GetValues(typeof(WeaponFlip)))
+            {
+                var flip = f;
+                flipButtons.Add((UguiKit.Choice(root, "Flip_" + f, CustomizeLabels.Flip(f), flx, y, 150f, 56f, 24, () => customizer.SetFlip(flip)), f));
+                flx += 160f;
+            }
 
             // プレビューの説明（左下）
             info = UguiKit.Label(root, "Info", "", 40f, 860f, 680f, 140f, 22, null, TextAnchor.UpperLeft);
@@ -175,7 +185,7 @@ namespace MojiBattle
         }
 
         static string Summary(FighterBuildData b) =>
-            $"{GlyphCatalog.FontDisplayName(b.fontType)}\n{b.weaponSize} / {CustomizeLabels.Grip(b.gripType)} / 握り {Mathf.RoundToInt(b.gripPosition * 100f)}%\n{CustomizeLabels.Style(b.battleStyle)}";
+            $"{GlyphCatalog.FontDisplayName(b.fontType)}\n{b.weaponSize} / {CustomizeLabels.Grip(b.gripType)} / {CustomizeLabels.GripPlace(b)}\n{CustomizeLabels.Flip(b.weaponFlip)} / {CustomizeLabels.Style(b.battleStyle)}";
 
         void Refresh()
         {
@@ -195,13 +205,14 @@ namespace MojiBattle
             foreach (var (btn, s) in sizeButtons) btn.SetSelected(s == b.weaponSize);
             foreach (var (btn, g) in gripButtons) btn.SetSelected(g == b.gripType);
             foreach (var (btn, s) in styleButtons) btn.SetSelected(s == b.battleStyle);
+            foreach (var (btn, f) in flipButtons) btn.SetSelected(f == b.weaponFlip);
             gripValue.text = "← 左の文字をクリックして持つ場所を選ぶ\n" + CustomizeLabels.GripPlace(b);
             charError.text = customizer.CharacterError ?? "";
             gripNote.text = GripNote(b.gripType);
             styleNote.text = StyleNote(b.battleStyle);
             preview.Show(b, side);
             FitPreviewCamera();
-            previewTitle.text = $"{(side == 0 ? "P1" : "P2")}「{b.character}」  {b.weaponSize} / {CustomizeLabels.Grip(b.gripType)} / {CustomizeLabels.Style(b.battleStyle)}";
+            previewTitle.text = $"{(side == 0 ? "P1" : "P2")}「{b.character}」  {b.weaponSize} / {CustomizeLabels.Grip(b.gripType)}{(b.weaponFlip != WeaponFlip.None ? " / " + CustomizeLabels.Flip(b.weaponFlip) : "")} / {CustomizeLabels.Style(b.battleStyle)}";
             previewTitle.color = FighterFactory.TeamColor(side);
             info.text = preview.Describe() + "\n<color=#555555>橙の丸 = 握り点 / 青の× = 重心 / 緑の枠 = 当たり判定</color>";
             info.supportRichText = true;

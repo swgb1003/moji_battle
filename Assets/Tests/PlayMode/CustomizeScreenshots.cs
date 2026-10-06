@@ -163,6 +163,9 @@ namespace MojiBattle.Tests
             c.SetStyle(BattleStyle.Defensive);
             for (int i = 0; i < 30; i++) yield return null;
             Capture("23_customize_p2_horizontal");
+            c.SetFlip(WeaponFlip.Vertical);
+            for (int i = 0; i < 30; i++) yield return null;
+            Capture("35_customize_flip_vertical");
             screen.ShowVs();
             yield return null;
             Capture("24_vs");

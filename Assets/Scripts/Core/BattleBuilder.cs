@@ -32,6 +32,8 @@ namespace MojiBattle
             { error = "左: " + reasonL; return null; }
             if (!GlyphCatalog.TryGet(config.right.grapheme, config.right.font, balance, calibration, out var gr, out var reasonR))
             { error = "右: " + reasonR; return null; }
+            gl = GlyphFlip.Apply(gl, config.left.build?.weaponFlip ?? WeaponFlip.None);
+            gr = GlyphFlip.Apply(gr, config.right.build?.weaponFlip ?? WeaponFlip.None);
 
             Time.fixedDeltaTime = TimeController.BaseFixedDelta;
             // 重い武器とヒンジの伸びを抑えるため反復回数を増やす
