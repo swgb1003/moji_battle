@@ -16,6 +16,8 @@ namespace MojiBattle
         public AttackStyle style;
         /// <summary>刺すの先端がガードを貫いた削り（本体には触れていない）</summary>
         public bool pierce;
+        /// <summary>連携（打ち上げ → 叩き落とし）の締めが当たった</summary>
+        public bool combo;
     }
 
     public struct GuardEvent
@@ -41,6 +43,8 @@ namespace MojiBattle
         public Vector2 point;
         /// <summary>持ち上げからの叩きつけ</summary>
         public bool slam;
+        /// <summary>叩き落とされて地面に激突した（連携の締め）</summary>
+        public bool smash;
     }
 
     public struct StateChangeEvent

@@ -139,12 +139,15 @@ namespace MojiBattle
                     float vSweep = Mathf.Min(Mathf.Abs(rtA.sweepYawRate), b.sweepMaxYawSpeed) * Mathf.Deg2Rad * r * b.sweepSpeedScale;
                     if (vSweep > vN) { vN = vSweep; va = n * vSweep; }
                 }
+                // 叩き落としは当たりの速さを固定する（浮いた相手への判定は武器の回転速度に左右されない）
+                bool smashHit = rtA.attackStyle == AttackStyle.Smash && !c.targetIsWeapon;
+                if (smashHit) { vN = b.smashHitSpeed; va = n * vN; }
                 var cand = new ContactCandidate { isWeapon = c.targetIsWeapon, vN = vN };
                 // 横持ちはガードの正面角が広い
                 if (c.targetIsWeapon) cand.frontal = IsFrontal(d, c.point, Mathf.Min(180f, b.guardHalfAngle * d.Mods.guardRange));
                 else
                 {
-                    qualities[i] = ClassifyQuality(a, c.point, n, va, b);
+                    qualities[i] = smashHit ? HitQuality.Normal : ClassifyQuality(a, c.point, n, va, b);
                     float styleDamage = tech != null ? tech.damage : 1f;
                     // 刺す: 先端の直撃は中央の当たり（大ダメージ）、柄や側面での接触は弱い
                     if (rtA.attackStyle == AttackStyle.Thrust)
@@ -304,8 +307,31 @@ namespace MojiBattle
 
             Vector2 dir = KnockDirection(a, d, hit.normal, tech != null && tech.upBias >= 0f ? tech.upBias : b.launchUpBias);
             Vector2 force = dir * impulse * b.impulseScale;
-            if (rtD.IsDown) d.Body.AddForceAtPosition(force, hit.point, ForceMode2D.Impulse);
-            else d.Body.AddForce(force, ForceMode2D.Impulse);
+            // 連携: 打ち上げは必ず真上へ浮かせ（叩き落としが届くよう横へは飛ばさない）、叩き落としは地面へ向けて落とす。
+            // どちらも吹き飛ばしの力の代わりに速度を直接決める
+            bool comboMove = (rtA.attackStyle == AttackStyle.Launch && rtD.state != FighterState.KO) || rtA.attackStyle == AttackStyle.Smash;
+            if (!comboMove)
+            {
+                if (rtD.IsDown) d.Body.AddForceAtPosition(force, hit.point, ForceMode2D.Impulse);
+                else d.Body.AddForce(force, ForceMode2D.Impulse);
+            }
+
+            float away = d.X >= a.X ? 1f : -1f;
+            if (rtA.attackStyle == AttackStyle.Launch && rtD.state != FighterState.KO)
+            {
+                var v = d.Body.linearVelocity;
+                d.AddVelocity(new Vector2(away * b.launchLiftAway, Mathf.Max(v.y, b.launchLiftSpeed)) - v);
+                if (!launch) { launch = true; d.MarkLaunched(time); }
+                rtA.launchConnectedAt = time;
+            }
+            else if (rtA.attackStyle == AttackStyle.Smash)
+            {
+                var v = d.Body.linearVelocity;
+                d.AddVelocity(new Vector2(away * b.smashDriveAway, -b.smashDriveSpeed) - v);
+                d.MarkLaunched(time); // 地面への激突を吹っ飛びの環境ダメージとして数える
+                launch = true;
+                rtD.smashedAt = time;
+            }
 
             ctx.Events.Raise(new HitEvent
             {
@@ -313,7 +339,7 @@ namespace MojiBattle
                 part = hit.part, quality = quality, damage = dmg, vN = c.vN, impulse = impulse,
                 point = hit.point, critical = hit.part == BodyPart.Head,
                 stagger = stagger, launch = launch, knockdown = knock || rtD.hp <= 0f, time = time,
-                defenderStateBefore = stateBefore, style = rtA.attackStyle,
+                defenderStateBefore = stateBefore, style = rtA.attackStyle, combo = rtA.attackStyle == AttackStyle.Smash,
             });
         }
 

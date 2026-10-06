@@ -144,6 +144,8 @@ namespace MojiBattle
             TrackLaunch(time);
             TrackLift(time, dt);
 
+            TryChainSmash(time);
+            DetectSmashHit();
             switch (rt.state)
             {
                 case FighterState.AttackWindup:
@@ -241,6 +243,7 @@ namespace MojiBattle
             var b = Balance;
             if (rt.weaponDetached) return;
             int m = Stats.weightScore;
+            rt.launchConnectedAt = -1f;
             rt.currentAttackId = rt.NextAttackId(Id);
             rt.attackHadContact = false;
             rt.clashedThisAttack = false;
@@ -275,7 +278,7 @@ namespace MojiBattle
             var special = AttackTechniques.ChooseSpecial(this, Brain.Rng.Value());
             if (special.HasValue) rt.attackStyle = special.Value;
             if (forced.HasValue) rt.attackStyle = forced.Value;
-            if (rt.attackStyle == AttackStyle.Throw) rt.comboRemaining = 0;
+            if (rt.attackStyle == AttackStyle.Throw || rt.attackStyle == AttackStyle.Smash) rt.comboRemaining = 0;
             var tech = AttackTechniques.Tuning(rt.attackStyle, b);
             if (tech != null)
             {
@@ -303,7 +306,7 @@ namespace MojiBattle
             }
             else if (rt.attackStyle == AttackStyle.Overhead)
                 target = Brain.Rng.Chance(Tendency.aimHeadChance) ? Opponent.HeadWorld : Opponent.ChestWorld;
-            else if (rt.attackStyle == AttackStyle.Launch || rt.attackStyle == AttackStyle.Throw)
+            else if (rt.attackStyle == AttackStyle.Launch || rt.attackStyle == AttackStyle.Throw || rt.attackStyle == AttackStyle.Smash)
                 target = Opponent.ChestWorld;
             else
                 target = Brain.Rng.Chance(0.5f) ? Opponent.Body.GetRelativePoint(new Vector2(0f, 0.45f)) : Opponent.ChestWorld;
@@ -315,6 +318,15 @@ namespace MojiBattle
                 // 刺す: 武器は狙いへ向けたまま、溜めで手を引き、有効時間に腕を伸ばして踏み込む
                 rt.swingFromPsi = aim;
                 rt.swingToPsi = aim;
+            }
+            else if (rt.attackStyle == AttackStyle.Smash)
+            {
+                // 叩き落とし: 浮いた相手の上まで振りかぶり、地面の手前まで一気に振り下ろす（重さに関係なく素早く）
+                rt.swingFromPsi = Mathf.Max(aim + 70f, 110f);
+                rt.swingToPsi = Mathf.Max(GroundPsi, aim - 60f);
+                rt.smashAimPsi = aim;
+                rt.windupDuration = Mathf.Min(rt.windupDuration, b.smashMaxWindup);
+                rt.activeDuration = Mathf.Min(rt.activeDuration, b.smashMaxActive);
             }
             else if (rt.attackStyle == AttackStyle.Throw)
             {
@@ -482,6 +494,55 @@ namespace MojiBattle
             Runtime.weaponPassThrough = on;
             // 実際の衝突の切り替えは MatchDirector の武器接触ゲート（物理ステップ直前に反映）
             Context.ApplyWeaponGate?.Invoke();
+        }
+
+        /// <summary>
+        /// 連携: 自分の打ち上げで相手が浮いたら、振りの残りと硬直を打ち切って叩き落としへつなぐ。
+        /// 相手が既に着地した・届かない・KO なら何もしない（通常の硬直のまま）。
+        /// </summary>
+        void TryChainSmash(float time)
+        {
+            var rt = Runtime;
+            if (rt.launchConnectedAt < 0f || rt.attackStyle != AttackStyle.Launch) return;
+            if (rt.state != FighterState.AttackActive && rt.state != FighterState.AttackRecovery) { rt.launchConnectedAt = -1f; return; }
+            // 待っている間に硬直が終わってしまわないよう、硬直の残りを延ばす（つながなければ通常どおり戻る）
+            if (rt.state == FighterState.AttackRecovery) rt.recoveryDuration = Mathf.Max(rt.recoveryDuration, rt.stateTime + Time.fixedDeltaTime * 2f);
+            var b = Balance;
+            float since = time - rt.launchConnectedAt;
+            if (since < b.smashChainDelay) return;
+            // 頂点付近まで待ってから振る（上昇中に振ると下をくぐってしまう）
+            if (Opponent.Body.linearVelocity.y > b.smashApexSpeed && since < b.smashChainTimeout) return;
+            rt.launchConnectedAt = -1f;
+            var ort = Opponent.Runtime;
+            float reach = (b.shoulderLocal.x + Weapon.length) * b.smashChainReach;
+            if (ort.state == FighterState.KO || Opponent.IsGrounded || DistanceToOpponent > reach || Context.MatchOver) return;
+            rt.comboRemaining = 0;
+            StartAttack(time, AttackStyle.Smash);
+            // 浮いた相手の手前（武器の長さの一定割合）へ詰める・離れる（真下に潜ると叩き落とした相手が自分の上に落ちる）
+            float gap = DistanceToOpponent - Weapon.length * b.smashStepFraction;
+            float v = Mathf.Clamp(gap / Mathf.Max(0.05f, rt.windupDuration + rt.activeDuration * 0.5f), -b.smashStepSpeed, b.smashStepSpeed);
+            AddVelocity(new Vector2(TowardOpponent * v - Body.linearVelocity.x, 0f));
+        }
+
+        /// <summary>
+        /// 叩き落としの当たり: 武器が狙いの角度まで振り下ろされた時、浮いた相手の胸が武器の届く範囲にあれば、胸への上からの当たりとして報告する。
+        /// 浮いた相手は動きが速く字形の当たり判定ではすり抜けやすいため、連携の締めはこの判定で決める（解決・ダメージは通常の当たりと同じ）。
+        /// </summary>
+        void DetectSmashHit()
+        {
+            var rt = Runtime;
+            if (rt.state != FighterState.AttackActive || rt.attackStyle != AttackStyle.Smash || rt.attackHadContact) return;
+            if (Context.Hits.Ledger.IsResolved(rt.currentAttackId, Opponent.Id)) return;
+            if (WeaponMotor.CurrentPsi > rt.smashAimPsi + 10f) return;
+            if (Opponent.IsGrounded || Opponent.Runtime.state == FighterState.KO) return;
+            Vector2 chest = Opponent.ChestWorld;
+            if (Vector2.Distance(GripWorld, chest) > Weapon.length + Balance.smashReachSlack) return;
+            Context.Hits.Report(new HitContact
+            {
+                attacker = this, target = Opponent, targetIsWeapon = false, part = BodyPart.Torso,
+                point = chest, normal = Vector2.down, relativeVelocity = Vector2.down * Balance.smashHitSpeed,
+                myColliderId = WeaponColliders[0].GetInstanceID(), otherColliderId = Opponent.BodyColliders[1].GetInstanceID(),
+            });
         }
 
         /// <summary>

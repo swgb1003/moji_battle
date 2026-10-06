@@ -36,6 +36,7 @@ namespace MojiBattle
                 case AttackStyle.Spin: return "回転斬り";
                 case AttackStyle.Rising: return "斬り上げ";
                 case AttackStyle.Throw: return "投げ";
+                case AttackStyle.Smash: return "叩き落とし";
                 default: return "振り下ろし";
             }
         }
@@ -51,6 +52,7 @@ namespace MojiBattle
                 case AttackStyle.Launch: return b.launch;
                 case AttackStyle.Spin: return b.spin;
                 case AttackStyle.Throw: return b.throwAttack;
+                case AttackStyle.Smash: return b.smash;
                 default: return null;
             }
         }

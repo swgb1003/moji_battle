@@ -331,6 +331,69 @@ namespace MojiBattle.Tests
             Assert.IsTrue(sawKo, "KO 決着の試合が見つからない");
         }
 
+        /// <summary>体と武器を同じだけ動かす（体だけ動かすと、物理の同期前の位置を基準にした握りへ関節で引き戻される）。</summary>
+        static void MoveFighter(Fighter f, Vector2 to)
+        {
+            Vector2 delta = to - f.Body.position;
+            f.Body.position += delta;
+            f.WeaponBody.position += delta;
+            f.Body.transform.position += (Vector3)delta;
+            f.WeaponBody.transform.position += (Vector3)delta;
+            f.Body.linearVelocity = Vector2.zero;
+            f.WeaponBody.linearVelocity = Vector2.zero;
+        }
+
+        /// <summary>連携: 打ち上げが当たると相手が浮き、自動で叩き落としへつながって地面に激突（ダメージ＋跳ねて転倒）する。</summary>
+        [UnityTest]
+        public IEnumerator LaunchCombo_LiftsThenSmashesIntoGround()
+        {
+            SimHarness.Begin(false);
+            int launched = 0, smashed = 0, grounded = 0;
+            string detail = "";
+            foreach (var (l, r) in new[] { ("一", "鬱"), ("鬱", "一"), ("山", "火") })
+            {
+                battle = SimHarness.Build(11, countdown: 1000f, left: l, right: r); // カウントダウン中は AI 停止
+                var a = battle.Left;
+                var d = battle.Right;
+                // 近くへ移した相手の武器が攻撃側の体にめり込んで弾き合わないよう、その組の衝突だけ外す（打ち上げの当たりは攻撃側の武器×相手の体）
+                foreach (var w in d.WeaponColliders) foreach (var bc in a.BodyColliders) Physics2D.IgnoreCollision(w, bc, true);
+                // 攻撃側が構えた武器の先端のすぐ外に立たせる（めり込ませると弾き飛ばされる）
+                float tip = a.WeaponColliders.Max(c => c.bounds.max.x);
+                MoveFighter(d, new Vector2(Mathf.Max(tip + 0.3f, a.X + a.AttackRange * 0.85f), 0.02f));
+                yield return null;
+                HitEvent? lh = null, sh = null;
+                EnvImpactEvent? env = null;
+                battle.Context.Events.Hit += e =>
+                {
+                    if (e.attacker != 0) return;
+                    if (e.style == AttackStyle.Launch) lh = e;
+                    if (e.style == AttackStyle.Smash) sh = e;
+                };
+                battle.Context.Events.EnvImpact += e => { if (e.fighter == 1 && e.smash) env = e; };
+                TimeController.SetSpectatorSpeed(1f);
+                float hp = d.Runtime.hp;
+                a.StartAttack(battle.Context.SimTime, AttackStyle.Launch);
+                int frames = 0;
+                float peak = 0f;
+                while (env == null && frames++ < 500)
+                {
+                    yield return null;
+                    peak = Mathf.Max(peak, d.Body.position.y);
+                }
+                detail += $"{l}->{r}: launch={(lh.HasValue ? lh.Value.damage.ToString("F1") : "-")} peak={peak:F2} smash={(sh.HasValue ? sh.Value.damage.ToString("F1") : "-")} ground={(env.HasValue ? env.Value.damage.ToString("F1") : "-")} hp {hp:F0}->{d.Runtime.hp:F0} state={d.Runtime.state}; ";
+                if (lh.HasValue && peak > 0.8f) launched++;
+                if (sh.HasValue && sh.Value.combo) smashed++;
+                if (env.HasValue && env.Value.damage > 0f && d.Runtime.IsDown) grounded++;
+                battle.Destroy();
+                battle = null;
+                yield return null;
+            }
+            Debug.Log("[COMBO] " + detail);
+            Assert.AreEqual(3, launched, "打ち上げで浮かない: " + detail);
+            Assert.AreEqual(3, smashed, "叩き落としにつながらない: " + detail);
+            Assert.AreEqual(3, grounded, "地面に激突して倒れない: " + detail);
+        }
+
         /// <summary>投げ: 離れた相手へ武器を投げて当てる。落ちた武器は拾うまで手に戻らず、拾えば握りへ戻る。</summary>
         [UnityTest]
         public IEnumerator Throw_HitsAtRange_WeaponReturnsOnlyWhenPickedUp()
@@ -339,8 +402,7 @@ namespace MojiBattle.Tests
             battle = SimHarness.Build(5, countdown: 1000f); // カウントダウン中は AI 停止
             var l = battle.Left;
             var r = battle.Right;
-            l.Body.position = new Vector2(r.X - 4.5f, 0.02f);
-            l.WeaponMotor.ResetPose();
+            MoveFighter(l, new Vector2(r.X - 4.5f, 0.02f));
             yield return null;
             HitEvent? hit = null;
             battle.Context.Events.Hit += e => { if (e.attacker == 0 && e.style == AttackStyle.Throw) hit = e; };

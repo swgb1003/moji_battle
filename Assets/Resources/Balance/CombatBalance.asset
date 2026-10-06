@@ -274,7 +274,7 @@ MonoBehaviour:
   bashGuardLoad: 3
   bashWallDistance: 2.2
   launch:
-    weight: 0.05
+    weight: 0.08
     windup: 1.3
     active: 1.2
     recovery: 1.2

@@ -225,6 +225,15 @@ namespace MojiBattle
                 {
                     punishing = false;
                     pendingAttackAt = -1f;
+                    // よろけた相手は打ち上げて叩き落とす連携を狙う（溜めを短くして間に合わせる）
+                    if (ort.state == FighterState.Stagger && d >= MinStrikeDistance && Rng.Chance(B.comboLaunchChance))
+                    {
+                        Rt.comboRemaining = 0;
+                        self.StartAttack(time, AttackStyle.Launch);
+                        Rt.windupDuration *= B.comboLaunchWindup;
+                        LastDecision = "連携(打ち上げ)";
+                        return;
+                    }
                     Rt.comboRemaining = Rng.RangeInclusive(tend.comboMin, tend.comboMax) - 1;
                     if (self.Style != null && self.Style.AttackWillingnessBonus(time) > 0f) WindowAttacks++;
                     self.StartAttack(time);
@@ -529,7 +538,8 @@ namespace MojiBattle
         {
             switch (s)
             {
-                case AttackStyle.Overhead: return B.guardPsiHigh;
+                case AttackStyle.Overhead:
+                case AttackStyle.Smash: return B.guardPsiHigh;
                 case AttackStyle.Sweep:
                 case AttackStyle.Spin:
                 case AttackStyle.Bash: return B.guardPsi;

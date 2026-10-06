@@ -33,11 +33,12 @@ namespace MojiBattle
                     }
                     break;
                 case FighterState.AttackWindup:
+                    if (rt.attackStyle == AttackStyle.Smash) return; // 叩き落としの踏み込みの勢いを保つ
                     if (rt.attackStyle == AttackStyle.Thrust) target = -walk * 0.35f * toward; // 半歩引く
                     else target = walk * (self.WeightClass == WeightClass.Heavy ? 0.3f : 0.25f) * toward;
                     break;
                 case FighterState.AttackActive:
-                    if (rt.attackStyle == AttackStyle.Thrust || rt.attackStyle == AttackStyle.Bash) return; // 踏み込み・体当たりの勢いを保つ
+                    if (rt.attackStyle == AttackStyle.Thrust || rt.attackStyle == AttackStyle.Bash || rt.attackStyle == AttackStyle.Smash) return; // 踏み込み・体当たりの勢いを保つ
                     if (rt.attackStyle == AttackStyle.Spin) { target = 0f; break; } // 回転斬りはその場で回る
                     // 振りの間は踏み込みを維持（重い武器の反動で後ろへ流されないよう踏ん張る）
                     target = Mathf.Max(walk * 0.6f, StatCalculator.Lerp01(b.stepInSpeedLight, b.stepInSpeedHeavy, self.Stats.weightScore)) * toward;

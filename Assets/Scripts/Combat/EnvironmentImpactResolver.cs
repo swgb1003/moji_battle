@@ -59,6 +59,14 @@ namespace MojiBattle
                     if (slamDmg > dmg) dmg = slamDmg; else slam = false;
                 }
                 if (dmg <= 0f) continue;
+                // 叩き落とされて地面に激突したら一度だけ跳ねて倒れる
+                bool smash = !c.isWall && time - rt.smashedAt <= b.smashBounceWindow;
+                if (smash)
+                {
+                    rt.smashedAt = -999f;
+                    var v = f.Body.linearVelocity;
+                    f.AddVelocity(new Vector2(v.x * 0.5f, b.smashBounceSpeed) - v);
+                }
                 if (slam) rt.metrics.slamsTaken++;
                 rt.ApplyDamage(dmg);
                 rt.metrics.envDamageTaken += dmg;
@@ -67,12 +75,13 @@ namespace MojiBattle
                 rt.knockdownAccum += vN * b.envAccumPerSpeed;
                 ctx.LastDamageTime = time;
                 if (rt.hp <= 0f) f.Knockdown.EnterKO(time);
-                else if (!rt.IsDown && rt.knockdownAccum >= b.knockdownAccumThreshold) f.Knockdown.EnterKnockdown(time);
+                else if (!rt.IsDown && (smash || rt.knockdownAccum >= b.knockdownAccumThreshold)) f.Knockdown.EnterKnockdown(time);
                 ctx.Events.Raise(new EnvImpactEvent
                 {
                     fighter = f.Id, isWall = c.isWall, vN = vN, damage = dmg,
                     timeSinceLaunch = slam ? time - rt.liftedAt : time - rt.launchedAt, point = c.point, time = time,
                     slam = slam,
+                    smash = smash,
                 });
             }
             queue.Clear();

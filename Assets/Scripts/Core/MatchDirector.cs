@@ -34,6 +34,8 @@ namespace MojiBattle
         readonly bool[] yawGhost = new bool[2];
         /// <summary>落ちている（投げた後の）武器と相手の体の衝突を外しているか</summary>
         readonly bool[] looseApplied = new bool[2];
+        /// <summary>連携（打ち上げ → 叩き落とし）の間、体どうし・自分の武器と相手の体の衝突を外しているか</summary>
+        readonly bool[] comboGhost = new bool[2];
         readonly System.Collections.Generic.HashSet<Collider2D> weaponColliderSet = new System.Collections.Generic.HashSet<Collider2D>();
         /// <summary>武器どうしの衝突が今有効か（接触ゲート）</summary>
         public bool WeaponsColliding { get; private set; } = true;
@@ -114,6 +116,7 @@ namespace MojiBattle
             Fighters[0].Tick(ctx.SimTime, dt);
             Fighters[1].Tick(ctx.SimTime, dt);
             UpdateLooseWeapons();
+            UpdateComboGhost();
             UpdateWeaponGate();
             UpdateYawGhost();
             Fighters[0].CachePreStep();
@@ -298,6 +301,8 @@ namespace MojiBattle
                 var s = f.Runtime.state;
                 bool want = AttackTechniques.IsYaw(f.Runtime.attackStyle) && !f.Runtime.IsDown
                             && (s == FighterState.AttackWindup || s == FighterState.AttackActive || s == FighterState.AttackRecovery);
+                // 打ち上げ: 低く構える溜めで相手の足を押し退けないよう、溜めと振りの間は体に当てず、重なりで当たりを判定する
+                if (f.Runtime.attackStyle == AttackStyle.Launch && !f.Runtime.IsDown && (s == FighterState.AttackWindup || s == FighterState.AttackActive)) want = true;
                 if (want == yawGhost[i]) continue;
                 yawGhost[i] = want;
                 foreach (var w in f.WeaponColliders)
@@ -369,15 +374,51 @@ namespace MojiBattle
             }
         }
 
-        /// <summary>落ちている武器と相手の体の組（他の安定化処理が衝突を戻さないようにする）。</summary>
+        /// <summary>
+        /// 連携の間は、浮かせた相手が自分の頭・武器の上に乗ったり引っ掛かったりしないよう、体どうしと自分の武器×相手の体を素通りさせる
+        /// （叩き落としの当たりは届く範囲で判定するので衝突は要らない）。終わったら離れてから戻す。
+        /// </summary>
+        void UpdateComboGhost()
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                var f = Fighters[i];
+                var rt = f.Runtime;
+                var s = rt.state;
+                bool want = !rt.IsDown && (rt.launchConnectedAt >= 0f
+                            || (rt.attackStyle == AttackStyle.Smash && (s == FighterState.AttackWindup || s == FighterState.AttackActive || s == FighterState.AttackRecovery)));
+                if (want == comboGhost[i]) continue;
+                comboGhost[i] = want;
+                var opp = f.Opponent;
+                foreach (var w in f.WeaponColliders)
+                foreach (var bc in opp.BodyColliders) SetGhost(w, bc, want);
+                foreach (var x in f.BodyColliders)
+                foreach (var y in opp.BodyColliders) SetGhost(x, y, want);
+            }
+        }
+
+        void SetGhost(Collider2D x, Collider2D y, bool ignore)
+        {
+            if (!ignore) { SetPair(x, y, false); return; }
+            Physics2D.IgnoreCollision(x, y, true);
+            separatedPairs.Remove((x, y));
+            separatedPairs.Remove((y, x));
+        }
+
+        /// <summary>落ちている武器と相手の体の組・連携中の組（他の安定化処理が衝突を戻さないようにする）。</summary>
         bool LooseBlocked(Collider2D x, Collider2D y)
         {
             for (int i = 0; i < 2; i++)
             {
-                if (!looseApplied[i]) continue;
                 var f = Fighters[i];
-                if (System.Array.IndexOf(f.WeaponColliders, x) >= 0 && System.Array.IndexOf(f.Opponent.BodyColliders, y) >= 0) return true;
-                if (System.Array.IndexOf(f.WeaponColliders, y) >= 0 && System.Array.IndexOf(f.Opponent.BodyColliders, x) >= 0) return true;
+                bool xw = System.Array.IndexOf(f.WeaponColliders, x) >= 0, yw = System.Array.IndexOf(f.WeaponColliders, y) >= 0;
+                bool xo = System.Array.IndexOf(f.Opponent.BodyColliders, x) >= 0, yo = System.Array.IndexOf(f.Opponent.BodyColliders, y) >= 0;
+                if ((looseApplied[i] || comboGhost[i]) && ((xw && yo) || (yw && xo))) return true;
+                if (comboGhost[i])
+                {
+                    bool xb = System.Array.IndexOf(f.BodyColliders, x) >= 0, yb = System.Array.IndexOf(f.BodyColliders, y) >= 0;
+                    if ((xb && yo) || (yb && xo)) return true;
+                }
             }
             return false;
         }

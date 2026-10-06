@@ -32,6 +32,14 @@ namespace MojiBattle
         /// <summary>この時刻まで武器の保持トルクを抜く（自分の武器を地面に突いて体が浮いた時に落とす）</summary>
         public float weaponLimpUntil = -1f;
 
+        // 連携（打ち上げ → 叩き落とし）
+        /// <summary>自分の打ち上げが当たって相手を浮かせた時刻（叩き落としへつなぐ）。未発生は -1</summary>
+        public float launchConnectedAt = -1f;
+        /// <summary>叩き落とされた時刻（地面で跳ねる判定）</summary>
+        public float smashedAt = -999f;
+        /// <summary>叩き落としの狙いの角度 ψ（武器がここまで振り下ろされたら当たりを判定する）</summary>
+        public float smashAimPsi;
+
         // 投げ
         /// <summary>武器が手から離れている（投げてから拾うまで）</summary>
         public bool weaponDetached;

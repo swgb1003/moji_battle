@@ -57,7 +57,17 @@ namespace MojiBattle
             string label = e.critical ? "CRITICAL!" : tech.Length > 0 ? tech : e.quality == HitQuality.Graze ? "かすり" : "";
             Color c = e.critical ? new Color32(0xF3, 0xC6, 0x5A, 0xFF) : FighterFactory.Ink;
             SpawnPopup($"{(label.Length > 0 ? label + "\n" : "")}{e.damage:F0}", e.point + Vector2.up * 0.3f, c, e.critical ? 0.5f : 0.36f);
-            if (e.damage >= director.Context.Balance.heavyHitDamage)
+            var b = director.Context.Balance;
+            if (e.combo)
+            {
+                // 連携の締め: 大きく「COMBO!」、長めのヒットストップ・揺れ・寄り
+                SpawnPopup("COMBO!", e.point + new Vector2(0f, 1.3f), new Color32(0xF3, 0xC6, 0x5A, 0xFF), 0.8f);
+                Burst(e.point, 26, FighterFactory.Ink, 9f, 0.12f);
+                TimeController.TriggerHitStop(b.smashHitStopSeconds);
+                rig?.Shake(b.smashShake, 0.3f);
+                rig?.ZoomPunch(b.smashZoom, 0.6f);
+            }
+            else if (e.damage >= b.heavyHitDamage)
             {
                 TimeController.TriggerHitStop(director.Context.Balance.hitStopSeconds);
                 rig?.Shake(0.18f, 0.2f);
@@ -75,9 +85,10 @@ namespace MojiBattle
         void OnEnv(EnvImpactEvent e)
         {
             Burst(e.point, 12, FighterFactory.Ink, 5f, 0.1f);
-            string label = e.slam ? "叩きつけ！" : e.isWall ? "ドンッ！" : "ズシャ";
-            SpawnPopup($"{label}\n{e.damage:F0}", e.point + Vector2.up * 0.5f, FighterFactory.Ink, e.slam ? 0.6f : 0.5f);
-            rig?.Shake(0.15f, 0.18f);
+            string label = e.smash ? "ドゴォン！" : e.slam ? "叩きつけ！" : e.isWall ? "ドンッ！" : "ズシャ";
+            SpawnPopup($"{label}\n{e.damage:F0}", e.point + Vector2.up * 0.5f, FighterFactory.Ink, e.slam || e.smash ? 0.6f : 0.5f);
+            if (e.smash) Burst(e.point, 20, FighterFactory.Ink, 7f, 0.12f);
+            rig?.Shake(e.smash ? 0.25f : 0.15f, e.smash ? 0.25f : 0.18f);
         }
 
         void OnKo(KoEvent e)

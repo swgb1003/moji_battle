@@ -229,11 +229,33 @@ namespace MojiBattle
         public TechniqueTuning bash = new TechniqueTuning { weight = 0.06f, windup = 0.8f, active = 1.6f, recovery = 1.4f, damage = 0.55f, impulse = 1.9f, upBias = 0.1f };
         public float bashDashSpeed = 6.5f, bashGuardLoad = 3f, bashWallDistance = 2.2f;
         [Tooltip("打ち上げ: 下から大きく跳ね上げて浮かせる。浮いた相手には追撃する")]
-        public TechniqueTuning launch = new TechniqueTuning { weight = 0.05f, windup = 1.3f, active = 1.2f, recovery = 1.2f, damage = 0.8f, impulse = 1.5f, upBias = 1.6f };
+        public TechniqueTuning launch = new TechniqueTuning { weight = 0.08f, windup = 1.3f, active = 1.2f, recovery = 1.2f, damage = 0.8f, impulse = 1.5f, upBias = 1.6f };
         [Tooltip("打ち上げで浮かせた相手への追撃: 打ち上げから何秒以内・射程の何倍まで")]
         public float juggleWindow = 1.0f, juggleRangeScale = 1.4f;
         [Tooltip("回転斬り: 一回転して前後を払う。振り終わりは目が回って隙が大きい")]
         public TechniqueTuning spin = new TechniqueTuning { weight = 0.03f, windup = 0.9f, active = 1.7f, recovery = 1.7f, damage = 0.75f, impulse = 1.1f };
+        [Tooltip("連携（打ち上げ → 叩き落とし）: 打ち上げが当たると相手をこの速さで浮かせる（上 / 相手を押す横）")]
+        public float launchLiftSpeed = 5.5f, launchLiftAway = 0f;
+        [Tooltip("連携: 打ち上げが当たってから叩き落としを始めるまでの最短秒数 / 浮いた相手の上昇がこの速さ以下（頂点付近）になったら振る / これを過ぎたらつながない")]
+        public float smashChainDelay = 0.12f, smashApexSpeed = 1.2f, smashChainTimeout = 1.2f;
+        [Tooltip("連携: 叩き落としにつなぐ距離（握りの肩からの横距離 + 武器の長さ のこの倍率まで）")]
+        public float smashChainReach = 1.3f;
+        [Tooltip("叩き落とし: 打ち上げた相手を頭上から地面へ叩きつける（連携の締め。単独では選ばない）")]
+        public TechniqueTuning smash = new TechniqueTuning { weight = 0f, windup = 0.55f, active = 0.9f, recovery = 1.3f, damage = 0.55f, impulse = 1f };
+        [Tooltip("叩き落とし: 当たった相手を地面へ向けて落とす速さ / その時に自分から離す横の速さ / 地面で跳ねる上向きの速さ / 跳ねる判定の猶予秒")]
+        public float smashDriveSpeed = 12f, smashDriveAway = 3f, smashBounceSpeed = 4.5f, smashBounceWindow = 0.8f;
+        [Tooltip("叩き落とし: 溜め・振りの時間の上限（秒）。浮いている間に振り終えるため重さに関係なく短い")]
+        public float smashMaxWindup = 0.14f, smashMaxActive = 0.22f;
+        [Tooltip("叩き落とし: 握りから相手の胸までがこの距離（武器の長さ + 値）以内なら届く")]
+        public float smashReachSlack = 0.6f;
+        [Tooltip("叩き落とし: 当たりの速さ（固定。威力のばらつきを抑える） / 振り始めに相手の手前（武器の長さのこの割合）まで踏み込む速さの上限")]
+        public float smashHitSpeed = 9f, smashStepSpeed = 6f;
+        [Tooltip("叩き落とし: 踏み込みで詰める相手との距離（武器の長さに対する割合）")]
+        public float smashStepFraction = 0.55f;
+        [Tooltip("連携: よろけた相手に差し込む時、打ち上げから始める確率 / その時の溜め時間の倍率")]
+        public float comboLaunchChance = 0.85f, comboLaunchWindup = 0.6f;
+        [Tooltip("連携の演出: 叩き落としが当たった時のヒットストップ秒 / 画面揺れ / カメラの寄り（画面の大きさの割合）")]
+        public float smashHitStopSeconds = 0.16f, smashShake = 0.3f, smashZoom = 0.18f;
         [Tooltip("投げ: 字形を相手へ投げつける（weight は使わない。AI が中距離の奥の手として選ぶ）。投げた後は拾うまで素手で、攻撃もガードもできない")]
         public TechniqueTuning throwAttack = new TechniqueTuning { weight = 0f, windup = 1.2f, active = 0.6f, recovery = 0.8f, damage = 0.55f, impulse = 1f, upBias = 0.2f };
         [Tooltip("投げ: 初速（軽量〜重量）。カスタマイズで扱いにくい武器はさらに遅い")]

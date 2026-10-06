@@ -9,6 +9,7 @@ namespace MojiBattle
         MatchDirector director;
         float xVel, sizeVel;
         float shakeAmp, shakeTime;
+        float zoomAmount, zoomTime, zoomDuration;
         Vector3 basePos;
 
         public const float GroundMargin = 1.35f;
@@ -29,6 +30,14 @@ namespace MojiBattle
             shakeTime = Mathf.Max(shakeTime, duration);
         }
 
+        /// <summary>一瞬だけ寄る（画面の大きさを amount の割合だけ縮め、duration 秒で戻す）。</summary>
+        public void ZoomPunch(float amount, float duration)
+        {
+            if (!TimeController.PresentationEffectsEnabled) return;
+            zoomAmount = amount;
+            zoomTime = zoomDuration = Mathf.Max(0.01f, duration);
+        }
+
         void LateUpdate()
         {
             if (director == null || director.Fighters[0] == null) return;
@@ -42,7 +51,16 @@ namespace MojiBattle
             float top = Mathf.Max(a.y, b.y) + 2.6f;
             targetSize = Mathf.Max(targetSize, Mathf.Min(6.5f, (top + GroundMargin) * 0.5f / 0.87f));
             float dt = Time.unscaledDeltaTime;
-            float size = Mathf.SmoothDamp(Cam.orthographicSize, targetSize, ref sizeVel, 0.35f, Mathf.Infinity, dt);
+            float size;
+            if (zoomTime > 0f)
+            {
+                // 寄りは追従の遅れなしで効かせ、時間とともに元の大きさへ戻す
+                zoomTime -= dt;
+                float k = Mathf.Clamp01(zoomTime / zoomDuration);
+                size = targetSize * (1f - zoomAmount * k);
+                sizeVel = 0f;
+            }
+            else size = Mathf.SmoothDamp(Cam.orthographicSize, targetSize, ref sizeVel, 0.35f, Mathf.Infinity, dt);
             Cam.orthographicSize = size;
             float halfW = size * aspect;
             float limit = Mathf.Max(0f, 9.8f - halfW); // 壁の外を見せすぎない
