@@ -2,24 +2,24 @@
   "url": "https://moji-fighter-x.vercel.app",
   "verified": [
     {
-      "file": "Build/00f2fd424891711509d7e2a1faaa22ca.framework.js.gz",
-      "bytes": 83374,
-      "sha256": "19fa2ea9d07b84bded4f539632c8720952d8865c4745f4f86c6e0bfbb2fcdd18"
+      "file": "Build/53a356fd277bf557f2e4b3186ecabaf6.wasm.gz",
+      "bytes": 7020256,
+      "sha256": "32f1e9c7c3da4cdff096a971ffba3acf98a46da50774d20dd6b8b7d439b18c97"
     },
     {
-      "file": "Build/3e60c0fc28a127709590f68e7f44c687.wasm.gz",
-      "bytes": 6693410,
-      "sha256": "1ee76b32c5b18f03cba9be3ea5c06bf82df7b8145c876496082861d9dffe5eba"
-    },
-    {
-      "file": "Build/bb1b557a6e40e0e9150a10e44c4d99bf.loader.js",
+      "file": "Build/61c9d25493e220b0a27ffc17a74a50e3.loader.js",
       "bytes": 26454,
-      "sha256": "8f707d131052ae33fad88723d29137767ffaae33c0878627b3b69ee6d4f724d7"
+      "sha256": "80f7a87c5d0de1156cd22000c837cc87b1ad637ac68eb61b3a06122ce7a9c011"
     },
     {
-      "file": "Build/c92964eac9400c30604c61773cea8ffa.data.gz",
-      "bytes": 53052501,
-      "sha256": "69b8e03a7c1da577edfa722f7b4e494f2337e24680e20be613077e8bf513672b"
+      "file": "Build/8194c8fb51f3917d17b7a9ea45e826a3.data.gz",
+      "bytes": 99214891,
+      "sha256": "c44846f082967d8fc6a8bac3fb755bf9a9a905833afb8e23c51cca62c540d5f8"
+    },
+    {
+      "file": "Build/eeabdfe43de43580879ec1241ef997c6.framework.js.gz",
+      "bytes": 84144,
+      "sha256": "feee75f91998fc3e66ac58671108af112a146ee80afccd04f5d75e131d52a795"
     },
     {
       "file": "Licenses/Brush/OFL.txt",
@@ -42,14 +42,24 @@
       "sha256": "2a20cf7ce1909d8ee1e949095d340f7d7656705f7c810a2d6faf56800ad0cb3d"
     },
     {
+      "file": "Licenses/Unicode/LICENSE.txt",
+      "bytes": 2034,
+      "sha256": "8437ba5f4e4c8ae0268c3df5cf106006f2d045ff3452eedd1f27e8eb26c5f327"
+    },
+    {
+      "file": "Licenses/WorldCupHeading/OFL.txt",
+      "bytes": 4301,
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+    },
+    {
       "file": "build-info.json",
       "bytes": 102,
-      "sha256": "b299c0ea52b79d899809045bf46ca1f9920470ff01d77c5ac86acc756dfe33fc"
+      "sha256": "c42d111932a750cf5573d93c6b97a4544e47af6529f6de258f77b04544712302"
     },
     {
       "file": "index.html",
       "bytes": 5533,
-      "sha256": "48bbe26e05fe86cc66cb427588430231931ceadf8020f83fb8bc741c5e06ce48"
+      "sha256": "1e93f2c01a7a34b037676f5f3bce206ce565310478aa1fd249363150edf9b911"
     }
   ]
 }

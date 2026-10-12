@@ -27,3 +27,9 @@ TestResults-*.xml
 
 # Server dependencies
 Server/node_modules/
+
+# Local verification output (large or machine-specific)
+/Reports/UI/FreeRoomVerification/
+/Reports/CombatTempo/
+/Reports/UI/FighterVolume/
+/Reports/**/*.log
