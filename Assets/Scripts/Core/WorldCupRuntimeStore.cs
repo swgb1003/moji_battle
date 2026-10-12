@@ -53,12 +53,15 @@ namespace MojiBattle
         {
             if(!ValidBuild(b))throw new ArgumentException("使用できる文字を選んでください。");
             Current=WorldCupCatalog.Create(b,seed);Preparing=false;Save();
+            AchievementStore.Change(p=>p.RecordWorldCup(Current),true);
         }
         public static bool Record(int id,MatchResult r,bool displayed=false)
         {
             if(Current==null || !Current.Record(id,r))return false;
             if(displayed){Current.LastMatch=id;Current.SelectedMatch=-1;Current.Page=WorldCupPage.MatchResult;}
-            Save();return true;
+            Save();
+            var session=Current;AchievementStore.Change(p=>p.RecordWorldCup(session),true);
+            return true;
         }
         public static void Show(WorldCupPage page){if(Current==null)return;Current.Page=page;Save();}
         public static void AbortMatch()

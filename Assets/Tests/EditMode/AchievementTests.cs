@@ -64,8 +64,8 @@ namespace MojiBattle.Tests
         [Test]
         public void StableOriginalDefinitionsAndAllChallengeAndDraftRewardsUnlockExactlyOnce()
         {
-            Assert.AreEqual(68,AchievementCatalog.All.Length);
-            CollectionAssert.AreEqual(Enumerable.Range(1,68),AchievementCatalog.All.Select(d=>d.Id));
+            Assert.AreEqual(77,AchievementCatalog.All.Length);
+            CollectionAssert.AreEqual(Enumerable.Range(1,77),AchievementCatalog.All.Select(d=>d.Id));
             foreach(var definition in AchievementCatalog.All.Where(d=>d.Id!=50))
             {
                 var p=new AchievementProfile();

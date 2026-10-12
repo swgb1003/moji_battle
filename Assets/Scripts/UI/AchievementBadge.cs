@@ -32,6 +32,14 @@ namespace MojiBattle
                 RetroUi.Label(root,"Question","?",0,0,size,size,Mathf.RoundToInt(size*.45f),RetroUi.Muted,TextAnchor.MiddleCenter);
                 return root;
             }
+            if(id>=69 && id<=77)
+            {
+                root.gameObject.AddComponent<ChallengeBadgeGraphic>().color=new Color32(176,131,40,255);
+                var cup=RetroUi.Label(root,"WorldCupRewardGlyph",new[]{"歩","突","首","崖","八","台","冠","覇","巡"}[id-69],
+                    size*.23f,size*.18f,size*.54f,size*.56f,Mathf.RoundToInt(size*.44f),RetroUi.Ink,TextAnchor.MiddleCenter);
+                cup.font=GlyphFontLibrary.Default?.Get(FontStyleId.Brush)?.font ?? RetroUi.Font;
+                return root;
+            }
             if(id>=65 && id<=68)
             {
                 root.gameObject.AddComponent<ChallengeBadgeGraphic>().color=RetroUi.Ink;

@@ -118,9 +118,17 @@ namespace MojiBattle.Tests
             Screen.Ceremony.Skip();yield return Ready();Capture("16_photo");
             B("WorldCupPhotoNext").onClick.Invoke();yield return Ready();Capture("17_tournament_result");
             Assert.IsTrue(s.Finished);Assert.AreEqual(0,s.ChampionId);Assert.AreEqual(8,s.PlayerWins);Assert.IsFalse(WorldCupRuntimeStore.CanResume);
+            // ワールド文字カップの称号: 出場・予選突破・八強・表彰台・優勝・無敗優勝（8 戦全勝）・優勝した文字
+            var profile=AchievementStore.Profile;
+            foreach(int id in new[]{69,70,73,74,75,76})Assert.IsTrue(profile.Has(id),"称号 "+id+" が付かない");
+            Assert.GreaterOrEqual(profile.Value(77),1);
             B("WorldCupResultBracket").onClick.Invoke();yield return Ready();Assert.AreEqual(WorldCupPage.Bracket,s.Page);
             B("WorldCupWholeBracket").onClick.Invoke();yield return Ready();Capture("19_whole_bracket");
             MenuUiTests.Capture("WorldCup/19_whole_bracket_1280x960",1280,960);
+            // 文字カップの称号の一覧（獲得したバッジ）
+            GameFlow.ToAchievements();yield return Ready();
+            Object.FindAnyObjectByType<AchievementsScreen>().ChooseCategory(10);yield return Ready();
+            MenuUiTests.Capture("Achievements/world_cup_titles");
         }
         [UnityTest] public IEnumerator IllustratedSelectionAndGuide_AssetsAndNavigationRenderAtDesktopAndSmallScreen()
         {
@@ -151,7 +159,7 @@ namespace MojiBattle.Tests
             Screen.Open(WorldCupPage.Bracket);yield return BoardReady();Assert.IsFalse(s.Eliminated);Assert.IsTrue(s.NextPlayerMatch.Bronze);
             B("WorldCupNext").onClick.Invoke();yield return Ready();var bronze=s.NextPlayerMatch;
             yield return PlayAndEnd(bronze,bronze.LeftId==0?0:1);B("WorldCupResultNext").onClick.Invoke();yield return BoardReady();
-            Assert.IsTrue(s.Finished);Assert.AreEqual(0,s.ThirdId);Assert.AreEqual(WorldCupPage.Results,s.Page);Capture("20_third_place_result");
+            Assert.IsTrue(s.Finished);Assert.AreEqual(0,s.ThirdId);Assert.IsTrue(AchievementStore.Profile.Has(74),"3位でも表彰台の称号が付く");Assert.AreEqual(WorldCupPage.Results,s.Page);Capture("20_third_place_result");
         }
         [UnityTest] public IEnumerator EarlyDefeat_ShowsExitAndWatchRest_AndResumePreservesSeed()
         {

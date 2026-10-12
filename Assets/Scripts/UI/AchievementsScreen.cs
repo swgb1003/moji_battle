@@ -32,7 +32,7 @@ namespace MojiBattle
             {
                 int chosen=i;
                 float width=1768f/AchievementCatalog.Categories.Length;
-                tabs.Add(RetroUi.Button(root,"Category_"+i,AchievementCatalog.Categories[i],76+i*width,260,width-10,62,28,()=>ChooseCategory(chosen),shadow:false));
+                tabs.Add(RetroUi.Button(root,"Category_"+i,AchievementCatalog.Categories[i],76+i*width,260,width-10,62,25,()=>ChooseCategory(chosen),shadow:false));
             }
             RetroUi.Frame(root,76,338,1168,665,RetroUi.Ink,3);
             grid=RetroUi.Group(root,"AchievementGrid",89,351,1142,566);

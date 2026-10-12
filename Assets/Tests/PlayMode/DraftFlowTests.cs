@@ -148,7 +148,7 @@ namespace MojiBattle.Tests
             screen.ChangePage(1);yield return Ready();Assert.AreEqual(2,grid.GetComponentsInChildren<DraftBadgeGraphic>().Length);
             screen.Select(64);yield return Ready();Capture("20_draft_badges_second");
             Assert.AreEqual("選び手の極み",GameObject.Find("DetailName").GetComponent<Text>().text);
-            Assert.AreEqual(68,AchievementCatalog.All.Length);
+            Assert.AreEqual(77,AchievementCatalog.All.Length);
         }
         [UnityTest] public IEnumerator FullSeriesMenuPickBuildVsBattleResultsAndRestartPreserveSavedBuilds()
         {

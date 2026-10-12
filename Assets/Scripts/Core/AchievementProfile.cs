@@ -20,6 +20,8 @@ namespace MojiBattle
         public int runRecordedMatches;
         public List<string> runWinningCharacters=new List<string>();
         public int draftRecordedMatches;
+        public List<string> worldCupChampionCharacters = new List<string>();
+        public List<string> worldCupChampionSessions = new List<string>();
         public int Count => unlocked.Count;
         public int UnseenCount => unlocked.FindAll(x => !x.seen).Count;
         public bool Has(int id) => unlocked.Exists(x => x.id == id);
@@ -127,6 +129,43 @@ namespace MojiBattle
                 runRecordedMatches=i+1;
             }
             for(int id=68;id>=65;id--)if(!old.Contains(id)&&Has(id)&&notifications.Remove(id))notifications.Insert(0,id);
+        }
+        /// <summary>
+        /// ワールド文字カップの称号。進行状況から決まるので、結果を記録するたびに評価し直してよい（何度呼んでも二重に数えない）。
+        /// </summary>
+        public void RecordWorldCup(WorldCupSession s)
+        {
+            if (s == null) return;
+            var old = new HashSet<int>(); for (int id = 69; id <= 77; id++) if (Has(id)) old.Add(id);
+            Set(69, 1);
+            if (s.Qualified)
+            {
+                Set(70, 1);
+                var standings = s.Standings(s.PlayerGroup);
+                if (standings[0].Id == 0) Set(71, 1);
+                if (standings.Count > 2 && standings[2].Id == 0) Set(72, 1);
+            }
+            // 準々決勝（ベスト8）の組み合わせに入った
+            for (int id = 96; id <= 99; id++) { var m = s.Match(id); if (m != null && (m.LeftId == 0 || m.RightId == 0)) { Set(73, 1); break; } }
+            if (s.ChampionId == 0 || s.RunnerUpId == 0 || s.ThirdId == 0) Set(74, 1);
+            if (s.ChampionId == 0)
+            {
+                Set(75, 1);
+                bool lost = false;
+                foreach (var m in s.Matches) if (m.Complete && m.IncludesPlayer && m.WinnerId >= 0 && m.WinnerId != 0) { lost = true; break; }
+                if (!lost) Set(76, 1);
+                worldCupChampionSessions = worldCupChampionSessions ?? new List<string>();
+                worldCupChampionCharacters = worldCupChampionCharacters ?? new List<string>();
+                if (!string.IsNullOrEmpty(s.Id) && !worldCupChampionSessions.Contains(s.Id))
+                {
+                    worldCupChampionSessions.Add(s.Id);
+                    string ch = s.Entrants[0].Build.character;
+                    if (!worldCupChampionCharacters.Contains(ch)) worldCupChampionCharacters.Add(ch);
+                }
+                Set(77, worldCupChampionCharacters.Count);
+            }
+            // 新しく得た大会の称号を先に知らせる
+            for (int id = 77; id >= 69; id--) if (!old.Contains(id) && Has(id) && notifications.Remove(id)) notifications.Insert(0, id);
         }
         public static int Bits(int value) { int n=0; for (int i=0;i<4;i++) if ((value & (1<<i)) != 0) n++; return n; }
     }
