@@ -34,7 +34,8 @@ namespace MojiBattle
             Vector2 off = new Vector2(d * .72f, -d);
             Vector2 bl = new Vector2(r.xMin, r.yMin), tl = new Vector2(r.xMin, r.yMax);
             Vector2 tr = new Vector2(r.xMax, r.yMax), br = new Vector2(r.xMax, r.yMin);
-            for (int i = 3; i > 0; i--)
+            // Without a face, the shadow would lie over the paper it supports and darken the whole board.
+            for (int i = drawFace ? 3 : 0; i > 0; i--)
             {
                 float spread = i * 3.5f + elevation * .15f;
                 Vector2 drift = off + new Vector2(2, -4);
