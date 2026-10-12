@@ -28,7 +28,7 @@ namespace MojiBattle
             body=RetroUi.Group(root,"ChallengeContent",0,0,1920,1080);
         }
         static void Fit(Text text,int min=18)
-        { text.resizeTextForBestFit=true; text.resizeTextMinSize=min; text.resizeTextMaxSize=text.fontSize; text.verticalOverflow=VerticalWrapMode.Truncate; }
+        { text.resizeTextForBestFit=true; text.resizeTextMinSize=min; text.resizeTextMaxSize=text.fontSize; text.verticalOverflow=VerticalWrapMode.Truncate; RetroUi.BalanceLines(text); }
         static void Header(Transform target,string step,string back,Action action)
         {
             RetroUi.Header(target,step,action);
@@ -111,7 +111,7 @@ namespace MojiBattle
             RetroUi.Button(body,"ChallengeSettings","⚙ 設定",1260,55,220,60,30,SettingsScreen.Open,RetroUi.Ink,false);
             RetroUi.Heading(body,d.Name,76);
             RetroUi.Label(body,"ChallengeDifficulty",$"#{d.Id+1:00} / 難易度 "+new string('●',d.Difficulty)+new string('○',3-d.Difficulty),
-                500,235,920,42,28,null,TextAnchor.MiddleCenter);
+                500,244,920,28,24,null,TextAnchor.MiddleCenter);
             var left=Panel(body,"ChallengeOpponent",80,278,910,677);
             Tag(left,"VS プレビュー",18,18,204);
             RetroUi.Fighter(left,64,107,.61f,d.PlayerGlyph,RetroUi.Red);

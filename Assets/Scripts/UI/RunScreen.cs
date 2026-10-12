@@ -143,8 +143,9 @@ namespace MojiBattle
             ChallengeScreen.Tag(left,"01",18,18,70);ChallengeScreen.Tag(right,"02",18,18,70);
             RetroUi.Label(left,"Heading","あなたの構成",114,18,700,60,44);
             RetroUi.Label(right,"Heading",boss?"最後の相手 / BOSS":"次の相手",114,18,730,60,44,boss?RetroUi.Blue:RetroUi.Ink);
-            RunUi.Fighter(left,50,87,.57f,s.player,RetroUi.Red);
-            RunUi.Fighter(right,38,87,.57f,s.Opponent.Build,RetroUi.Blue,true);
+            // The raised weapon reaches above the figure; keep it below the panel headings.
+            RunUi.Fighter(left,50,112,.57f,s.player,RetroUi.Red);
+            RunUi.Fighter(right,58,112,.57f,s.Opponent.Build,RetroUi.Blue,true);
             RunUi.Hp(left,300,105,518,s);
             RetroUi.Label(left,"PlayerBuild",RunUi.BuildText(s.player),300,199,518,86,27);
             RunUi.PerkChips(left,s,300,314,518);

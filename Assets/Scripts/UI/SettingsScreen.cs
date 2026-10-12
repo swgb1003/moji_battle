@@ -59,7 +59,7 @@ namespace MojiBattle
             RetroUi.Header(root, "05 / SETTINGS", Close);
             root.Find("Back").GetComponentInChildren<Text>().text = inBattle ? "← 対戦へ" : "← メニュー";
             RetroUi.Label(root, "SettingsHeading", "設定", 580, 140, 760, 112, 96, null, TextAnchor.MiddleCenter);
-            RetroUi.Label(root, "SettingsSubtitle", "自分好みの音と演出に", 580, 245, 760, 38, 28, RetroUi.Muted, TextAnchor.MiddleCenter);
+            RetroUi.Label(root, "SettingsSubtitle", "自分好みの音と演出に", 580, 256, 760, 34, 26, RetroUi.Muted, TextAnchor.MiddleCenter);
             string[] titles = { "基本", "音楽", "表示・演出", "データ" };
             for (int i = 0; i < 4; i++)
             {
@@ -100,22 +100,22 @@ namespace MojiBattle
             Volume(audio, "Effects", "効果音", 292, s => s.effectsVolume, (s, v) => s.effectsVolume = v);
             RetroUi.Block(audio, "MusicRule", 34, 378, 792, 1, RetroUi.Rule);
             RetroUi.Label(audio, "BattleMusicCaption", "戦闘BGM", 34, 390, 730, 44, 29);
-            var picker = RetroUi.Button(audio, "MusicSelect", "", 34, 444, 548, 66, 32, ToggleMusicPicker, shadow: false);
+            var picker = RetroUi.Button(audio, "MusicSelect", "", 34, 440, 548, 60, 32, ToggleMusicPicker, shadow: false);
             refreshers.Add(() => picker.label.text = MusicName(GameSettings.BattleMusic) + "  ▾");
-            RetroUi.Button(audio, "MusicPreview", "▶ 試聴", 614, 444, 212, 66, 29, () => Preview(GameSettings.BattleMusic), shadow: false);
-            RetroUi.Label(audio, "MusicHint", "次の対戦から、この曲が流れます", 34, 512, 792, 34, 23, RetroUi.Muted);
+            RetroUi.Button(audio, "MusicPreview", "▶ 試聴", 614, 440, 212, 60, 29, () => Preview(GameSettings.BattleMusic), shadow: false);
+            RetroUi.Label(audio, "MusicHint", "次の対戦から、この曲が流れます", 34, 512, 792, 30, 22, RetroUi.Muted);
             var display = Panel(parent, "BasicDisplay", "戦闘・表示", 884, 884);
             Options(display, "InitialSpeed", "初期観戦速度", 116, new[] { "×1", "×2", "×4" }, () => GameSettings.InitialSpeed == 1 ? 0 : GameSettings.InitialSpeed == 2 ? 1 : 2,
                 i => GameSettings.Change(s => s.spectatorSpeed = i == 0 ? 1 : i == 1 ? 2 : 4));
-            Options(display, "Instructions", "開始時の操作説明", 200, new[] { "ON", "OFF" }, () => GameSettings.ShowInstructions ? 0 : 1,
+            Options(display, "Instructions", "開始時の操作説明", 196, new[] { "ON", "OFF" }, () => GameSettings.ShowInstructions ? 0 : 1,
                 i => GameSettings.Change(s => s.showInstructions = i == 0));
-            Options(display, "Damage", "ダメージ数値", 284, new[] { "ON", "OFF" }, () => GameSettings.ShowDamage ? 0 : 1,
+            Options(display, "Damage", "ダメージ数値", 276, new[] { "ON", "OFF" }, () => GameSettings.ShowDamage ? 0 : 1,
                 i => GameSettings.Change(s => s.showDamage = i == 0));
-            Options(display, "Reduced", "画面の揺れ・点滅", 368, new[] { "通常", "控えめ" }, () => GameSettings.ReducedEffects ? 1 : 0,
+            Options(display, "Reduced", "画面の揺れ・点滅", 356, new[] { "通常", "控えめ" }, () => GameSettings.ReducedEffects ? 1 : 0,
                 i => GameSettings.Change(s => s.reducedEffects = i == 1));
-            Options(display, "Special", "必殺技の演出", 452, new[] { "通常", "簡易" }, () => GameSettings.SimpleSpecial ? 1 : 0,
+            Options(display, "Special", "必殺技の演出", 436, new[] { "通常", "簡易" }, () => GameSettings.SimpleSpecial ? 1 : 0,
                 i => GameSettings.Change(s => s.simpleSpecial = i == 1));
-            RetroUi.Label(display, "DisplayHint", "演出を控えめにすると見やすくなります", 34, 514, 820, 32, 23, RetroUi.Muted);
+            RetroUi.Label(display, "DisplayHint", "演出を控えめにすると見やすくなります", 34, 512, 820, 30, 22, RetroUi.Muted);
         }
 
         void Volume(Transform panel, string name, string title, float y, Func<GameSettingsData, float> get, Action<GameSettingsData, float> set)

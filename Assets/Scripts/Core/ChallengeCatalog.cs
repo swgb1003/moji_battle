@@ -54,19 +54,19 @@ namespace MojiBattle
     public static class ChallengeCatalog
     {
         public static readonly ChallengeDefinition[] All = {
-            new ChallengeDefinition(0,"一文字の可能性",1,"一","刀","文字「一」で勝利する","文字「一」で相手に勝利する",
+            new ChallengeDefinition(0,"一文字の可能性",1,"一","刀","文字「一」で\n勝利する","文字「一」で相手に勝利する",
                 "シンプルな形を活かして、握る位置や持ち方を試そう。",fixedCharacter:"一"),
-            new ChallengeDefinition(1,"小よく大を制す",1,"小","大","SサイズでXLに挑む","SサイズでXLの相手に勝利する",
+            new ChallengeDefinition(1,"小よく大を制す",1,"小","大","Sサイズで\nXLに挑む","SサイズでXLの相手に勝利する",
                 "小さな武器の速さを活かして、間合いと戦い方を工夫しよう。",fixedSize:WeaponSize.S,
                 opponentSize:WeaponSize.XL,opponentStyle:BattleStyle.Aggressive),
-            new ChallengeDefinition(2,"鉄壁突破",2,"破","盾","守りの堅い相手を倒す","鉄壁の相手「盾」に勝利する",
+            new ChallengeDefinition(2,"鉄壁突破",2,"破","盾","守りの堅い\n相手を倒す","鉄壁の相手「盾」に勝利する",
                 "守りを崩す必殺技や、届く位置を変える持ち方を試そう。",opponentStyle:BattleStyle.Defensive),
-            new ChallengeDefinition(3,"一撃の美学",2,"撃","刀","必殺技でとどめを刺す","必殺技でとどめを刺して勝利する",
+            new ChallengeDefinition(3,"一撃の美学",2,"撃","刀","必殺技で\nとどめを刺す","必殺技でとどめを刺して勝利する",
                 "相手の残りHPを見て、必殺技を発動するタイミングを選ぼう。",goal:ChallengeGoal.SpecialFinish),
-            new ChallengeDefinition(4,"声援の力",2,"声","闘","声援を使って勝利する","声援を使った試合で勝利する",
+            new ChallengeDefinition(4,"声援の力",2,"声","闘","声援を使って\n勝利する","声援を使った試合で勝利する",
                 "声援ゲージが満タンになったら、Lキーやボタンで力を届けよう。",opponentStyle:BattleStyle.Aggressive,
                 goal:ChallengeGoal.CheerVictory),
-            new ChallengeDefinition(5,"挑戦者の証",3,"挑","龍","強敵「龍」を倒す","強敵「龍」に勝利する",
+            new ChallengeDefinition(5,"挑戦者の証",3,"挑","龍","強敵「龍」を\n倒す","強敵「龍」に勝利する",
                 "相手の必殺技には声援で踏ん張り、自分の切り札で反撃しよう。",opponentSize:WeaponSize.L,
                 opponentStyle:BattleStyle.Aggressive)
         };

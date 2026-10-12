@@ -76,7 +76,8 @@ namespace MojiBattle
                 if(own)D.Frame(p,0,0,386,146,D.Red,3);
                 D.InkFill(p,"GroupBand",4,4,142,35,own?D.Red:D.Navy);T(p,"GroupLetter",((char)('A'+g)).ToString(),5,4,50,35,33,D.Paper,TextAnchor.MiddleCenter);T(p,"GroupName","グループ",60,4,86,35,20,D.Paper);
                 var entrants=Session.Entrants.Where(e=>e.Group==g).ToArray();
-                for(int i=0;i<4;i++){Fighter(p,entrants[i].Id,10+i*94,40,90,101);if(entrants[i].Id==0)T(p,"DrawPlayerTag","YOU",25+i*94,128,58,22,15,D.Red,TextAnchor.MiddleCenter);}
+                for(int i=0;i<4;i++){Fighter(p,entrants[i].Id,10+i*94,40,90,101);}
+                if(own)T(p,"DrawPlayerTag","YOU",154,4,70,35,22,D.Red,TextAnchor.MiddleLeft);
                 RetroUi.Enter(p.gameObject,RetroMotionSettings.Reduced?0:g*.05f,12);
             }
             D.Block(root,"DrawFooterRule",20,717,1632,2,D.Ink);Fighter(root,0,66,728,345,175);
@@ -112,14 +113,14 @@ namespace MojiBattle
             Header("GROUP");D.Text(root,"WorldCupTitle","グループリーグ",49,101,505,89,59,null,TextAnchor.MiddleLeft,true);Tabs();
             var p=D.Panel(root,"GroupStandings",41,203,952,410,$"グループ{(char)('A'+group)}");
             T(p,"LeagueStatus",$"第{Mathf.Max(1,Session.PlayerGroupGames)}節終了",715,9,220,61,28,D.Paper,TextAnchor.MiddleRight);Table(p,group,13,84,926,67);
-            var fixtures=D.Panel(root,"GroupFixtures",41,625,952,268,"これまでの対戦結果");
+            var fixtures=D.Panel(root,"GroupFixtures",41,625,952,254,"これまでの対戦結果");
             var matches=Session.Matches.Where(m=>m.Group==group).ToArray();
             for(int i=0;i<6;i++){var m=matches[i];float x=20+i/3*474,y=78+i%3*57;D.Frame(fixtures,x,y,435,56,D.Rule,1);T(fixtures,"Fixture"+i,$"{Glyph(m.LeftId)}　{(m.Complete?m.WinnerId<0?"△":m.WinnerId==m.LeftId?"○":"●":"VS")}　{Glyph(m.RightId)}",x+10,y,415,56,31,m.IncludesPlayer?D.Red:D.Navy,TextAnchor.MiddleCenter);}
             NextPanel(1007,203,628,523);
             D.Frame(root,1007,738,628,62,D.Ink,2);T(root,"QualifyingRule","1・2位は決勝へ　/　3位は成績上位8文字",1024,746,594,47,24,D.Navy,TextAnchor.MiddleCenter);
             Button("WorldCupPause","大会を中断",1007,814,251,GameFlow.ToTournamentSelect,D.Ink,78,32);
             primary=Button("WorldCupNext","次の試合へ →",1284,814,350,Next,D.Red,78,38);primary.button.interactable=Session.NextPlayerMatch!=null;
-            calculation=T(root,"WorldCupCalculation","",49,900,1570,24,17,D.Navy);
+            calculation=T(root,"WorldCupCalculation","",49,896,1570,18,15,D.Navy);
         }
         void NextPanel(float x,float y,float w,float h)
         {
@@ -170,7 +171,7 @@ namespace MojiBattle
             Header("KNOCKOUT");D.Title(root,"決勝トーナメント",83,70);
             string[] rounds={"ベスト32","ベスト16","準々決勝","準決勝","決勝"};int current=Session.NextPlayerMatch?.Round??4;
             for(int i=0;i<5;i++){D.InkFill(root,"RoundStage",100+i*294,192,294,49,i==current?D.Ink:new Color(.7f,.69f,.64f));T(root,"RoundText",rounds[i],100+i*294,191,294,50,27,i==current?D.Paper:D.Ink,TextAnchor.MiddleCenter);}
-            var graph=D.Panel(root,"WorldCupBracket",36,260,1165,638);D.InkFill(graph,"BracketCaptionBand",11,9,393,44,D.Navy);T(graph,"BracketCaption",wholeBracket?"全32文字を表示":"第"+(quarter+1)+"ブロックを表示",24,10,365,41,27,D.Paper);
+            var graph=D.Panel(root,"WorldCupBracket",36,260,1165,620);D.InkFill(graph,"BracketCaptionBand",11,9,393,44,D.Navy);T(graph,"BracketCaption",wholeBracket?"全32文字を表示":"第"+(quarter+1)+"ブロックを表示",24,10,365,41,27,D.Paper);
             for(int i=0;i<4;i++){int q=i;var b=D.Button(graph,"WorldCupQuarter"+i,(i+1).ToString(),429+i*64,9,57,42,()=>{quarter=q;wholeBracket=false;Build();},null,22,false);D.Selected(b,!wholeBracket&&i==quarter);}
             if(wholeBracket)DrawWhole(graph);else DrawQuarter(graph);
             NextPanel(1217,260,421,342);
@@ -178,7 +179,7 @@ namespace MojiBattle
             Button("WorldCupPause","大会を中断",1240,706,375,GameFlow.ToTournamentSelect,null,60,29);
             primary=Button("WorldCupNext",Session.Finished?"大会結果へ →":"次の試合へ →",1240,788,375,Next,D.Red,83,38);primary.button.interactable=!Busy&&(Session.NextPlayerMatch!=null||Session.Finished);
             if(Session.Match(103)?.Ready==true&&!Session.Match(103).IncludesPlayer)D.Button(graph,"WorldCupWatchBronze","3位決定戦を観戦 →",729,558,404,56,()=>ShowVersus(103),D.Navy,26);
-            calculation=T(root,"WorldCupCalculation","",50,901,1545,22,16,D.Navy);
+            calculation=T(root,"WorldCupCalculation","",50,896,1545,18,15,D.Navy);
             if(Session.Eliminated || Session.Match(103).Complete&&Session.Match(103).IncludesPlayer)
             {primary.label.text=Session.Finished?"大会結果へ →":"大会の続きを集計 →";primary.button.interactable=!Busy;primary.button.onClick.RemoveAllListeners();primary.button.onClick.AddListener(()=>{if(Busy)return;Session.WatchRest=true;WorldCupRuntimeStore.Save();StartCoroutine(Resolve(true));});}
         }

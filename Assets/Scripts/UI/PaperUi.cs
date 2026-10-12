@@ -26,7 +26,9 @@ namespace MojiBattle
         public static void Frame(Transform parent, float x, float y, float w, float h, float weight)
         {
             bool board = w > 1500 && h > 800;
+            // Selection and focus outlines sit above a card's content, so a paper face there would hide it.
             if ((!board && parent.GetComponent<Graphic>() != null) || parent.name.Contains("Hover")
+                || parent.name.Contains("Focus") || parent.name.Contains("Selected") || parent.name.Contains("Border")
                 || parent.name.StartsWith("Stamp") || w < 90 || h < 58) return;
             var owner = parent as RectTransform;
             bool full = owner != null && Mathf.Abs(x) < .01f && Mathf.Abs(y) < .01f

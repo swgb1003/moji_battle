@@ -93,7 +93,7 @@ namespace MojiBattle
                 else
                 {
                     var condition=RetroUi.Label(card,"Condition",d.Condition,14,207,346,39,20,null,TextAnchor.MiddleCenter);
-                    condition.resizeTextForBestFit=true; condition.resizeTextMinSize=17; condition.resizeTextMaxSize=20;
+                    condition.resizeTextForBestFit=true; condition.resizeTextMinSize=15; condition.resizeTextMaxSize=20;
                     condition.verticalOverflow=VerticalWrapMode.Truncate;
                     int value=Mathf.Min(p.Value(d.Id),d.Goal);
                     RetroUi.Frame(card,14,254,242,10,RetroUi.Ink,1);

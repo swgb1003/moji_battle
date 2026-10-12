@@ -67,7 +67,33 @@ namespace MojiBattle
             text.fontStyle = text.font == Font ? FontStyle.Normal : FontStyle.Bold;
             text.verticalOverflow = VerticalWrapMode.Overflow;
             if (size >= 54) PaperUi.Ink(text, Mathf.Clamp(size * .025f, 1.5f, 7));
+            BalanceLines(text);
             return text;
+        }
+        const string NoLineStart = "、。，．」』）】！？ー…ぁぃぅぇぉっゃゅょァィゥェォッャュョをでにはがのとへも";
+        const string BreakAfter = "、。」』をでにはがのとへもて→";
+        /// <summary>Japanese wraps per character, so a long line can leave one or two characters alone on the next line.
+        /// When a label wraps to two lines with such a short tail, break it near the middle at a natural boundary instead.</summary>
+        public static void BalanceLines(Text text)
+        {
+            string s = text.text;
+            if (string.IsNullOrEmpty(s) || s.IndexOf('\n') >= 0 || text.horizontalOverflow == HorizontalWrapMode.Overflow) return;
+            var size = text.rectTransform.rect.size;
+            // A box that holds only one line shrinks the text to fit instead.
+            if (size.x <= 0 || size.y < text.fontSize * text.lineSpacing * 2.2f) return;
+            var generator = new TextGenerator();
+            if (!generator.Populate(s, text.GetGenerationSettings(size)) || generator.lineCount != 2) return;
+            int second = generator.lines[1].startCharIdx, tail = s.Length - second;
+            if (tail > 3 || tail * 3 > second) return;
+            int best = -1;
+            for (int i = 2; i <= second; i++)
+            {
+                if (NoLineStart.IndexOf(s[i]) >= 0 || (BreakAfter.IndexOf(s[i - 1]) < 0 && s[i] != '「')) continue;
+                if (best < 0 || Mathf.Abs(i - s.Length / 2f) < Mathf.Abs(best - s.Length / 2f)) best = i;
+            }
+            if (best < 0) return;
+            string balanced = s.Substring(0, best) + "\n" + s.Substring(best);
+            if (generator.Populate(balanced, text.GetGenerationSettings(size)) && generator.lineCount == 2) text.text = balanced;
         }
         public static void Frame(Transform root, float x, float y, float w, float h, Color color, float weight = 2)
         {

@@ -186,16 +186,16 @@ namespace MojiBattle
             foreach (GripType g in System.Enum.GetValues(typeof(GripType)))
             {
                 var value = g;
-                gripButtons.Add((Option(settings, "Grip_" + g, CustomizeLabels.Grip(g), gripButtons.Count, y, () => customizer.SetGrip(value)), g));
+                gripButtons.Add((Option(settings, "Grip_" + g, CustomizeLabels.Grip(g), gripButtons.Count, y, () => customizer.SetGrip(value), NotedRowHeight), g));
             }
-            gripNote = RetroUi.Label(settings, "GripNote", "", 252, y + 57, 750, 28, 18, RetroUi.Muted);
+            gripNote = RetroUi.Label(settings, "GripNote", "", 252, y + 60, 750, 26, 18, RetroUi.Muted);
             y = 478; Section(settings, "戦い方", y);
             foreach (BattleStyle s in System.Enum.GetValues(typeof(BattleStyle)))
             {
                 var value = s;
-                styleButtons.Add((Option(settings, "Style_" + s, CustomizeLabels.StyleShort(s), styleButtons.Count, y, () => customizer.SetStyle(value)), s));
+                styleButtons.Add((Option(settings, "Style_" + s, CustomizeLabels.StyleShort(s), styleButtons.Count, y, () => customizer.SetStyle(value), NotedRowHeight), s));
             }
-            styleNote = RetroUi.Label(settings, "StyleNote", "", 252, y + 57, 750, 28, 18, RetroUi.Muted);
+            styleNote = RetroUi.Label(settings, "StyleNote", "", 252, y + 60, 750, 26, 18, RetroUi.Muted);
             y = 568; Section(settings, "反転", y);
             string[] flips = { "なし", "左右", "上下", "180°" };
             foreach (WeaponFlip f in System.Enum.GetValues(typeof(WeaponFlip)))
@@ -318,8 +318,10 @@ namespace MojiBattle
         {
             RetroUi.Label(root, "Section_" + title, title, 36, y, 206, 56, 32);
         }
-        static UguiKit.ChoiceButton Option(Transform root, string name, string title, int i, float y, System.Action action) =>
-            RetroUi.Button(root, name, title, 252 + i * 187, y, 178, 56, 27, action, shadow: false);
+        // Rows with a note under the buttons keep the paper edge clear of the note text.
+        const float NotedRowHeight = 48;
+        static UguiKit.ChoiceButton Option(Transform root, string name, string title, int i, float y, System.Action action, float h = 56) =>
+            RetroUi.Button(root, name, title, 252 + i * 187, y, 178, h, 27, action, shadow: false);
         void ToggleGuides()
         {
             preview.showGuides = !preview.showGuides;
