@@ -1,0 +1,18 @@
+{
+  "generator": "Runway Sound Effects",
+  "created": "2026-10-07",
+  "assets": [
+    {
+      "key": "title_start",
+      "taskId": "6ef53a2c-ba0f-42f2-bc8a-1057d5f42b8e",
+      "prompt": "A single crisp high metallic sword chime, 'kiiin', bright ringing Japanese steel blade tone for a fighting game's title start button. Immediate sharp attack, clear sustained metallic resonance fading naturally. Isolated clean sound, no music, no voice, no background noise.",
+      "created": "2026-10-07"
+    },
+    {
+      "key": "battle_start",
+      "taskId": "ff7b6489-a768-41b5-8c72-920dfb70e3f4",
+      "prompt": "Two powerful Japanese wadaiko drum strikes in quick succession, 'don DON', second hit slightly stronger, rich deep wooden drum body and taut skin attack. Dramatic fight-start button cue. Clean isolated sound with short natural resonance, no other percussion, no music, no voice.",
+      "created": "2026-10-07"
+    }
+  ]
+}

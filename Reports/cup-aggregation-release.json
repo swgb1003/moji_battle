@@ -1,0 +1,28 @@
+{
+  "productionUrl": "https://moji-fighter-x.vercel.app",
+  "deploymentId": "dpl_AjNQ55rao16Thg9YTXb8Fm2B2TjC",
+  "deploymentUrl": "https://moji-fighter-j723ewivk-swgb1003-5441s-projects.vercel.app",
+  "target": "production",
+  "readyState": "READY",
+  "team": "swgb1003-5441s-projects",
+  "project": {
+    "projectId": "prj_dysF5ncQzt0MeAgRoHEDSazVQ3eG",
+    "orgId": "team_T9S6jm2dWj9hQHWiULpbSwxx",
+    "projectName": "moji-fighter-x"
+  },
+  "baseCommit": "e2b60e25a4a4c7b34759b032832b2829f079bfc5",
+  "sourceFilesMatched": 921,
+  "publicExportFilesVerified": 12,
+  "testResult": "Passed 4/4",
+  "testReport": "Reports/cup-aggregation-final-tests.xml",
+  "benchmark": {
+    "environment": "Unity native PlayMode; six identical World Cup COM fixtures",
+    "previousSeconds": 29.273172599999995,
+    "optimizedSeconds": 23.99992309999999,
+    "speedup": 1.2197194331843508,
+    "previousYieldCount": 1228,
+    "optimizedYieldCount": 306,
+    "identicalResults": true
+  },
+  "scope": "Computer fixtures in Watanabe Challenge Cup and World Character Cup; active player battle retains its normal calculation path."
+}

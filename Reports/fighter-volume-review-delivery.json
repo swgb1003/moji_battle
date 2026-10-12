@@ -1,0 +1,27 @@
+[
+  {
+    "file": "reviews/fighter-volume/after.mp4",
+    "bytes": 883938,
+    "sha256": "2365d289bfa7875cff7bfafcf6879a91118fd72bf737b887a3dfc038d85a98a3"
+  },
+  {
+    "file": "reviews/fighter-volume/before.mp4",
+    "bytes": 722855,
+    "sha256": "4b03778c0ae7676f601ccef5a714b8bf1133ce8f7473ce6c021df4e88a365c0f"
+  },
+  {
+    "file": "reviews/fighter-volume/comparison.mp4",
+    "bytes": 1488596,
+    "sha256": "426ac4e62f74ae58d62e63766d49d4acb6a18a64eb0ca3d283ab1ab4a3001425"
+  },
+  {
+    "file": "reviews/fighter-volume/full_battle.png",
+    "bytes": 2464812,
+    "sha256": "9efcf6b8d92b6491de7222857f5bca9c91020a4c405c81aecd7c2b4cf2846750"
+  },
+  {
+    "file": "reviews/fighter-volume/index.html",
+    "bytes": 904,
+    "sha256": "69dd02a7e29c1d624ac6145d7198f95e29a9e94f791ae46063a95b8b9c95b248"
+  }
+]

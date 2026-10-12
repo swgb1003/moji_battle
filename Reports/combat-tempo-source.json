@@ -1,0 +1,22 @@
+{
+  "baseCommit": "e2b60e25a4a4c7b34759b032832b2829f079bfc5",
+  "team": "team_T9S6jm2dWj9hQHWiULpbSwxx",
+  "project": "prj_dysF5ncQzt0MeAgRoHEDSazVQ3eG",
+  "environment": "production",
+  "sourceSha256": {
+    "Assets/Scripts/Stats/CombatBalance.cs": "0d4788c9a7d2e5b48814b020d01194e45902f7a47e0a271786a39f6cc016ff36",
+    "Assets/Resources/Balance/CombatBalance.asset": "b360378d072cc74b512d932c3970dfd29c640e94d4a60f4e5572dbc870a980b0",
+    "Assets/Scripts/Physics/Fighter.cs": "a77e673514f741192a228cd1f421673d68fa51dcf1a364ba6282c320f401578c",
+    "Assets/Scripts/Physics/FighterMotor2D.cs": "ff9dcdbf6372e738f91f5341f7f63536bd21235c3cd07d4cf4b1d19f9ccd398c",
+    "Assets/Scripts/Physics/WeaponMotor2D.cs": "09ad81c19297d719f6f36319f9c63bec5e7a86761c3ed3b30e060319813c1054",
+    "Assets/Scripts/Physics/KnockdownController.cs": "fd039b46cdd388c11fb1cfca6a9ae24a1586c49f24e5285e6607e38e9e84f663",
+    "Assets/Scripts/AI/FighterBrain.cs": "5b863b2879e97d0b697b6b1369cf31cb1cce46b0f477c49ac59c7850ae1ab99a",
+    "Assets/Scripts/UI/StickmanView.cs": "180af70f7274ec4d137f2b59d922ea7391ab586430f49605b71b3bd69be9f1d9",
+    "Assets/Scripts/Combat/FighterRuntime.cs": "dddf9b2eae6d33fe62bcdd83f5c81dd49a2027d799298816b9c1e8f3962e9369",
+    "Assets/Scripts/Combat/BattleIntervention.cs": "a10fca3d0bb27641473b8a935f0be1d7c2a73dbd81cde7137d81fac79df01e03",
+    "Assets/Tests/PlayMode/CombatTempoTests.cs": "c74947a91067bc6ea9e3508bf4e157b44ed0ca2078623ba50d5a21898c101908",
+    "Assets/Tests/PlayMode/CombatTempoTests.cs.meta": "48fc5708b43fe2dbe0672315677f6be8f739ead718a574b9e4e55ca36f821808",
+    "Assets/Tests/PlayMode/BattlePlayModeTests.cs": "1c7e0287406403530bbf83ec085e2ebba82140fcdd0b438d6164ed60007c42f2",
+    "Assets/Tests/PlayMode/HeavyTempoTests.cs": "b101d81f6d0e1b99b493f6759a51609903614bf0c8c3db534d4a01eca375abc0"
+  }
+}

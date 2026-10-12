@@ -1,0 +1,60 @@
+{
+  "url": "https://moji-fighter-x.vercel.app",
+  "verified": [
+    {
+      "file": "Build/5660100c4d0a728a0866393a671d4ae6.data.gz",
+      "bytes": 62790599,
+      "sha256": "488862daeb8587a77148888f6f50799f7c6d61d1df096eaa23a9f50e5d77c4d7"
+    },
+    {
+      "file": "Build/679d3d449b6d3120ddc30df2bedb959c.framework.js.gz",
+      "bytes": 83781,
+      "sha256": "1625b65717ef14a3bb6d5153bf113073fa0f9fa8f04cfc2b15cd15ed9d4a3d09"
+    },
+    {
+      "file": "Build/9479df564990c58e7cb2f1a2965148fa.loader.js",
+      "bytes": 26454,
+      "sha256": "cba66dffeee963d4e1290cf10ed8b607e5a47935f596d28b99981e04fe32bd8c"
+    },
+    {
+      "file": "Build/da57a1676b9bb0a1465aa4e250865abf.wasm.gz",
+      "bytes": 6802420,
+      "sha256": "e20d8f99314336ec782259509c25f52ae2e0ccc91a38c361cba1f011561cebce"
+    },
+    {
+      "file": "Licenses/Brush/OFL.txt",
+      "bytes": 4386,
+      "sha256": "ef7c85c72ae94381c8bc4832ae4e6fbabdeafa2bb8a31313cd75dce95a690256"
+    },
+    {
+      "file": "Licenses/Gothic/OFL.txt",
+      "bytes": 4388,
+      "sha256": "cec239a4ff08f8b4c5691bd45bec938bf2cc6f1c254b9a49a85caf0f92f1ef6c"
+    },
+    {
+      "file": "Licenses/Mincho/OFL.txt",
+      "bytes": 4399,
+      "sha256": "41fba056279be5f45ff9a99e44b7b53897b42732f5806d8e666e0ab49ac6bd38"
+    },
+    {
+      "file": "Licenses/RoundedGothic/OFL.txt",
+      "bytes": 4402,
+      "sha256": "2a20cf7ce1909d8ee1e949095d340f7d7656705f7c810a2d6faf56800ad0cb3d"
+    },
+    {
+      "file": "Licenses/Unicode/LICENSE.txt",
+      "bytes": 2034,
+      "sha256": "8437ba5f4e4c8ae0268c3df5cf106006f2d045ff3452eedd1f27e8eb26c5f327"
+    },
+    {
+      "file": "build-info.json",
+      "bytes": 102,
+      "sha256": "4fc7fcdab628719e0af1a9303ed90df20b1b0a3808fb3274f4a1523283d4b0a4"
+    },
+    {
+      "file": "index.html",
+      "bytes": 5533,
+      "sha256": "3c4256d1f0ea548690474241cfc5a4a62e97a87aee1545d5afae893739738e12"
+    }
+  ]
+}

@@ -9,6 +9,8 @@ namespace MojiBattle
         public CombatEvents Events;
         public HitResolver Hits;
         public EnvironmentImpactResolver Env;
+        public RangedCombat Ranged;
+        public int MatchSeed;
         public float SimTime;
         public float ArenaHalfWidth;
         public bool MatchOver;
@@ -28,6 +30,8 @@ namespace MojiBattle
         public System.Action ApplyWeaponGate;
         /// <summary>武器を瞬間的に動かした後、相手に重なった組だけ離れるまで衝突を外す。MatchDirector が設定する。</summary>
         public System.Action<Fighter> SeparateWeaponOverlaps;
+        /// <summary>観戦者の関与（必殺・声援・踏ん張り）。null なら完全オート。</summary>
+        public BattleIntervention Interventions;
     }
 
     /// <summary>字形から作った武器の幾何情報（握り原点・右向き基準のワールド単位）。</summary>
@@ -76,6 +80,7 @@ namespace MojiBattle
         public FighterMotor2D Motor;
         public WeaponMotor2D WeaponMotor;
         public KnockdownController Knockdown;
+        public FighterActions Actions;
         public StickmanView View;
         public float AttackRange, WalkSpeed;
         /// <summary>カスタマイズ補正（無しなら Identity）。</summary>
@@ -112,6 +117,13 @@ namespace MojiBattle
         public float WindupTime => StatCalculator.Windup(Stats.weightScore, Balance) / Mods.attackSpeed;
         public float ActiveTime => StatCalculator.Active(Stats.weightScore, Balance) / Mods.attackSpeed;
         public float RecoveryTime => StatCalculator.Recovery(Stats.weightScore, Balance) / Mods.attackSpeed;
+        public bool HeavyTempoEnabled => Balance.heavyTempo && WeightClass == WeightClass.Heavy;
+        // Special actions with their own physical timing retain that timing.
+        public bool UsesHeavyWeaponTempo => HeavyTempoEnabled && !AttackTechniques.IsKick(Runtime.attackStyle)
+            && !AttackTechniques.IsRanged(Runtime.attackStyle) && Runtime.attackStyle != AttackStyle.HookPull
+            && Runtime.attackStyle != AttackStyle.Throw && Runtime.attackStyle != AttackStyle.Leap
+            && Runtime.attackStyle != AttackStyle.Smash && Runtime.attackStyle != AttackStyle.Riposte
+            && Runtime.attackStyle != AttackStyle.DashSlash;
         /// <summary>切っ先が地面に届かない最も低い ψ（武器が長いほど高い）。</summary>
         public float GroundPsi => -Mathf.Asin(Mathf.Clamp01((Balance.shoulderLocal.y - 0.15f) / Mathf.Max(0.01f, Weapon.length))) * Mathf.Rad2Deg + 5f;
         /// <summary>
@@ -133,6 +145,7 @@ namespace MojiBattle
             get
             {
                 var rt = Runtime;
+                if (AttackTechniques.IsKick(rt.attackStyle) || AttackTechniques.IsRanged(rt.attackStyle)) return false; // Feet/projectiles own their hit windows.
                 if (rt.throwLive) return true;
                 if (rt.state == FighterState.AttackActive) return true;
                 return rt.state == FighterState.AttackRecovery && rt.stateTime <= Balance.followThroughHitSeconds
@@ -149,6 +162,15 @@ namespace MojiBattle
             rt.prevState = prev;
             rt.state = s;
             rt.stateTime = 0f;
+            Actions?.OnStateChanged(prev, s);
+            if (s != FighterState.Guard) rt.parryArmed = false;
+            if (s == FighterState.Stagger || s == FighterState.Knockdown || s == FighterState.KO || s == FighterState.Evade)
+            {
+                rt.armorPressure = 0f;
+                rt.riposteAt = -1f;
+            }
+            if (s != FighterState.AttackWindup && s != FighterState.AttackActive && s != FighterState.AttackRecovery)
+                rt.leapJumped = false;
             Context.Events.Raise(new StateChangeEvent { fighter = Id, from = prev, to = s, time = Context.SimTime });
         }
 
@@ -158,21 +180,30 @@ namespace MojiBattle
             var b = Balance;
             rt.stateTime += dt;
             rt.Decay(dt, b);
+            if (rt.parryArmed && time > rt.parryUntil) rt.parryArmed = false;
             UpdateGrounded();
+            Actions?.Tick(time, dt);
+            TryStartRiposte(time);
             TrackLaunch(time);
             TrackLift(time, dt);
 
             TryChainSmash(time);
             DetectSmashHit();
-            switch (rt.state)
+            HoldLeapArc(time);
+            bool rangedPhase = Context.Ranged != null && Context.Ranged.TickFighter(this, time, dt);
+            if (!rangedPhase) switch (rt.state)
             {
                 case FighterState.AttackWindup:
+                    if (rt.attackStyle == AttackStyle.Leap) { UpdateLeapWindup(); break; }
                     if (rt.stateTime >= rt.windupDuration && WindupReady())
                     {
                         SetState(FighterState.AttackActive);
                         if (rt.attackStyle == AttackStyle.Thrust) Motor.ApplyLunge();
                         else if (rt.attackStyle == AttackStyle.Bash) Motor.ApplyDash(b.bashDashSpeed);
-                        else if (rt.attackStyle != AttackStyle.Spin) Motor.ApplyStepIn();
+                        else if (rt.attackStyle == AttackStyle.DashSlash) Motor.ApplyTechniqueDash();
+                        else if (rt.attackStyle != AttackStyle.Spin && rt.attackStyle != AttackStyle.Whirl) Motor.ApplyStepIn();
+                        RaiseTechniqueMotion();
+                        Actions?.OnAttackActive();
                     }
                     break;
                 case FighterState.AttackActive:
@@ -183,9 +214,12 @@ namespace MojiBattle
                     else if (rt.stateTime >= rt.activeDuration && SwingFinished()) EndActive(time);
                     break;
                 case FighterState.AttackRecovery:
-                    if (rt.stateTime >= rt.recoveryDuration && RecoveredPose()) EndRecovery(time);
+                    // 跳び斬りは着地するまで硬直が続く
+                    if (rt.stateTime >= rt.recoveryDuration && RecoveredPose()
+                        && (rt.attackStyle != AttackStyle.Leap || (IsGrounded && Body.position.y < 0.3f))) EndRecovery(time);
                     break;
                 case FighterState.Evade:
+                    if (rt.evadeKind == EvadeKind.Duck) break;
                     if ((rt.stateTime >= b.evadeMinTime && IsGrounded) || rt.stateTime >= b.evadeMaxTime)
                     {
                         rt.evadeEndedAt = time;
@@ -214,39 +248,51 @@ namespace MojiBattle
         }
 
         /// <summary>
-        /// カスタマイズした武器は、振りかぶり・振り抜きを時間ではなく武器の実際の角度で終える（最大で予定の数倍まで待つ）。
+        /// カスタマイズした武器は実際の角度を確認する。テンポ設定では短い猶予で次の段階へ進む。
         /// 重い・長い・端を握った武器ほどトルクに対して慣性が大きく、実際に振りが遅くなる。カスタマイズ無しは従来どおり時間で終える。
         /// </summary>
         bool WindupReady()
         {
+            if (AttackTechniques.IsKick(Runtime.attackStyle) || Runtime.attackStyle == AttackStyle.HookPull) return true;
             if (!Mods.customized) return true;
             var rt = Runtime;
             var cb = Context.Customize;
             // 押さえ込まれて回らないなら待たない（押し続けると握りが外れかける）
             return Mathf.Abs(Mathf.DeltaAngle(WeaponMotor.CurrentPsi, rt.swingFromPsi)) <= cb.windupReadyToleranceDeg
-                   || WeaponMotor.Stalled || rt.stateTime >= rt.windupDuration * cb.maxPhaseStretch;
+                   || WeaponMotor.Stalled || rt.stateTime >= PoseWaitLimit(rt.windupDuration, cb.maxPhaseStretch);
         }
 
         bool SwingFinished()
         {
+            if (AttackTechniques.IsKick(Runtime.attackStyle) || Runtime.attackStyle == AttackStyle.HookPull) return true;
             if (!Mods.customized) return true;
             var rt = Runtime;
             var cb = Context.Customize;
-            if (rt.attackHadContact || rt.attackStyle == AttackStyle.Thrust || rt.attackStyle == AttackStyle.Sweep || WeaponMotor.Stalled || rt.stateTime >= rt.activeDuration * cb.maxPhaseStretch) return true;
+            float limit = rt.tempoAttack ? Mathf.Min(rt.activeDuration * cb.maxPhaseStretch,
+                rt.activeDuration + Balance.tempoSwingWaitExtra) : rt.activeDuration * cb.maxPhaseStretch;
+            if (rt.attackHadContact || rt.attackStyle == AttackStyle.Thrust || rt.attackStyle == AttackStyle.Sweep || WeaponMotor.Stalled || rt.stateTime >= limit) return true;
             float span = rt.swingToPsi - rt.swingFromPsi;
             if (Mathf.Abs(span) < 1f) return true;
             float progress = (WeaponMotor.CurrentPsi - rt.swingFromPsi) / span;
             return progress >= cb.swingFinishProgress;
         }
 
-        /// <summary>カスタマイズした武器は、構えへ戻るまで（最大で予定の数倍）硬直が続く。長い・重い武器ほど戻りが遅い。</summary>
+        /// <summary>構えへの復帰を確認するが、テンポ設定では見た目の戻りで硬直を長引かせない。</summary>
         bool RecoveredPose()
         {
+            if (AttackTechniques.IsKick(Runtime.attackStyle) || Runtime.attackStyle == AttackStyle.HookPull) return true;
             if (!Mods.customized || Runtime.weaponDetached) return true;
             var rt = Runtime;
             var cb = Context.Customize;
             return Mathf.Abs(Mathf.DeltaAngle(WeaponMotor.CurrentPsi, ReadyPsi)) <= cb.recoverReadyToleranceDeg
-                   || WeaponMotor.Stalled || rt.stateTime >= rt.recoveryDuration * cb.maxPhaseStretch;
+                   || WeaponMotor.Stalled || rt.stateTime >= PoseWaitLimit(rt.recoveryDuration, cb.maxPhaseStretch);
+        }
+
+        float PoseWaitLimit(float duration, float stretch)
+        {
+            float limit = UsesHeavyWeaponTempo ? Mathf.Max(duration,
+                Mathf.Min(duration * stretch, Balance.heavyMaxPoseWait)) : duration * stretch;
+            return Runtime.tempoAttack ? Mathf.Min(limit, duration + Balance.tempoPoseWaitExtra) : limit;
         }
 
         public void StartAttack(float time) => StartAttack(time, ForcedStyleForTests);
@@ -255,13 +301,17 @@ namespace MojiBattle
         public static AttackStyle? ForcedStyleForTests;
 
         /// <summary>攻撃を始める。forced を指定すると技を選ばずにその振りで打つ（浮かせた相手への追撃など）。</summary>
-        public void StartAttack(float time, AttackStyle? forced)
+        public void StartAttack(float time, AttackStyle? forced, bool specialMove = false)
         {
             var rt = Runtime;
             var b = Balance;
-            if (rt.weaponDetached) return;
+            if (Context.MatchOver || rt.IsDown || (rt.weaponDetached && !(forced.HasValue && AttackTechniques.IsKick(forced.Value)))) return;
+            if (forced.HasValue && AttackTechniques.IsRanged(forced.Value)
+                && (!b.rangedAttacks || !IsGrounded || time < rt.rangedReadyAt
+                    || (forced.Value == AttackStyle.GroundWave ? !AttackTechniques.CanGroundWave(this) : !AttackTechniques.CanStrokeShot(this)))) return;
             int m = Stats.weightScore;
             rt.launchConnectedAt = -1f;
+            rt.aerialStage = 0;
             rt.currentAttackId = rt.NextAttackId(Id);
             rt.attackHadContact = false;
             rt.clashedThisAttack = false;
@@ -271,6 +321,8 @@ namespace MojiBattle
             // 逆手: 回避の直後は素早く切り返す
             if (Mods.postEvadeAttackSpeed != 1f && Context.Customize != null && time - rt.evadeEndedAt <= Context.Customize.postEvadeWindow)
                 rt.windupDuration /= Mods.postEvadeAttackSpeed;
+            if (Context.Interventions != null) rt.windupDuration *= Context.Interventions.WindupScale(this, time);
+            Brain.OnAttackStarted(time);
             Style?.OnAttackStarted(time);
 
             // 狙いの上下位置（PRNG）。相手の武器が高い位置にあれば下から、低ければ上から狙いやすい。
@@ -296,7 +348,33 @@ namespace MojiBattle
             var special = AttackTechniques.ChooseSpecial(this, Brain.Rng.Value());
             if (special.HasValue) rt.attackStyle = special.Value;
             if (forced.HasValue) rt.attackStyle = forced.Value;
-            if (rt.attackStyle == AttackStyle.Throw || rt.attackStyle == AttackStyle.Smash) rt.comboRemaining = 0;
+            Actions?.ConfigureAttack(time);
+            rt.tempoAttack = b.combatTempo && !specialMove && (rt.attackStyle == AttackStyle.Overhead
+                || rt.attackStyle == AttackStyle.Rising || rt.attackStyle == AttackStyle.Thrust
+                || rt.attackStyle == AttackStyle.Sweep || rt.attackStyle == AttackStyle.LowSweep
+                || rt.attackStyle == AttackStyle.Launch || rt.attackStyle == AttackStyle.PickupSlash);
+            if (AttackTechniques.IsRanged(rt.attackStyle))
+            {
+                rt.comboRemaining = 0;
+                rt.rangedReleased = false;
+                rt.leapJumped = false;
+                bool wave = rt.attackStyle == AttackStyle.GroundWave;
+                rt.rangedReadyAt = time + (wave ? b.groundWaveCooldown : b.strokeShotCooldown);
+                rt.windupDuration = wave ? b.groundWaveCrouch : .28f;
+                rt.activeDuration = wave ? .4f : .24f;
+                rt.recoveryDuration = wave ? .8f : .38f;
+                rt.swingFromPsi = wave ? 130f : 100f;
+                rt.swingToPsi = wave ? -45f : 12f;
+                rt.metrics.attacksStarted++;
+                Context.LastAttackStartTime = time;
+                SetState(FighterState.AttackWindup);
+                Context.Events.Raise(new FighterMotionEvent { fighter = Id,
+                    kind = wave ? FighterMotionKind.GroundWave : FighterMotionKind.StrokeShot, time = time });
+                return;
+            }
+            if (rt.attackStyle == AttackStyle.Throw || rt.attackStyle == AttackStyle.Smash || rt.attackStyle == AttackStyle.Leap
+                || rt.attackStyle == AttackStyle.DashSlash || rt.attackStyle == AttackStyle.Riposte || rt.attackStyle == AttackStyle.Whirl) rt.comboRemaining = 0;
+            rt.leapJumped = false;
             var tech = AttackTechniques.Tuning(rt.attackStyle, b);
             if (tech != null)
             {
@@ -304,11 +382,48 @@ namespace MojiBattle
                 rt.activeDuration *= tech.active;
                 rt.recoveryDuration *= tech.recovery;
             }
-            if (AttackTechniques.IsYaw(rt.attackStyle) || rt.attackStyle == AttackStyle.Bash)
+            if (UsesHeavyWeaponTempo)
+            {
+                rt.windupDuration = Mathf.Min(rt.windupDuration * b.heavyWindupScale, b.heavyMaxWindup);
+                rt.recoveryDuration = Mathf.Min(rt.recoveryDuration * b.heavyRecoveryScale, b.heavyMaxRecovery);
+            }
+            if (rt.attackStyle == AttackStyle.DashSlash)
+            {
+                rt.dashReadyAt = time + b.dashCooldown;
+                rt.activeDuration = Mathf.Max(0.35f, rt.activeDuration);
+            }
+            else if (rt.attackStyle == AttackStyle.Riposte)
+            {
+                rt.windupDuration = Mathf.Min(rt.windupDuration, 0.12f);
+                rt.activeDuration = Mathf.Clamp(rt.activeDuration, 0.25f, 0.4f);
+            }
+            else if (rt.attackStyle == AttackStyle.Whirl)
+            {
+                rt.whirlReadyAt = time + b.whirlCooldown;
+                rt.windupDuration = Mathf.Max(b.whirlMinWindup, rt.windupDuration);
+                rt.activeDuration = Mathf.Max(b.whirlMinActive, rt.activeDuration);
+                rt.recoveryDuration = Mathf.Max(b.whirlMinRecovery, rt.recoveryDuration);
+            }
+            // Preserve bespoke jump/throw/spin/body-attack timing and the actual striking window.
+            // Shorten preparation and reset for ordinary blade attacks, with readable heavy windups.
+            if (rt.tempoAttack)
+            {
+                rt.windupDuration = Mathf.Min(rt.windupDuration * b.tempoWindupScale, b.tempoMaxWindup);
+                rt.recoveryDuration = Mathf.Min(rt.recoveryDuration * b.tempoRecoveryScale, b.tempoMaxRecovery);
+            }
+            if (AttackTechniques.IsYaw(rt.attackStyle) || rt.attackStyle == AttackStyle.Bash
+                || AttackTechniques.IsKick(rt.attackStyle) || rt.attackStyle == AttackStyle.HookPull)
             {
                 // 横薙ぎ・足払い・回転斬り: 字形を立てたまま（ψ = 字形の基準角）、奥行き方向に回す
                 // 盾当て: 字形を前に立てて構えたまま体当たり
                 rt.swingFromPsi = rt.swingToPsi = rt.attackStyle == AttackStyle.Bash ? b.guardPsi : Weapon.alpha0Deg;
+                if (rt.attackStyle == AttackStyle.HookPull)
+                {
+                    // Present the cavity toward the opposing blade, including low guards.
+                    Vector2 toBlade = Opponent.WeaponBody.worldCenterOfMass - Body.GetRelativePoint(ShoulderLocal(Facing));
+                    rt.swingFromPsi = rt.swingToPsi = Mathf.Max(GroundPsi,
+                        Mathf.Atan2(toBlade.y, Mathf.Max(.25f, Mathf.Abs(toBlade.x))) * Mathf.Rad2Deg);
+                }
                 rt.metrics.attacksStarted++;
                 Context.LastAttackStartTime = time;
                 SetState(FighterState.AttackWindup);
@@ -324,7 +439,7 @@ namespace MojiBattle
             }
             else if (rt.attackStyle == AttackStyle.Overhead)
                 target = Brain.Rng.Chance(Tendency.aimHeadChance) ? Opponent.HeadWorld : Opponent.ChestWorld;
-            else if (rt.attackStyle == AttackStyle.Launch || rt.attackStyle == AttackStyle.Throw || rt.attackStyle == AttackStyle.Smash)
+            else if (rt.attackStyle == AttackStyle.Launch || rt.attackStyle == AttackStyle.Throw || rt.attackStyle == AttackStyle.Smash || rt.attackStyle == AttackStyle.Leap)
                 target = Opponent.ChestWorld;
             else
                 target = Brain.Rng.Chance(0.5f) ? Opponent.Body.GetRelativePoint(new Vector2(0f, 0.45f)) : Opponent.ChestWorld;
@@ -336,6 +451,24 @@ namespace MojiBattle
                 // 刺す: 武器は狙いへ向けたまま、溜めで手を引き、有効時間に腕を伸ばして踏み込む
                 rt.swingFromPsi = aim;
                 rt.swingToPsi = aim;
+            }
+            else if (rt.attackStyle == AttackStyle.Leap)
+            {
+                // 跳び斬り: 真上に振りかぶって跳び、頭上から真下へ振り下ろす。溜め = かがみ + 跳び上がり（頂点まで）
+                rt.swingFromPsi = b.leapFromPsi;
+                rt.swingToPsi = b.leapToPsi;
+                rt.windupDuration = b.leapCrouchSeconds + LeapRiseSeconds;
+            }
+            else if (rt.attackStyle == AttackStyle.DashSlash)
+            {
+                rt.swingFromPsi = Mathf.Min(120f, aim + 85f);
+                rt.swingToPsi = Mathf.Max(GroundPsi, aim - 25f);
+            }
+            else if (rt.attackStyle == AttackStyle.Riposte)
+            {
+                // Strike directly from the successful guard pose; no second long windup.
+                rt.swingFromPsi = WeaponMotor.MeasurePsi();
+                rt.swingToPsi = Mathf.Max(GroundPsi, aim - 30f);
             }
             else if (rt.attackStyle == AttackStyle.Smash)
             {
@@ -396,18 +529,19 @@ namespace MojiBattle
             var b = Balance;
             float prev = rt.sweepYaw;
             bool sweeping = rt.attackStyle == AttackStyle.Sweep || rt.attackStyle == AttackStyle.LowSweep;
-            bool spinning = rt.attackStyle == AttackStyle.Spin;
+            bool spinning = rt.attackStyle == AttackStyle.Spin || rt.attackStyle == AttackStyle.Whirl;
+            bool wholeBody = rt.attackStyle == AttackStyle.Whirl;
             float yaw;
             switch (rt.state)
             {
                 // 回転斬り: 少し引いてから一回転（前→奥→後ろ→手前→前）、振り終わりで正面へ戻す
                 case FighterState.AttackWindup when spinning:
-                    yaw = Mathf.Lerp(0f, -25f, Mathf.Clamp01(rt.stateTime / Mathf.Max(0.05f, rt.windupDuration)));
+                    yaw = Mathf.Lerp(0f, wholeBody ? -65f : -25f, Mathf.Clamp01(rt.stateTime / Mathf.Max(0.05f, rt.windupDuration)));
                     break;
                 case FighterState.AttackActive when spinning:
                 {
                     float t = Mathf.Clamp01(rt.stateTime / Mathf.Max(0.02f, rt.activeDuration));
-                    yaw = Mathf.Lerp(-25f, 385f, Mathf.Pow(t, 1.3f));
+                    yaw = Mathf.Lerp(wholeBody ? -65f : -25f, wholeBody ? 365f : 385f, Mathf.Pow(t, 1.3f));
                     break;
                 }
                 case FighterState.AttackRecovery when spinning:
@@ -433,6 +567,7 @@ namespace MojiBattle
                     break;
                 }
                 default:
+                    if (wholeBody && prev > 180f) prev -= 360f;
                     yaw = Mathf.MoveTowards(prev, 0f, 720f * dt);
                     break;
             }
@@ -472,8 +607,25 @@ namespace MojiBattle
                     case AttackStyle.Bash:
                         target = new Vector2(rt.state == FighterState.AttackActive ? 0.15f : -0.1f, -0.15f);
                         break;
+                    case AttackStyle.GroundWave:
+                        target = rt.state == FighterState.AttackActive ? new Vector2(.1f, -.75f) : Vector2.zero;
+                        speed = 6f;
+                        break;
+                    case AttackStyle.DashSlash:
+                        target = new Vector2(rt.state == FighterState.AttackActive ? 0.12f : -0.08f, -0.08f);
+                        break;
+                    case AttackStyle.Whirl:
+                        target = new Vector2(b.shoulderLocal.x * (Mathf.Cos(rt.sweepYaw * Mathf.Deg2Rad) - 1f), 0f);
+                        speed = 5f;
+                        break;
+                    case AttackStyle.HookPull:
+                        target = new Vector2(rt.state == FighterState.AttackActive ? -0.22f : 0.2f, 0f);
+                        speed = 4f;
+                        break;
                 }
             }
+            if (rt.state == FighterState.Evade && rt.evadeKind == EvadeKind.Duck)
+                target = new Vector2(0f, -0.55f);
             if (rt.IsDown) { rt.handOffset = Vector2.zero; speed = 0f; }
             // 武器が相手や地面に止められて手だけ先へ行きそうなら、伸ばすのをやめて手を武器の位置へ寄せる（関節を引き伸ばさない）
             Vector2 weaponLocal = Body.GetPoint(WeaponBody.position);
@@ -486,6 +638,47 @@ namespace MojiBattle
         }
 
         const float HandStretchLimit = 0.1f;
+
+        public void ArmParry(float time, float delay = 0f)
+        {
+            var rt = Runtime;
+            if (rt.state != FighterState.Guard || rt.weaponDetached || time < rt.parryReadyAt || Context.MatchOver) return;
+            rt.parryArmed = true;
+            rt.parryOpensAt = time + Mathf.Max(0f, delay);
+            rt.parryUntil = rt.parryOpensAt + Balance.parryWindow;
+            rt.parryReadyAt = time + Balance.parryCooldown;
+        }
+
+        public bool CanParry(Fighter attacker, float time) => Runtime.state == FighterState.Guard
+            && Runtime.parryArmed && IsGrounded && !Runtime.weaponDetached && !attacker.Runtime.throwLive
+            && time >= Runtime.parryOpensAt && time <= Runtime.parryUntil && !Context.MatchOver
+            && attacker.WeaponBody.mass <= WeaponBody.mass * Balance.parryMaxMassRatio
+            && DistanceToOpponent <= AttackRange * 1.3f;
+
+        public void ScheduleRiposte(float time)
+        {
+            Runtime.parryArmed = false;
+            Runtime.riposteAt = time + Balance.parryCounterDelay;
+        }
+
+        void TryStartRiposte(float time)
+        {
+            var rt = Runtime;
+            if (rt.riposteAt < 0f || time < rt.riposteAt) return;
+            rt.riposteAt = -1f;
+            bool far = DistanceToOpponent > AttackRange * 1.4f;
+            if (Context.MatchOver || rt.weaponDetached || !IsGrounded || !rt.CanBeControlled || Opponent.Runtime.IsDown || far) return;
+            StartAttack(time, AttackStyle.Riposte);
+        }
+
+        void RaiseTechniqueMotion()
+        {
+            var style = Runtime.attackStyle;
+            if (style != AttackStyle.DashSlash && style != AttackStyle.Riposte && style != AttackStyle.Whirl) return;
+            Context.Events.Raise(new FighterMotionEvent { fighter = Id, time = Context.SimTime,
+                kind = style == AttackStyle.DashSlash ? FighterMotionKind.Dash
+                    : style == AttackStyle.Riposte ? FighterMotionKind.Riposte : FighterMotionKind.Whirl });
+        }
 
         /// <summary>武器 Collider を向き（左右）と横振りの奥行き角に合わせる。</summary>
         public void ApplyWeaponYaw(bool force)
@@ -515,6 +708,73 @@ namespace MojiBattle
         }
 
         /// <summary>
+        /// 跳び斬りで空中にいる間は、体を跳んだ時の放物線に沿わせる。軽い体は武器を振る反動で大きく押し上げられ、
+        /// 相手の頭上を外れてしまうため（着地・転倒・被弾でのよろけで解除）。
+        /// </summary>
+        void HoldLeapArc(float time)
+        {
+            var rt = Runtime;
+            if (rt.attackStyle != AttackStyle.Leap || !rt.leapJumped || rt.IsDown) return;
+            bool airborne = rt.state == FighterState.AttackWindup || rt.state == FighterState.AttackActive
+                            || rt.state == FighterState.AttackRecovery;
+            if (!airborne) return;
+            float g = -Physics2D.gravity.y * Body.gravityScale;
+            float t = time - rt.leapJumpTime;
+            AddVelocity(new Vector2(rt.leapVx, rt.leapVy - g * t) - Body.linearVelocity);
+            // 着地したら（足が地面の高さで下向き）以後は物理に任せる
+            if (t > 0.1f && Body.position.y <= 0.05f && Body.linearVelocity.y < 0f) rt.leapJumped = false;
+        }
+
+        float LeapRiseSeconds => Mathf.Sqrt(2f * Balance.leapApexHeight / Mathf.Max(0.1f, -Physics2D.gravity.y * Body.gravityScale));
+
+        /// <summary>頂点までに頭上へ到達できる水平距離。</summary>
+        public float LeapTravelRange => Balance.leapMaxSpeedX * LeapRiseSeconds + Mathf.Abs(Balance.shoulderLocal.x);
+
+        /// <summary>
+        /// 跳び斬りの溜め: かがんでから、握りが相手の真上に来る位置へ跳ぶ（相手の動きを先読み）。頂点（上昇が止まる所）で振り下ろしを始める。
+        /// 跳ぶ時に地面にいなければ（よろけ・押され中など）跳ばずに普通の振り下ろしに切り替える。
+        /// </summary>
+        void UpdateLeapWindup()
+        {
+            var rt = Runtime;
+            var b = Balance;
+            if (!rt.leapJumped)
+            {
+                if (rt.stateTime < b.leapCrouchSeconds) return;
+                if (!IsGrounded)
+                {
+                    rt.attackStyle = AttackStyle.Overhead;
+                    rt.swingToPsi = Mathf.Max(GroundPsi, rt.swingToPsi);
+                    rt.windupDuration = rt.stateTime;
+                    SetState(FighterState.AttackActive);
+                    return;
+                }
+                float g = -Physics2D.gravity.y * Body.gravityScale;
+                float vy = Mathf.Sqrt(2f * g * b.leapApexHeight);
+                float t = vy / g;
+                int toward = TowardOpponent;
+                float targetX = Opponent.X + Opponent.Body.linearVelocity.x * t - toward * b.shoulderLocal.x;
+                float vx = Mathf.Clamp((targetX - X) / t, -b.leapMaxSpeedX, b.leapMaxSpeedX);
+                AddVelocity(new Vector2(vx, vy) - Body.linearVelocity);
+                rt.leapJumped = true;
+                Context.Events.Raise(new FighterMotionEvent { fighter = Id, kind = FighterMotionKind.Jump, time = Context.SimTime });
+                rt.leapJumpTime = Context.SimTime;
+                rt.leapVx = vx;
+                rt.leapVy = vy;
+                rt.windupDuration = rt.stateTime + t;
+                return;
+            }
+            // 頂点付近（上昇がほぼ止まった）か、予定を過ぎたら振り下ろす
+            if (Body.linearVelocity.y <= 0.5f || rt.stateTime >= rt.windupDuration + 0.15f)
+            {
+                // 頭上で横移動を止め、落下しながら同じ位置へ振り下ろす。
+                rt.leapVx = 0f;
+                AddVelocity(new Vector2(-Body.linearVelocity.x, 0f));
+                SetState(FighterState.AttackActive);
+            }
+        }
+
+        /// <summary>
         /// 連携: 自分の打ち上げで相手が浮いたら、振りの残りと硬直を打ち切って叩き落としへつなぐ。
         /// 相手が既に着地した・届かない・KO なら何もしない（通常の硬直のまま）。
         /// </summary>
@@ -523,6 +783,7 @@ namespace MojiBattle
             var rt = Runtime;
             if (rt.launchConnectedAt < 0f || rt.attackStyle != AttackStyle.Launch) return;
             if (rt.state != FighterState.AttackActive && rt.state != FighterState.AttackRecovery) { rt.launchConnectedAt = -1f; return; }
+            if (Actions.TryStartAerial(time)) return;
             // 待っている間に硬直が終わってしまわないよう、硬直の残りを延ばす（つながなければ通常どおり戻る）
             if (rt.state == FighterState.AttackRecovery) rt.recoveryDuration = Mathf.Max(rt.recoveryDuration, rt.stateTime + Time.fixedDeltaTime * 2f);
             var b = Balance;
@@ -584,6 +845,7 @@ namespace MojiBattle
             float g = -Physics2D.gravity.y * WeaponBody.gravityScale;
             WeaponBody.linearVelocity = BallisticVelocity(WeaponBody.worldCenterOfMass, Opponent.ChestWorld, speed, g);
             WeaponBody.angularVelocity = -Facing * StatCalculator.Lerp01(b.throwSpinLight, b.throwSpinHeavy, m);
+            Context.Events.Raise(new FighterMotionEvent { fighter = Id, kind = FighterMotionKind.Throw, time = time });
             SetState(FighterState.AttackRecovery);
         }
 
@@ -618,7 +880,11 @@ namespace MojiBattle
             if (rt.IsDown || rt.state == FighterState.Recover) return;
             Vector2 w = WeaponBody.worldCenterOfMass;
             bool reachable = rt.state == FighterState.Approach && IsGrounded && Mathf.Abs(w.x - X) <= b.throwPickupRadius && w.y < 1.2f;
-            if (reachable || time - rt.thrownAt > b.throwRetrieveTimeout) ReattachWeapon();
+            if (reachable || time - rt.thrownAt > b.throwRetrieveTimeout)
+            {
+                ReattachWeapon();
+                Actions?.OnPickup(reachable);
+            }
         }
 
         /// <summary>武器を手に戻す。投げた時の向きのままの字形・重心・Collider を今の向きへ合わせ直す。</summary>
@@ -634,6 +900,7 @@ namespace MojiBattle
             WeaponMotor.ResetPose();
             Hinge.enabled = true;
             Context.ApplyWeaponGate?.Invoke();
+            Context.Events.Raise(new FighterMotionEvent { fighter = Id, kind = FighterMotionKind.Pickup, time = Context.SimTime });
         }
 
         void EndActive(float time)
@@ -645,11 +912,12 @@ namespace MojiBattle
             if (whiff)
             {
                 rt.metrics.attacksWhiffed++;
-                if (WeightClass == WeightClass.Heavy) rt.recoveryDuration *= b.heavyWhiffRecoveryMultiplier;
+                if (WeightClass == WeightClass.Heavy) rt.recoveryDuration *= UsesHeavyWeaponTempo
+                    ? b.heavyTempoWhiffMultiplier : b.heavyWhiffRecoveryMultiplier;
                 // 重心のずれた重い武器を空振りした反動で持ち主がよろける（物理量から決定、乱数なし）
                 float relW = PreWeaponAngVelRad - Body.angularVelocity * Mathf.Deg2Rad;
                 float momentum = Mathf.Abs(relW) * Weapon.InertiaAtGrip(WeaponBody);
-                if (momentum >= b.heavyWhiffStaggerMomentum)
+                if (!AttackTechniques.IsKick(rt.attackStyle) && rt.attackStyle != AttackStyle.HookPull && momentum >= b.heavyWhiffStaggerMomentum)
                 {
                     rt.comboRemaining = 0;
                     EnterStagger(0.35f);
@@ -661,6 +929,7 @@ namespace MojiBattle
 
         void EndRecovery(float time)
         {
+            if (Actions != null && Actions.TryKickFollowup(time)) return;
             var rt = Runtime;
             // 連撃を続ける前に相手の溜めを確認し、気づけば中断して対応する（反応率に従う）
             var ort = Opponent.Runtime;
@@ -678,7 +947,9 @@ namespace MojiBattle
                 return;
             }
             rt.comboRemaining = 0;
-            rt.attackReadyAt = time + (WeightClass == WeightClass.Light ? Balance.attackCooldownLight : Balance.attackCooldownHeavy);
+            rt.attackReadyAt = time + (HeavyTempoEnabled ? Balance.heavyTempoCooldown
+                : WeightClass == WeightClass.Light ? Balance.attackCooldownLight : Balance.attackCooldownHeavy);
+            if (Balance.combatTempo) rt.attackReadyAt = time + (rt.attackReadyAt-time) * Balance.tempoCooldownScale;
             SetState(FighterState.Approach);
             Brain.OnAttackSequenceFinished(time);
         }
@@ -694,13 +965,16 @@ namespace MojiBattle
         {
             var rt = Runtime;
             var b = Balance;
-            if (!IsGrounded) return;
+            if (!IsGrounded || rt.IsDown || Context.MatchOver) return;
+            if (kind == EvadeKind.WallJump && (WeightClass == WeightClass.Heavy || BackSpace > b.wallJumpDistance)) return;
             rt.evadeKind = kind;
             rt.evadeReadyAt = time + b.evadeCooldown;
             rt.metrics.evades++;
-            if (kind == EvadeKind.Backstep) rt.metrics.backsteps++; else rt.metrics.hopOvers++;
+            if (kind == EvadeKind.Backstep || kind == EvadeKind.RecoverRoll) rt.metrics.backsteps++;
+            else if (kind == EvadeKind.HopOver || kind == EvadeKind.WallJump) rt.metrics.hopOvers++;
             SetState(FighterState.Evade);
             Motor.ApplyEvadeImpulse(kind);
+            Actions?.OnEvade(kind);
             Context.Events.Raise(new EvadeEvent { fighter = Id, kind = kind, time = time });
         }
 

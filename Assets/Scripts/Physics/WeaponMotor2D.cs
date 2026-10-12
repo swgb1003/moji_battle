@@ -53,6 +53,10 @@ namespace MojiBattle
             float target;
             switch (rt.state)
             {
+                case FighterState.Bind:
+                    target = rt.bindPsi; torqueScale = .6f; break;
+                case FighterState.Feint:
+                    target = rt.swingFromPsi; torqueScale = .5f; break;
                 case FighterState.Guard:
                     target = float.IsNaN(rt.guardPsiTarget) ? b.guardPsi : rt.guardPsiTarget; torqueScale = 1f; break;
                 case FighterState.AttackWindup:
@@ -61,12 +65,14 @@ namespace MojiBattle
                     float t = Mathf.Clamp01(rt.stateTime / Mathf.Max(0.05f, rt.windupDuration * 0.7f));
                     target = Mathf.Lerp(windupStartPsi, rt.swingFromPsi, t * t * (3f - 2f * t));
                     // 溜めは押し込まない（溜め中の接触は物理衝突のみ）
-                    torqueScale = 0.5f;
+                    torqueScale = self.UsesHeavyWeaponTempo ? b.heavyWindupTorque : .5f;
                     break;
                 }
                 case FighterState.AttackActive:
                 {
                     float t = Mathf.Clamp01(rt.stateTime / Mathf.Max(0.02f, rt.activeDuration));
+                    if (rt.attackStyle == AttackStyle.DashSlash)
+                        t = Mathf.Clamp01((rt.stateTime - b.dashSlashDelay) / Mathf.Max(0.02f, rt.activeDuration - b.dashSlashDelay));
                     // 加速しながら振り抜く（終端付近で最速 = 当たる瞬間が一番重い）
                     target = Mathf.Lerp(rt.swingFromPsi, rt.swingToPsi, t * t);
                     torqueScale = 1f;
@@ -74,9 +80,11 @@ namespace MojiBattle
                 }
                 case FighterState.AttackRecovery:
                     // 振り切った後はしばらく武器が低い位置に残る（重量級ほど隙が大きい）
-                    if (rt.stateTime < rt.recoveryDuration * self.Balance.followThroughFraction)
+                    float followThrough = self.UsesHeavyWeaponTempo ? b.heavyFollowThroughFraction : b.followThroughFraction;
+                    if (rt.tempoAttack) followThrough = Mathf.Min(followThrough, .3f);
+                    if (rt.stateTime < rt.recoveryDuration * followThrough)
                     { target = rt.swingToPsi; torqueScale = 0.35f; }
-                    else { target = ReadyPsi; torqueScale = 0.5f; }
+                    else { target = ReadyPsi; torqueScale = self.UsesHeavyWeaponTempo ? b.heavyReturnTorque : .5f; }
                     break;
                 case FighterState.Stagger:
                     target = ReadyPsi; torqueScale = 0.3f; break;
@@ -92,6 +100,8 @@ namespace MojiBattle
                     if (!float.IsNaN(stylePsi) && !self.Brain.CarryWeapon) target = stylePsi;
                     torqueScale = self.Balance.idleHoldTorqueScale; break;
             }
+            if (rt.tempoAttack && (rt.state == FighterState.AttackWindup || rt.state == FighterState.AttackRecovery))
+                torqueScale *= b.tempoPoseTorque;
             // 目標角の速度（同じ状態が続いている間だけ）。PD の微分項を目標速度との差にして振りの遅れを無くす
             bool continuing = !float.IsNaN(lastTarget) && lastState == rt.state;
             float targetVelDeg = continuing ? (target - lastTarget) / Mathf.Max(1e-4f, dt) : 0f;

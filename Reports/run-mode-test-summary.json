@@ -1,0 +1,37 @@
+[
+  {
+    "report": "Reports/run-edit-final.xml",
+    "result": "Passed",
+    "total": 120,
+    "passed": 120,
+    "failed": 0,
+    "classes": {
+      "MojiBattle.Tests.AchievementTests": 8,
+      "MojiBattle.Tests.ChallengeTests": 11,
+      "MojiBattle.Tests.CombatRulesTests": 14,
+      "MojiBattle.Tests.CustomizeDataTests": 6,
+      "MojiBattle.Tests.DraftTests": 8,
+      "MojiBattle.Tests.FriendRoomServerConfigTests": 13,
+      "MojiBattle.Tests.GameSettingsTests": 2,
+      "MojiBattle.Tests.GlyphAndStatsTests": 17,
+      "MojiBattle.Tests.RunTests": 6,
+      "MojiBattle.Tests.RuntimeGlyphBakeTests": 5,
+      "MojiBattle.Tests.SpecialMoveTests": 16,
+      "MojiBattle.Tests.TournamentTests": 7,
+      "MojiBattle.Tests.WebCharacterInputTests": 7
+    }
+  },
+  {
+    "report": "Reports/run-play-final.xml",
+    "result": "Passed",
+    "total": 30,
+    "passed": 30,
+    "failed": 0,
+    "classes": {
+      "MojiBattle.Tests.DraftFlowTests": 7,
+      "MojiBattle.Tests.InterventionTests": 15,
+      "MojiBattle.Tests.MenuUiTests": 5,
+      "MojiBattle.Tests.RunFlowTests": 3
+    }
+  }
+]

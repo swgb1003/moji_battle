@@ -1,0 +1,16 @@
+﻿✔ romaji and kana remain untouched until the kanji candidate is confirmed (90.4009ms)
+✔ hiragana, katakana and kanji reach Unity without losing Unicode (11.8777ms)
+✔ paste and multiple characters are sent intact for game validation (6.9915ms)
+✔ IME Enter after compositionend is not mistaken for submission (9.2524ms)
+✔ leaving the field during conversion does not commit unfinished kana (7.1561ms)
+✔ switching players cancels composition and uses the new player character (7.4692ms)
+✔ confirmation hides the overlay and leaving customization removes it (15.1265ms)
+✔ input follows scaled canvas bounds and stays inside the fullscreen container (8.1302ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 164.8867

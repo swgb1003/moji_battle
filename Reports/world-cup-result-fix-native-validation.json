@@ -1,0 +1,32 @@
+{
+  "checks": [
+    {
+      "case": "ResultLabels_FollowRemainingFixtures_AndEliminatedPlacementFitsWithoutCrown",
+      "result": "Passed",
+      "report": "Reports/world-cup-result-regression-final.xml"
+    },
+    {
+      "case": "ChampionFlow_SharedCustomize_League_BronzeSpectator_Final_Ceremony_Photo_Result",
+      "result": "Passed",
+      "report": "Reports/world-cup-result-regression.xml"
+    },
+    {
+      "case": "SemifinalLoser_PlaysBronzeAndFinishesThird",
+      "result": "Passed",
+      "report": "Reports/world-cup-result-regression.xml"
+    }
+  ],
+  "captures": [
+    "Reports/UI/WorldCup/21_result_progress_round1.png",
+    "Reports/UI/WorldCup/21_result_progress_round2.png",
+    "Reports/UI/WorldCup/21_result_progress_round3.png",
+    "Reports/UI/WorldCup/22_group_eliminated_final_result.png"
+  ],
+  "scope": [
+    "Remaining league fixtures determine next-round captions",
+    "Eliminated placement uses two fitted lines and no crown",
+    "Only the champion receives crown decoration",
+    "Eliminated fighter fits beside the statistics",
+    "Non-player result heading follows the actual match stage"
+  ]
+}

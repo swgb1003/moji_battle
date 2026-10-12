@@ -38,9 +38,9 @@ namespace MojiBattle
         }
 
         /// <summary>
-        /// クリックで選んだ場所（外接矩形内の正規化座標）に最も近い画線上の画素を握る。端ギリギリは Clamp（物理の安定のため）。
+        /// 選んだ場所（外接矩形内の正規化座標）に最も近い画線上の画素を握る。端ギリギリは Clamp（物理の安定のため）。
         /// </summary>
-        public static Vector2 GripFromPoint(GlyphDefinitionRuntime glyph, Vector2 normalized, float clampMin, float clampMax)
+        public static Vector2 GripFromPoint(GlyphDefinitionRuntime glyph, Vector2 normalized, float clampMin, float clampMax, Color32[] pixels = null)
         {
             var f = glyph.features;
             var b = f.inkBounds;
@@ -48,7 +48,7 @@ namespace MojiBattle
             if (tex == null || !tex.isReadable) return f.gripPoint;
             float tx = Mathf.Lerp(b.xMin, b.xMax, Mathf.Clamp(normalized.x, clampMin, clampMax));
             float ty = Mathf.Lerp(b.yMin, b.yMax, Mathf.Clamp(normalized.y, clampMin, clampMax));
-            var px = tex.GetPixels32();
+            var px = pixels ?? tex.GetPixels32();
             int w = tex.width;
             float best = float.MaxValue;
             Vector2 grip = f.gripPoint;

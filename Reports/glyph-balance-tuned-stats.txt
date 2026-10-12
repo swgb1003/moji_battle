@@ -1,0 +1,2 @@
+→: attack=51 defense=53 speed=84 durability=20 weight=25 hp=94.00 mass=1.963 walk=3.972 range=1.005 class=Light colliders=27 bounds=(x:-0.90, y:-0.46, width:1.80, height:0.93) normalized=A=19.2 W=96.5 H=42.6 C=9.6 B=17.4
+鬱: attack=74 defense=70 speed=15 durability=97 weight=100 hp=109.40 mass=4.600 walk=1.695 range=1.253 class=Heavy colliders=64 bounds=(x:-0.90, y:-1.03, width:1.80, height:1.78) normalized=A=100.0 W=99.5 H=99.5 C=89.7 B=82.7

@@ -1,0 +1,204 @@
+{
+  "generator": "Runway Sound Effects",
+  "created": "2026-10-06",
+  "assets": [
+    {
+      "key": "gong_start",
+      "taskId": "a1069aac-39da-42a2-b50c-bc1b5ccaf1d7",
+      "prompt": "A single bright bronze boxing gong struck firmly at the very beginning, clear metallic 'kaaan' attack with warm resonant decay, compact arcade fighting game sound effect, clean studio recording, no voices, no music, no background ambience."
+    },
+    {
+      "key": "gong_end",
+      "taskId": "d6d87730-48f6-4f67-9d83-ea96a9636e0a",
+      "prompt": "A single deep bronze boxing gong signalling the end of a fight, immediate strong metallic strike then a warm long ringing tail, lower and fuller than a starting bell."
+    },
+    {
+      "key": "jump",
+      "taskId": "7ee2d5ce-7d92-4dd8-a860-279315ba8b80",
+      "prompt": "One quick springing foot push off a wooden floor with a short airy upward swoosh, crisp compact athletic jump takeoff."
+    },
+    {
+      "key": "land_light",
+      "taskId": "87373ef5-003a-4236-8766-355a4922bfbf",
+      "prompt": "One light two-foot landing on a wooden stage, dry soft 'ton' thump with a small paper rustle."
+    },
+    {
+      "key": "land_heavy",
+      "taskId": "5b8f815b-e274-472d-a3f7-c4a82a0bc39f",
+      "prompt": "One heavy two-foot landing on a wooden stage, deep short 'dos' body thump with a firm woody contact and paper rustle."
+    },
+    {
+      "key": "swing_light_01",
+      "taskId": "ff9a1dd8-5188-4acb-bee8-b34cf1fcd326",
+      "prompt": "One fast thin weapon swishing through air, bright crisp narrow whoosh, accelerates and stops cleanly."
+    },
+    {
+      "key": "swing_light_02",
+      "taskId": "8681e01b-85da-4018-bfbd-db93e619ac0f",
+      "prompt": "One short quick air-cutting weapon swish with a papery edge, tight high-frequency swoosh."
+    },
+    {
+      "key": "swing_heavy_01",
+      "taskId": "2c119342-1fee-4907-95bd-8b2a6c364f42",
+      "prompt": "One oversized heavy weapon sweeping through air, deep broad rushing whoosh with thick fluttering cardboard texture, accelerates to a low powerful finish."
+    },
+    {
+      "key": "swing_heavy_02",
+      "taskId": "ec307c62-80e8-427f-8659-22ef814767bb",
+      "prompt": "One massive broad weapon swing, low rounded 'voom' air rush with woody weight and subtle paper flutter."
+    },
+    {
+      "key": "hit_01",
+      "taskId": "7911483b-1053-4aea-992f-c6c0e629e803",
+      "prompt": "One comic fighting game body punch, punchy dry 'dok' thud with a sharp wooden slap layered on a short low body impact."
+    },
+    {
+      "key": "hit_02",
+      "taskId": "d6253de2-03f9-4433-b765-11ad76c352bd",
+      "prompt": "One comic fighting game body hit, fast 'bashi' smack, tight papery slap and rounded low thump."
+    },
+    {
+      "key": "hit_03",
+      "taskId": "cb80e755-15cc-404a-8dfc-33d93c99c238",
+      "prompt": "One crisp cartoon combat body strike, short woody 'pak' attack over a firm compact punch thud."
+    },
+    {
+      "key": "hit_heavy_01",
+      "taskId": "ddf92110-c38a-48c2-9e4f-9940d975ebf7",
+      "prompt": "One powerful heavy fighting game impact, deep 'dogoh' punch with a sharp wooden crack and short heavy low-end thump."
+    },
+    {
+      "key": "hit_heavy_02",
+      "taskId": "4d235c40-dee1-4bc1-89d9-0d82b82c19de",
+      "prompt": "One weighty comic combat smash, thick 'bak' crunch from wood and cardboard with a deep body thud."
+    },
+    {
+      "key": "critical",
+      "taskId": "49a4ec4e-1098-49a9-9fb8-95c25762dc0e",
+      "prompt": "One extra-sharp critical hit in a comic fighting game, immediate bright wooden snap layered over a powerful tight body punch, distinctive crisp crack."
+    },
+    {
+      "key": "guard",
+      "taskId": "1905e938-bbd8-499d-84c1-3d7b12e73ac7",
+      "prompt": "One weapon hit blocked by a sturdy guard, sharp hard 'gan' clack, woody core with a short bright metallic resonance."
+    },
+    {
+      "key": "clash",
+      "taskId": "e59f8732-0f84-4d3d-a4f2-577e37e1245b",
+      "prompt": "Two hard weapons clash once, bright 'gakin' metallic and wooden clank, firm transient with a short ringing decay."
+    },
+    {
+      "key": "guard_break",
+      "taskId": "f4e7860e-cc79-4407-a486-06dbb558cdb7",
+      "prompt": "One fighting game guard shattering, sudden bright 'bakiin' crack then brief cascading brittle wood and metal fragments."
+    },
+    {
+      "key": "wall",
+      "taskId": "f4008873-22e5-4721-bd03-f523830d11f9",
+      "prompt": "One heavy body hitting a solid wooden arena wall, low 'don' impact with a brief hollow wooden resonance."
+    },
+    {
+      "key": "fall",
+      "taskId": "2f57c55e-70aa-444a-aff1-28bb5993a419",
+      "prompt": "One body tumbling onto a wooden stage, dry 'dosa' thud with a compact gritty paper scuff."
+    },
+    {
+      "key": "launch",
+      "taskId": "17f01b2e-a928-48b0-a7db-5cb90819e706",
+      "prompt": "One fighting game upward weapon strike, tight body impact followed by a very short rising airy whoosh, clear lifting sensation."
+    },
+    {
+      "key": "slam",
+      "taskId": "c365b7eb-1536-494f-aad4-7708ede7eb48",
+      "prompt": "One powerful downward body slam onto a wooden stage, huge comic 'dogoon' crack and deep punch, short debris rattle, compact dramatic impact."
+    },
+    {
+      "key": "evade",
+      "taskId": "d35f4130-5d03-490b-93c3-6a28b637d67c",
+      "prompt": "One fast backward sliding footstep on a wooden stage, short dry 'za' shoe scuff with a small airy swish."
+    },
+    {
+      "key": "throw",
+      "taskId": "3b5dc266-6c0f-475a-be27-90593341fd33",
+      "prompt": "One heavy papery weapon thrown sharply forward, fast focused 'shwong' launch whoosh with brief air flutter."
+    },
+    {
+      "key": "pickup",
+      "taskId": "36a3cadd-cbc4-4647-83af-82ae3ac59aa5",
+      "prompt": "One short weapon pickup, small wooden grip clack with a light paper shuffle, clean subtle 'kacha'."
+    },
+    {
+      "key": "charge",
+      "taskId": "1aa35d55-4e61-44dc-8c7d-2a7780579d75",
+      "prompt": "One quiet combat windup, short low rising tension from creaking wood and taut paper, restrained preparatory rustle."
+    },
+    {
+      "key": "step_01",
+      "taskId": "dce0f649-762f-4e0e-8afd-be2bf8702ef1",
+      "prompt": "One quiet shoe footstep on a wooden stage, soft dry heel-toe 'tap', very compact."
+    },
+    {
+      "key": "step_02",
+      "taskId": "2d3e0985-1dc0-471d-b142-78767fc16ffb",
+      "prompt": "One soft single shoe step with slight dry wooden floor scuff, compact gentle 'tok'."
+    },
+    {
+      "key": "recover",
+      "taskId": "83b554e3-a79f-4f5a-b60b-e227d8d7a76c",
+      "prompt": "One body rising to its feet, brief cloth and paper shuffle followed by a small firm shoe placement on wood."
+    },
+    {
+      "key": "ko",
+      "taskId": "bc216926-238e-4c10-abc6-955db7479e70",
+      "prompt": "One dramatic final knockout impact for a comic fighting game, deep explosive body thud and sharp woody crack with a short descending low resonance."
+    },
+    {
+      "key": "dash_step",
+      "taskId": "1bb038b0-9b6f-4dec-aa4e-b6815ead3e12",
+      "prompt": "A single rapid forward dash push-off, crisp shoe scrape and sharp airy shh, comic arcade sword fighter on paper stage, immediate onset, isolated dry foley, no voice, music or background.",
+      "created": "2026-10-07"
+    },
+    {
+      "key": "dash_swing",
+      "taskId": "c5910ca2-65fc-4ecc-9ea9-0dff3613342f",
+      "prompt": "A single fast precise weapon slash, sharp zash airy cutting whoosh with papery wooden texture, short explosive acceleration, isolated comic arcade sword fight effect, immediate onset, no voice or music.",
+      "created": "2026-10-07"
+    },
+    {
+      "key": "dash_hit",
+      "taskId": "76141885-06d9-4c96-b874-9c74e44de1d3",
+      "prompt": "A single clean snappy bash impact, crisp bashi wooden punch with a short low body thump, energetic comic arcade sword fight hit, isolated dry studio effect, immediate onset, no voice or music.",
+      "created": "2026-10-07"
+    },
+    {
+      "key": "parry",
+      "taskId": "a95bfee0-5b3f-4990-b687-80dff68fb224",
+      "prompt": "A single sharp kakin weapon deflection, bright metallic wooden clack with a very short ringing tail, successful parry in a comic arcade sword battle, immediate onset, isolated studio effect, no speech or music.",
+      "created": "2026-10-07"
+    },
+    {
+      "key": "counter_swing",
+      "taskId": "eebf86b8-a58a-415d-b271-3f62052d7f47",
+      "prompt": "A single short quick hyu weapon swish for a riposte, fast compact airy cutting motion with wooden texture, isolated dry comic arcade sword battle effect, immediate onset, no voice or music.",
+      "created": "2026-10-07"
+    },
+    {
+      "key": "counter_hit",
+      "taskId": "f4194da4-56f4-49bf-a14d-e276c8de7e8b",
+      "prompt": "A single strong zubah sharp slash impact, crisp splintering wooden crack over a punchy body thump, decisive riposte in comic arcade combat, isolated dry effect, immediate onset, no voice or music.",
+      "created": "2026-10-07"
+    },
+    {
+      "key": "whirl_swing",
+      "taskId": "a2a6fdab-437d-4261-9c45-c0a9df72112f",
+      "prompt": "An enormous heavy wooden letter weapon swung in a full body circle, deep broad bwoooon rushing whoosh accelerating through one revolution, powerful low airy rumble, isolated arcade comic fight effect, immediate onset, no voice, music or ambience.",
+      "created": "2026-10-07"
+    },
+    {
+      "key": "whirl_hit",
+      "taskId": "eaa077a7-91ba-422f-a05c-f11bdf4f054b",
+      "prompt": "A single huge dogan heavy wooden weapon impact, deep crushing thump and chunky cracking attack, heavyweight comic arcade battle hit, isolated dry studio effect, immediate onset, short tail, no voice or music.",
+      "created": "2026-10-07"
+    }
+  ]
+}

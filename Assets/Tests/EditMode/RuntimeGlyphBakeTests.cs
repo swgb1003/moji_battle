@@ -86,8 +86,8 @@ namespace MojiBattle.Tests
         public void Catalog_CachesRuntimeGlyphs()
         {
             GlyphCatalog.ClearCache();
-            Assert.IsTrue(GlyphCatalog.TryGet("刀", FontStyleId.Gothic, B, C, out var a, out var reason), reason);
-            Assert.IsTrue(GlyphCatalog.TryGet("刀", FontStyleId.Gothic, B, C, out var b2, out _));
+            Assert.IsTrue(GlyphCatalog.TryGet("刈", FontStyleId.Gothic, B, C, out var a, out var reason), reason);
+            Assert.IsTrue(GlyphCatalog.TryGet("刈", FontStyleId.Gothic, B, C, out var b2, out _));
             Assert.AreSame(a, b2);
             Assert.IsTrue(a.runtimeBaked);
             Assert.IsTrue(GlyphCatalog.TryGet("鬱", FontStyleId.Gothic, B, C, out var baked, out _));

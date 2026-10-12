@@ -1,0 +1,110 @@
+[
+  {
+    "number": 1,
+    "id": "01_tournament_select",
+    "title": "大会選択",
+    "file": "01_tournament_select.png"
+  },
+  {
+    "number": 2,
+    "id": "02_guide",
+    "title": "大会ルール",
+    "file": "02_guide_v2.png"
+  },
+  {
+    "number": 3,
+    "id": "03_customize",
+    "title": "共通カスタマイズ",
+    "file": "03_customize_v3.png"
+  },
+  {
+    "number": 4,
+    "id": "04_group_draw",
+    "title": "組み合わせ抽選",
+    "file": "04_group_draw.png"
+  },
+  {
+    "number": 5,
+    "id": "05_group_board",
+    "title": "グループリーグ",
+    "file": "05_group_board.png"
+  },
+  {
+    "number": 6,
+    "id": "06_vs",
+    "title": "対戦前",
+    "file": "06_vs.png"
+  },
+  {
+    "number": 7,
+    "id": "07_battle",
+    "title": "戦闘",
+    "file": "07_battle_v2.png"
+  },
+  {
+    "number": 8,
+    "id": "08_match_result",
+    "title": "試合結果",
+    "file": "08_match_result_v2.png"
+  },
+  {
+    "number": 9,
+    "id": "09_group_qualified",
+    "title": "グループ最終結果",
+    "file": "09_group_qualified.png"
+  },
+  {
+    "number": 10,
+    "id": "10_third_ranking",
+    "title": "3位比較",
+    "file": "10_third_ranking_v2.png"
+  },
+  {
+    "number": 11,
+    "id": "11_knockout_board",
+    "title": "決勝トーナメント表",
+    "file": "11_knockout_board_v2.png"
+  },
+  {
+    "number": 12,
+    "id": "12_bronze_match",
+    "title": "3位決定戦",
+    "file": "12_bronze_match.png"
+  },
+  {
+    "number": 13,
+    "id": "13_final",
+    "title": "決勝戦",
+    "file": "13_final.png"
+  },
+  {
+    "number": 14,
+    "id": "14_podium",
+    "title": "表彰式・トロフィー",
+    "file": "14_podium.png"
+  },
+  {
+    "number": 15,
+    "id": "15_congratulations",
+    "title": "祝福・花火",
+    "file": "15_congratulations.png"
+  },
+  {
+    "number": 16,
+    "id": "16_photo",
+    "title": "記念撮影",
+    "file": "16_photo_v2.png"
+  },
+  {
+    "number": 17,
+    "id": "17_tournament_result",
+    "title": "大会結果",
+    "file": "17_tournament_result.png"
+  },
+  {
+    "number": 18,
+    "id": "18_eliminated",
+    "title": "敗退時の結果",
+    "file": "18_eliminated_v2.png"
+  }
+]

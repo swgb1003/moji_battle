@@ -19,6 +19,11 @@ namespace MojiBattle
         SpriteRenderer flash;
         float flashAlpha, speedLineAlpha;
         Vector3 koPoint;
+        float finishAge = -1;
+        bool finishFrozen, finishBurst;
+        KoEvent finishing;
+        public FinishKind LastFinishKind => finishing.finish;
+        public bool FinishBurstPlayed => finishBurst;
 
         sealed class Popup { public TextMesh tm; public float age, life; public Vector3 vel; }
         sealed class Particle { public SpriteRenderer sr; public Vector3 vel; public float age, life, spin; public Color color; }
@@ -29,6 +34,7 @@ namespace MojiBattle
             rig = cameraRig;
             var ev = d.Events;
             ev.Hit += OnHit;
+            ev.RangedLaunch += OnRangedLaunch;
             ev.Guard += OnGuard;
             ev.Clash += e => SpawnPopup("弾く", e.point, FighterFactory.Ink, 0.35f);
             ev.EnvImpact += OnEnv;
@@ -46,6 +52,17 @@ namespace MojiBattle
             }
         }
 
+        void OnRangedLaunch(RangedLaunchEvent e)
+        {
+            bool wave = e.style == AttackStyle.GroundWave;
+            Burst(e.point, wave ? 16 : 6, FighterFactory.Ink, wave ? 4f : 2f, wave ? .09f : .05f);
+            if (wave)
+            {
+                SpawnPopup("ドンッ！", e.point + Vector2.up * .35f, FighterFactory.Ink, .4f);
+                rig?.Shake(.12f, .18f);
+            }
+        }
+
         void OnHit(HitEvent e)
         {
             var team = FighterFactory.TeamColor(e.attacker);
@@ -54,9 +71,12 @@ namespace MojiBattle
             Burst(e.point, n / 2, team, 5f + e.vN * 0.4f, 0.07f);
             // 技の名前（基本の振り下ろし・斬り上げ以外）を出して、どの技が入ったか分かるようにする
             string tech = e.pierce ? "貫通" : e.style == AttackStyle.Overhead || e.style == AttackStyle.Rising ? "" : AttackTechniques.Label(e.style);
+            if (e.style == AttackStyle.DashSlash || e.style == AttackStyle.Riposte || e.style == AttackStyle.Whirl
+                || AttackTechniques.IsKick(e.style) || e.style == AttackStyle.PickupSlash) tech = "";
             string label = e.critical ? "CRITICAL!" : tech.Length > 0 ? tech : e.quality == HitQuality.Graze ? "かすり" : "";
             Color c = e.critical ? new Color32(0xF3, 0xC6, 0x5A, 0xFF) : FighterFactory.Ink;
-            SpawnPopup($"{(label.Length > 0 ? label + "\n" : "")}{e.damage:F0}", e.point + Vector2.up * 0.3f, c, e.critical ? 0.5f : 0.36f);
+            string hitText = GameSettings.ShowDamage ? $"{(label.Length > 0 ? label + "\n" : "")}{e.damage:F0}" : label;
+            if (hitText.Length > 0) SpawnPopup(hitText, e.point + Vector2.up * 0.3f, c, e.critical ? 0.5f : 0.36f);
             var b = director.Context.Balance;
             if (e.combo)
             {
@@ -78,7 +98,7 @@ namespace MojiBattle
         void OnGuard(GuardEvent e)
         {
             Burst(e.point, 10, Color.white, 6f, 0.08f, outline: true);
-            SpawnPopup(e.broke ? "GUARD BREAK" : "GUARD", e.point + Vector2.up * 0.35f, FighterFactory.Ink, 0.4f);
+            if (!e.parried) SpawnPopup(e.broke ? "GUARD BREAK" : "GUARD", e.point + Vector2.up * 0.35f, FighterFactory.Ink, 0.4f);
             if (e.broke) rig?.Shake(0.1f, 0.15f);
         }
 
@@ -86,7 +106,7 @@ namespace MojiBattle
         {
             Burst(e.point, 12, FighterFactory.Ink, 5f, 0.1f);
             string label = e.smash ? "ドゴォン！" : e.slam ? "叩きつけ！" : e.isWall ? "ドンッ！" : "ズシャ";
-            SpawnPopup($"{label}\n{e.damage:F0}", e.point + Vector2.up * 0.5f, FighterFactory.Ink, e.slam || e.smash ? 0.6f : 0.5f);
+            SpawnPopup(GameSettings.ShowDamage ? $"{label}\n{e.damage:F0}" : label, e.point + Vector2.up * 0.5f, FighterFactory.Ink, e.slam || e.smash ? 0.6f : 0.5f);
             if (e.smash) Burst(e.point, 20, FighterFactory.Ink, 7f, 0.12f);
             rig?.Shake(e.smash ? 0.25f : 0.15f, e.smash ? 0.25f : 0.18f);
         }
@@ -94,10 +114,48 @@ namespace MojiBattle
         void OnKo(KoEvent e)
         {
             koPoint = e.point;
-            flashAlpha = 0.85f;
-            speedLineAlpha = 1f;
-            Burst(e.point, 30, FighterFactory.Ink, 8f, 0.12f);
-            rig?.Shake(0.3f, 0.35f);
+            finishing = e;
+            finishAge = 0; finishFrozen = finishBurst = false;
+            rig?.ZoomPunch(.14f, .65f);
+        }
+
+        void TickFinish(float dt)
+        {
+            if (finishAge < 0 || TimeController.Paused) return;
+            finishAge += dt;
+            bool cinematic = TimeController.PresentationEffectsEnabled && !GameSettings.ReducedEffects && !director.SilentSimulation;
+            if (finishAge >= .08f && !finishFrozen)
+            {
+                finishFrozen = true;
+                if (cinematic) TimeController.TriggerFreeze(.09f);
+            }
+            if (finishAge < .18f || finishBurst) return;
+            finishBurst = true;
+            if (!cinematic) return;
+            flashAlpha = .6f; speedLineAlpha = 1;
+            var ink = director.GetComponent<CombatInkEffects>();
+            var color = finishing.winner >= 0 ? FighterFactory.TeamColor(finishing.winner) : FighterFactory.Ink;
+            switch (finishing.finish)
+            {
+                case FinishKind.Ground:
+                    ink?.GroundBurst(koPoint, 2.3f);
+                    ink?.Slash(new Vector2(koPoint.x, .8f), Vector2.up, FighterFactory.Ink, 1.5f);
+                    break;
+                case FinishKind.Impact:
+                    ink?.Ring(koPoint, color, 2.8f);
+                    ink?.Ring(koPoint, FighterFactory.Ink, 1.9f);
+                    break;
+                case FinishKind.DoubleKO:
+                    ink?.Ring(koPoint, FighterFactory.Ink, 2.8f);
+                    ink?.Slash(koPoint, Vector2.right, color, 2);
+                    break;
+                default:
+                    ink?.Slash(koPoint, finishing.direction, color, 2.2f);
+                    ink?.Slash(koPoint, finishing.direction, FighterFactory.Ink, 1.7f);
+                    break;
+            }
+            Burst(koPoint, 38, FighterFactory.Ink, 8, .13f);
+            rig?.Shake(.28f, .3f);
         }
 
         void SpawnPopup(string text, Vector2 at, Color color, float height)
@@ -116,7 +174,8 @@ namespace MojiBattle
 
         void Burst(Vector2 at, int count, Color color, float speed, float size, bool outline = false)
         {
-            if (!TimeController.PresentationEffectsEnabled) return;
+            if (!TimeController.PresentationEffectsEnabled || GameSettings.ReducedEffects) return;
+            count = Mathf.Min(count, Mathf.Max(0, 180 - particles.Count));
             for (int i = 0; i < count; i++)
             {
                 var sr = UiKit.Rect(transform, "Particle", color, outline ? 21 : 20);
@@ -139,6 +198,7 @@ namespace MojiBattle
 
         void Update()
         {
+            TickFinish(Time.unscaledDeltaTime);
             float dt = Time.deltaTime;
             for (int i = popups.Count - 1; i >= 0; i--)
             {
@@ -172,13 +232,13 @@ namespace MojiBattle
             flash.transform.position = cam.transform.position + new Vector3(0f, 0f, 9f);
             flash.transform.localScale = new Vector3(h * cam.aspect + 1f, h + 1f, 1f);
             flashAlpha = Mathf.MoveTowards(flashAlpha, 0f, Time.unscaledDeltaTime * 2.5f);
-            flash.color = new Color(1f, 1f, 1f, flashAlpha);
+            flash.color = new Color(1f, 1f, 1f, GameSettings.ReducedEffects ? 0 : flashAlpha);
 
             speedLineAlpha = Mathf.MoveTowards(speedLineAlpha, 0f, Time.unscaledDeltaTime * 0.9f);
             for (int i = 0; i < speedLines.Count; i++)
             {
                 var lr = speedLines[i];
-                if (speedLineAlpha <= 0f) { lr.positionCount = 0; continue; }
+                if (speedLineAlpha <= 0f || GameSettings.ReducedEffects) { lr.positionCount = 0; continue; }
                 float a = i / (float)speedLines.Count * Mathf.PI * 2f + 0.2f;
                 Vector3 dir = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f);
                 lr.positionCount = 2;

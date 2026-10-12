@@ -19,7 +19,11 @@ namespace MojiBattle
         LineRenderer head, torso, armFront, armBack, legA, legB, ground, gripMarker, comMarker;
         readonly List<LineRenderer> colliderLines = new List<LineRenderer>();
         SpriteRenderer weapon;
+        SpriteRenderer printedHead;
         Sprite currentSprite;
+        FighterVolumeRig volume;
+        SpriteRenderer pedestalTop, pedestalSide;
+        public FighterVolumeRig VolumeRig => volume;
 
         public FighterBuildData Build { get; private set; }
         public int Side { get; private set; }
@@ -30,6 +34,8 @@ namespace MojiBattle
         public float AttackRange { get; private set; }
         public WeightClass EffectiveClass { get; private set; }
         GlyphDefinitionRuntime glyph;
+        Texture2D gripTexture;
+        Color32[] gripPixels;
 
         // 試し振り
         enum Demo { Hold, Windup, Swing, Back }
@@ -41,11 +47,22 @@ namespace MojiBattle
         Vector3 shownGrip;
         Quaternion shownRot = Quaternion.identity;
         LineRenderer hoverMarker;
+        bool gripEditing;
+        bool pauseBeforeEditing;
+        Vector3 editingPixelOrigin;
+        Quaternion editingRotation;
+        Vector2? pendingGripPx;
+        public bool GripEditing => gripEditing;
 
         void Awake()
         {
-            var ink = FighterFactory.Ink;
+            var ink = RetroUi.Ink;
             head = UiKit.Line(transform, "Head", ink, 0.075f, 4, loop: true);
+            if(GameFlow.ChallengeMode || GameFlow.DraftMode)
+            {
+                printedHead=UiKit.Rect(transform,"PrintedHead",ink,4);printedHead.sprite=UiKit.DiscSprite;
+                printedHead.transform.localScale=new Vector3(.39f,.39f,1);
+            }
             torso = UiKit.Line(transform, "Torso", ink, 0.075f, 4);
             armFront = UiKit.Line(transform, "ArmFront", ink, 0.075f, 6);
             armBack = UiKit.Line(transform, "ArmBack", ink, 0.07f, 3);
@@ -59,29 +76,57 @@ namespace MojiBattle
             go.transform.SetParent(transform, false);
             weapon = go.AddComponent<SpriteRenderer>();
             weapon.sortingOrder = 5;
+            pedestalSide = UiKit.Rect(transform, "DisplayPlinthSide", PaperUi.Edge, 0);
+            pedestalTop = UiKit.Rect(transform, "DisplayPlinthTop", new Color(.94f, .9f, .8f, 1), 0);
+            pedestalSide.sprite = pedestalTop.sprite = UiKit.DiscSprite;
+            volume = new FighterVolumeRig(transform, weapon, RetroUi.Red);
+            volume.SetVisible(true);
+            head.enabled = torso.enabled = armFront.enabled = armBack.enabled = legA.enabled = legB.enabled = false;
+            if (printedHead != null) printedHead.enabled = false;
         }
 
         /// <summary>設定を反映（変更の瞬間に呼ぶ）。</summary>
         public void Show(FighterBuildData build, int side)
         {
+            bool glyphChanged = glyph == null || Build == null || build.character != Build.character
+                || build.fontType != Build.fontType || build.weaponFlip != Build.weaponFlip;
+            bool gripChanged = Build == null || build.customGrip != Build.customGrip
+                || (build.customGrip ? build.gripPoint != Build.gripPoint : build.gripPosition != Build.gripPosition);
+            bool geometryChanged = glyphChanged || Geometry == null || build.weaponSize != Build.weaponSize || gripChanged;
+            bool poseChanged = geometryChanged || build.gripType != Build.gripType || side != Side;
+            if (gripEditing && Build != null && (glyphChanged || build.weaponSize != Build.weaponSize || side != Side)) EndGripEditing();
             Build = build.Clone();
             Side = side;
-            if (!GlyphCatalog.TryGet(build.character, build.fontType, B, GlyphCalibration.Default, out glyph, out _)) return;
-            glyph = GlyphFlip.Apply(glyph, build.weaponFlip);
-            var stats = StatCalculator.Compute(glyph, B);
-            Stats = stats;
-            Geometry = FighterFactory.ResolveWeapon(Build, glyph, stats, B, CB, out float mass);
-            WeaponMass = mass;
-            Mods = FighterModifiers.From(Build, glyph, stats, Geometry, mass, B, CB);
+            if (glyphChanged)
+            {
+                if (!GlyphCatalog.TryGet(build.character, build.fontType, B, GlyphCalibration.Default, out glyph, out _)) return;
+                glyph = GlyphFlip.Apply(glyph, build.weaponFlip);
+                Stats = StatCalculator.Compute(glyph, B);
+            }
+            if (geometryChanged)
+            {
+                Geometry = FighterFactory.ResolveWeapon(Build, glyph, Stats, B, CB, out float mass);
+                WeaponMass = mass;
+            }
+            Mods = FighterModifiers.From(Build, glyph, Stats, Geometry, WeaponMass, B, CB);
             AttackRange = (B.shoulderLocal.x + Geometry.length * B.reachFactor + 0.1f) * Mods.reach;
-            EffectiveClass = StatCalculator.Classify(Mods.EffectiveWeightScore(stats.weightScore, CB), B);
+            EffectiveClass = StatCalculator.Classify(Mods.EffectiveWeightScore(Stats.weightScore, CB), B);
 
             var tex = glyph.texture;
-            if (currentSprite != null) Destroy(currentSprite);
-            currentSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
-                new Vector2(Geometry.gripPx.x / tex.width, Geometry.gripPx.y / tex.height), 1f / Geometry.scale, 0, SpriteMeshType.FullRect);
+            if (gripTexture != tex)
+            {
+                gripTexture = tex;
+                gripPixels = tex != null && tex.isReadable ? tex.GetPixels32() : null;
+            }
+            if (currentSprite == null || geometryChanged)
+            {
+                if (currentSprite != null) Destroy(currentSprite);
+                currentSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                    new Vector2(Geometry.gripPx.x / tex.width, Geometry.gripPx.y / tex.height), 1f / Geometry.scale, 0, SpriteMeshType.FullRect);
+            }
             weapon.sprite = currentSprite;
-            weapon.color = FighterFactory.TeamColor(side);
+            weapon.color = RetroUi.Team(side);
+            volume.SetTeam(weapon.color);
 
             var rects = glyph.features.colliderRects;
             while (colliderLines.Count < rects.Length)
@@ -90,6 +135,10 @@ namespace MojiBattle
             omega = 0f;
             demo = Demo.Hold;
             demoTime = 0f;
+            // A confirmed grip must show its new stance now, even while the pointer still hovers here.
+            // Rebase the hover freeze onto that stance; only an in-progress drag keeps the old pose.
+            RenderPose(preserveEditingPose: !poseChanged);
+            if (gripEditing && poseChanged) CaptureEditingPose();
         }
 
         float ReadyPsi => float.IsNaN(Mods.readyPsi) ? B.ReadyPsi(Stats.weightScore) : Mods.readyPsi;
@@ -101,11 +150,11 @@ namespace MojiBattle
         void Update()
         {
             if (Geometry == null) return;
-            float dt = Time.deltaTime;
+            float dt = Time.unscaledDeltaTime;
+            if (RetroMotionSettings.Reduced) { psi = ReadyPsi; omega = 0; return; }
             if (Paused)
             {
-                // 握る場所を選ぶ間は構えのまま止める（クリックした場所がずれないように）
-                psi = Mathf.MoveTowards(psi, ReadyPsi, 360f * dt);
+                // Pause the displayed pose; moving back to ReadyPsi would move the point under the cursor.
                 omega = 0f;
                 demo = Demo.Hold;
                 demoTime = 0f;
@@ -147,11 +196,18 @@ namespace MojiBattle
 
         void Next(Demo d) { demo = d; demoTime = 0f; }
 
-        void LateUpdate()
+        void LateUpdate() => RenderPose();
+
+        void RenderPose(bool preserveEditingPose = true)
         {
             if (Geometry == null) return;
             Vector3 P(float x, float y) => new Vector3(feet.x + x, feet.y + y, 0f);
             Vector3 hip = P(0f, 0.86f), neck = P(0f, 1.42f), headC = P(0f, 1.62f), shoulder = P(0f, 1.34f);
+            pedestalTop.transform.position = P(0, -.015f);
+            pedestalTop.transform.localScale = new Vector3(1.4f, .1f, 1);
+            pedestalSide.transform.position = P(0, -.075f);
+            pedestalSide.transform.localScale = new Vector3(1.4f, .16f, 1);
+            if(printedHead!=null)printedHead.transform.position=headC;
             head.positionCount = 20;
             for (int i = 0; i < 20; i++)
             {
@@ -161,22 +217,36 @@ namespace MojiBattle
             Line(torso, neck, hip);
             Line(legA, hip, P(0.16f, 0.43f), P(0.2f, 0f));
             Line(legB, hip, P(-0.06f, 0.43f), P(-0.12f, 0f));
-            Line(ground, P(-3.2f, 0f), P(3.6f, 0f));
+            Line(ground, P(-12f, 0f), P(12f, 0f));
 
             Vector3 grip = P(B.shoulderLocal.x, B.shoulderLocal.y);
             float phi = psi - Geometry.alpha0Deg;
             var rot = Quaternion.Euler(0f, 0f, phi);
+            if (gripEditing && preserveEditingPose)
+            {
+                rot = editingRotation;
+                grip = editingPixelOrigin + rot * (Vector3)(Geometry.gripPx * Geometry.scale);
+            }
             weapon.transform.SetPositionAndRotation(grip, rot);
+            volume.Begin(feet, hip, neck, headC, 1, false);
+            volume.Leg(hip, P(.2f, 0), P(.16f, .43f), true, 1, true);
+            volume.Leg(hip, P(-.12f, 0), P(-.06f, .43f), false, 1, true);
             shownGrip = grip;
             shownRot = rot;
-            Line(armFront, shoulder, Vector3.Lerp(shoulder, grip, 0.5f) + Vector3.down * 0.12f, grip);
-            Vector3 back = grip;
+            Vector3 hand = pendingGripPx.HasValue ? PixelToWorld(pendingGripPx.Value) : grip;
+            Line(armFront, shoulder, Vector3.Lerp(shoulder, hand, 0.5f) + Vector3.down * 0.12f, hand);
+            Vector3 back = hand;
             if (Mods.grip == GripType.TwoHanded)
             {
                 float len = Geometry.comLocal.magnitude;
-                if (len > 1e-3f) back = grip + rot * (Vector3)(Geometry.comLocal / len * Mathf.Min(len, CB.secondHandOffset));
+                if (len > 1e-3f) back = hand + rot * (Vector3)(Geometry.comLocal / len * Mathf.Min(len, CB.secondHandOffset));
             }
             Line(armBack, shoulder + new Vector3(-0.05f, -0.02f, 0f), Vector3.Lerp(shoulder, back, 0.5f) + Vector3.down * 0.2f, back);
+            Vector3 axis = rot * (Vector3)Geometry.comLocal;
+            volume.Arm(shoulder, hand, Vector3.down * .12f, true, true, axis);
+            volume.Arm(shoulder + new Vector3(-.05f, -.02f, 0), back, Vector3.down * .2f, false,
+                Mods.grip == GripType.TwoHanded, axis);
+            volume.End();
 
             var rects = glyph.features.colliderRects;
             for (int i = 0; i < colliderLines.Count; i++)
@@ -190,12 +260,15 @@ namespace MojiBattle
                 lr.SetPosition(2, grip + rot * (Vector3)Geometry.PxToLocal(new Vector2(r.xMax, r.yMax)));
                 lr.SetPosition(3, grip + rot * (Vector3)Geometry.PxToLocal(new Vector2(r.xMin, r.yMax)));
             }
+            ColliderDebugView.DrawGripMarker(gripMarker, hand + Vector3.back * 0.1f, pendingGripPx.HasValue ? .12f : .08f);
             if (showGuides)
             {
-                ColliderDebugView.DrawGripMarker(gripMarker, grip + Vector3.back * 0.1f, 0.08f);
                 ColliderDebugView.DrawComMarker(comMarker, grip + rot * (Vector3)Geometry.comLocal + Vector3.back * 0.1f, 0.09f);
             }
-            else { gripMarker.positionCount = 0; comMarker.positionCount = 0; }
+            else
+            {
+                comMarker.positionCount = 0;
+            }
         }
 
         /// <summary>
@@ -215,10 +288,56 @@ namespace MojiBattle
             return true;
         }
 
+        public void BeginGripEditing()
+        {
+            if (gripEditing || Geometry == null) return;
+            pauseBeforeEditing = Paused;
+            Paused = true;
+            gripEditing = true;
+            CaptureEditingPose();
+        }
+
+        void CaptureEditingPose()
+        {
+            editingRotation = shownRot;
+            editingPixelOrigin = shownGrip - shownRot * (Vector3)(Geometry.gripPx * Geometry.scale);
+        }
+
+        public void EndGripEditing()
+        {
+            if (!gripEditing) return;
+            gripEditing = false;
+            pendingGripPx = null;
+            Paused = pauseBeforeEditing;
+            psi = ReadyPsi; omega = 0f; demo = Demo.Hold; demoTime = 0f;
+            ShowHover(null);
+            RenderPose();
+        }
+
+        /// <summary>Drag positions are clamped to the glyph; gaps between strokes snap to actual ink.</summary>
+        public bool ProjectGrip(Vector3 world, out Vector2 normalized)
+        {
+            normalized = default;
+            if (Geometry == null || glyph == null) return false;
+            Vector2 px = (Vector2)(Quaternion.Inverse(shownRot) * (world - shownGrip)) / Geometry.scale + Geometry.gripPx;
+            var bounds = glyph.features.inkBounds;
+            normalized = new Vector2(Mathf.Clamp01((px.x - bounds.xMin) / Mathf.Max(1f, bounds.width)),
+                Mathf.Clamp01((px.y - bounds.yMin) / Mathf.Max(1f, bounds.height)));
+            return true;
+        }
+
+        public void ShowPendingGrip(Vector2? normalized)
+        {
+            pendingGripPx = normalized.HasValue && glyph != null ? WeaponGripController.GripFromPoint(glyph,
+                normalized.Value, CB.gripClampMin * .5f, 1f - (1f - CB.gripClampMax) * .5f, gripPixels) : (Vector2?)null;
+            ShowHover(null);
+            RenderPose();
+        }
+
         bool NearInk(Vector2 px, float radius)
         {
             var tex = glyph.texture;
-            if (tex == null || !tex.isReadable) return true;
+            if (tex == null || gripPixels == null) return true;
             int r = Mathf.CeilToInt(radius);
             int cx = Mathf.FloorToInt(px.x), cy = Mathf.FloorToInt(px.y);
             for (int y = cy - r; y <= cy + r; y += 2)
@@ -226,7 +345,7 @@ namespace MojiBattle
             {
                 if (x < 0 || y < 0 || x >= tex.width || y >= tex.height) continue;
                 if ((x - px.x) * (x - px.x) + (y - px.y) * (y - px.y) > radius * radius) continue;
-                if (tex.GetPixel(x, y).a >= 0.5f) return true;
+                if (gripPixels[y * tex.width + x].a >= 128) return true;
             }
             return false;
         }
@@ -260,6 +379,7 @@ namespace MojiBattle
 
         void OnDestroy()
         {
+            volume?.Dispose();
             if (currentSprite != null) Destroy(currentSprite);
         }
     }

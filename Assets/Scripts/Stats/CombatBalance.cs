@@ -35,12 +35,12 @@ namespace MojiBattle
     {
         [Header("5.3 ステータス式")]
         public float mBase = 5f, mA = 0.70f, mC = 0.20f, mH = 0.10f, mMin = 5f, mMax = 100f;
-        [Tooltip("Tuned: 攻撃の下限 20→30（軽い字形の与ダメージが小さすぎたため。仕様の参考値「一」攻撃31）")]
-        public float atkM = 0.60f, atkC = 0.40f, atkMin = 30f, atkMax = 100f;
-        public float defW = 0.50f, defA = 0.30f, defM = 0.20f, defMin = 20f, defMax = 85f;
+        [Tooltip("密度の高い文字に攻撃・HPの有利が重なりすぎないよう、基礎攻撃＋小さな重量差にする")]
+        public float atkBase = 45f, atkM = 0.20f, atkC = 0.10f, atkMin = 45f, atkMax = 75f;
+        public float defW = 0.50f, defA = 0.10f, defM = 0.10f, defMin = 20f, defMax = 75f;
         public float spdBase = 105f, spdM = 0.85f, spdC = 0.10f, spdB = 0.05f, spdMin = 10f, spdMax = 100f;
         public float durA = 0.50f, durM = 0.30f, durB = 0.20f, durMin = 20f, durMax = 100f;
-        public float hpBase = 50f, hpPerDurability = 0.7f;
+        public float hpBase = 90f, hpPerDurability = 0.2f;
         public float weaponMassBase = 1.1f, weaponMassPerM = 0.035f;
         public float bodyMassBase = 2.0f, bodyMassPerDurability = 0.008f;
         public float lightMaxWeight = 35f, heavyMinWeight = 70f;
@@ -88,6 +88,8 @@ namespace MojiBattle
         public float attackTimingJitter = 0.12f;
         public float threatWindow = 0.6f;
         public float guardMinDwell = 0.3f;
+        [Tooltip("横持ちは盾として短く構えを保つ。他の持ち方の最短ガード時間に対する倍率")]
+        public float horizontalGuardDwellScale = 1.5f;
         public float evadeCooldown = 1.0f;
         public float tooCloseDistance = 0.9f;
         [Tooltip("Tuned: これより近いと武器が相手を通り越すため、下がってから打つ")]
@@ -114,6 +116,25 @@ namespace MojiBattle
         public float risingWhenHighLight = 0.75f, risingWhenLowLight = 0.3f, risingWhenHighHeavy = 0.25f, risingWhenLowHeavy = 0.1f;
         public float attackCooldownLight = 0.15f, attackCooldownHeavy = 1.4f;
         public float heavyWhiffRecoveryMultiplier = 1.7f;
+        [Header("重量級のテンポ（振りの有効時間・質量・威力は維持）")]
+        public bool heavyTempo = true;
+        public float heavyWindupScale = .82f, heavyRecoveryScale = .55f;
+        public float heavyMaxWindup = 1.2f, heavyMaxRecovery = 1f, heavyMaxPoseWait = 1.65f;
+        public float heavyTempoCooldown = .45f, heavyTempoWhiffMultiplier = 1.25f;
+        public float heavyWindupTorque = .65f, heavyReturnTorque = .75f, heavyFollowThroughFraction = .3f;
+        [Tooltip("重量級同士でダメージがない時、待ち構えをやめて詰め直すまでの秒数")]
+        public float heavyDuelPressureSeconds = 2f;
+        [Range(0f, 1f)] public float heavyDuelMinWillingness = .55f, heavyDuelDefenseScale = .65f;
+        [Header("戦闘テンポ（移動・溜め・復帰をつなぐ）")]
+        public bool combatTempo = true;
+        public float tempoWindupScale = .8f, tempoRecoveryScale = .5f;
+        public float tempoMaxWindup = .75f, tempoMaxRecovery = .4f;
+        public float tempoPoseWaitExtra = .12f, tempoSwingWaitExtra = .3f;
+        public float tempoPoseTorque = 1.8f, tempoCooldownScale = .6f;
+        public float tempoAiScale = .5f, tempoTimingJitter = .05f;
+        public float tempoMoveAccelScale = 1.3f, tempoRetreatScale = .65f;
+        public float tempoRecoverDelayMin = .4f, tempoRecoverDelayMax = .8f;
+        public float tempoMaxKnockdownTime = 2.5f;
         [Tooltip("Tuned: 攻撃後の硬直のうち、武器を振り切った位置に残す割合")]
         public float followThroughFraction = 0.6f;
         [Tooltip("Tuned: 相手の硬直に差し込むため、射程外から踏み込める距離（歩行速度×残り硬直×係数）")]
@@ -167,10 +188,10 @@ namespace MojiBattle
         public float clashPush = 1.5f;
         [Tooltip("Tuned: 弾き合いで重い武器が軽い武器を叩き落とす強さ")]
         public float clashWeaponKnock = 1.0f;
-        [Tooltip("Tuned: 攻撃側の武器質量がこの倍率以上なら、弾き合っても軽い武器を叩き落として振り抜く")]
-        public float overpowerMassRatio = 1.8f;
         [Tooltip("Tuned: 弾き合いで、勢い（質量×速度）がこの倍率以上なら相手の武器を押し退けて振り抜く")]
         public float overpowerMomentumRatio = 1.3f;
+        [Tooltip("打ち合いを押し切る最低運動量。ほぼ静止した武器同士ではよろけない")]
+        public float clashMinMomentum = 4f;
         [Tooltip("Tuned: 弾き合いで勢い負けした側のよろけ時間（その間に勝った側が追撃できる）")]
         public float clashLoserStagger = 0.45f;
         [Tooltip("Tuned: AI が使う射程 = 肩 + 武器の最遠点距離 × この値（四角い字形は角でしか届かないため控えめに）")]
@@ -213,6 +234,14 @@ namespace MojiBattle
         public bool heavyArmorDuringAttack = true;
         [Tooltip("スーパーアーマーが効くのは、相手の武器質量が自分の武器質量のこの割合未満の時だけ（中量級の重い打撃では崩れる）")]
         public float heavyArmorMassRatio = 0.5f;
+        [Tooltip("ひるみ耐性で受けたダメージの累積が最大HPのこの割合に達すると攻撃を中断する")]
+        public float heavyArmorBreakHpFraction = .22f, heavyArmorPressureDecay = 8f;
+
+        [Header("細長い字形の先端攻撃")]
+        [Tooltip("字形の縦横比と低密度から求めた精密さに応じた先端ダメージの最大加算倍率")]
+        public float precisionTipBonus = .35f;
+        [Tooltip("精密さに応じて先端の突きのガード貫通率へ加算する値（重さによる貫通禁止はしない）")]
+        public float precisionGuardPierceBonus = .35f;
 
         [Header("技（基本の振りを状況に合う技へ置き換える）")]
         [Tooltip("基本の振りを技へ置き換える確率の上限")]
@@ -260,6 +289,27 @@ namespace MojiBattle
         public float comboLaunchChance = 0.85f, comboLaunchWindup = 0.6f;
         [Tooltip("連携の演出: 叩き落としが当たった時のヒットストップ秒 / 画面揺れ / カメラの寄り（画面の大きさの割合）")]
         public float smashHitStopSeconds = 0.16f, smashShake = 0.3f, smashZoom = 0.18f;
+        [Tooltip("跳び斬り: 跳び上がって相手の頭上から垂直に振り下ろす（重量級は使わない）。溜め = かがみ + 跳び上がり")]
+        public TechniqueTuning leap = new TechniqueTuning { weight = 0.04f, windup = 1f, active = 0.8f, recovery = 1.4f, damage = 1f, impulse = 0.8f, upBias = 0f };
+        [Tooltip("跳び斬り: かがむ秒数 / 跳ぶ高さ（足の高さ） / 横の速さの上限")]
+        public float leapCrouchSeconds = 0.16f, leapApexHeight = 1.0f, leapMaxSpeedX = 8.5f;
+        [Tooltip("跳び斬り: 振りかぶり（真上）と振り下ろし（真下寄り）の ψ")]
+        public float leapFromPsi = 100f, leapToPsi = -90f;
+        [Tooltip("跳び斬りを選ぶ距離（射程の倍率） / 間合いを詰める時に跳び斬りで飛び込む、判断 1 回あたりの確率")]
+        public float leapMinRangeScale = 0.8f, leapMaxRangeScale = 2.6f, leapApproachChance = 0.025f;
+        [Header("追加技: 踏み込み斬り・受け流し反撃・全身ぶん回し")]
+        public TechniqueTuning dashSlash = new TechniqueTuning { weight = 0.08f, windup = 0.75f, active = 1f, recovery = 1.3f, damage = 1.05f, impulse = 0.85f };
+        public float dashSpeed = 6.5f, dashDriveSeconds = 0.16f, dashSlashDelay = 0.07f;
+        public float dashMaxTravel = 1.1f, dashCooldown = 3f, dashApproachChance = 0.06f;
+        public TechniqueTuning riposte = new TechniqueTuning { weight = 0f, windup = 0.35f, active = 0.8f, recovery = 1.1f, damage = 1.2f, impulse = 0.9f };
+        public float parryWindow = 0.24f, parryCooldown = 4f, parryChance = 0.35f;
+        public float parryCounterDelay = 0.1f, parryAttackerStagger = 0.38f, parryMaxMassRatio = 2f;
+        public TechniqueTuning whirl = new TechniqueTuning { weight = 0.12f, windup = 1.4f, active = 1.8f, recovery = 2f, damage = 1.35f, impulse = 1.3f };
+        public float whirlMinWindup = 0.55f, whirlMinActive = 0.95f, whirlMinRecovery = 1f, whirlCooldown = 5f;
+
+        [Header("観戦者の関与: 必殺技・声援・踏ん張り")]
+        public InterventionTuning intervention = new InterventionTuning();
+
         [Tooltip("投げ: 字形を相手へ投げつける（weight は使わない。AI が中距離の奥の手として選ぶ）。投げた後は拾うまで素手で、攻撃もガードもできない")]
         public TechniqueTuning throwAttack = new TechniqueTuning { weight = 0f, windup = 1.2f, active = 0.6f, recovery = 0.8f, damage = 0.55f, impulse = 1f, upBias = 0.2f };
         [Tooltip("投げ: 初速（軽量〜重量）。カスタマイズで扱いにくい武器はさらに遅い")]
@@ -280,6 +330,23 @@ namespace MojiBattle
         public float throwPickupRadius = 0.55f, throwRetrieveTimeout = 8f;
         [Tooltip("投げた後の素手の間、相手の攻撃に反応して避ける確率の倍率（反応率に掛ける。0 なら素手の間は避けない）")]
         public float unarmedEvadeFactor = 0f;
+
+        [Header("追加アクション: 回避・崩し・復帰")]
+        public bool expandedActions = true;
+        [Tooltip("軽量・中量の打ち上げから跳躍追撃。被弾・着地・時間切れで中断する")]
+        public bool aerialCombos = true;
+        public float aerialCooldown = 7f, aerialTimeout = 1.1f, aerialSlashDamage = .55f;
+        public float aerialJumpSpeed = 5.8f, aerialMaxSpeedX = 4.5f;
+        public bool bindCounters = true;
+        public float duckDuration = 0.38f, duckChance = 0.32f, duckCooldown = 3f;
+        public float feintDuration = 0.28f, feintCooldown = 4f, feintChance = 0.1f;
+        public float bindDuration = 0.5f, bindCooldown = 5f, bindMomentumRatio = 1.75f, bindMassRatio = 1.35f;
+        public float kickRange = 1.05f, kickCooldown = 3f, kickChance = 0.16f;
+        public float kickDamage = 0.22f, kickPushSpeed = 2.3f;
+        public float wallJumpDistance = 1.2f, wallJumpCooldown = 5f;
+        public float wallJumpSpeedX = 5.8f, wallJumpSpeedY = 7.4f;
+        public float pickupSlashCooldown = 4f, hookCooldown = 4f, hookChance = 0.18f;
+        public float hookMaxMassRatio = 1.5f, hookStagger = 0.4f;
 
         [Header("8.4 転倒・KO")]
         public float settleSpeed = 0.6f, settleAngularSpeed = 90f;
@@ -323,6 +390,20 @@ namespace MojiBattle
 
         public float QualityMultiplier(HitQuality q) =>
             q == HitQuality.Center ? qualityCenter : q == HitQuality.Graze ? qualityGraze : qualityNormal;
+
+        [Header("遠距離攻撃")]
+        public bool rangedAttacks = true;
+        public float groundWaveRange = 9.5f, groundWaveSpeed = 6.5f, groundWaveCooldown = 5.5f;
+        public float groundWaveCrouch = .22f, groundWaveApex = .8f;
+        public float strokeShotRange = 7.5f, strokeShotSpeed = 9f, strokeShotCooldown = 3.2f;
+        public float rangedChance = .12f;
+        [Tooltip("遠距離攻撃を優先し、短時間の離脱で射撃の間合いを作る")]
+        public bool rangedSpacing = true;
+        public float rangedSpacingChance = .32f, rangedSpacingNeutralChance = .05f;
+        public float rangedSpacingSeconds = 2.4f, rangedSpacingCooldown = 4f;
+        public float rangedSpacingMargin = .65f, rangedSpacingBackstepChance = .65f;
+        public TechniqueTuning groundWave = new TechniqueTuning { damage = .75f, impulse = .5f };
+        public TechniqueTuning strokeShot = new TechniqueTuning { damage = .5f, impulse = .25f };
 
         static CombatBalance cachedDefault;
 

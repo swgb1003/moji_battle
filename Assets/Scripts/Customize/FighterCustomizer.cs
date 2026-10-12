@@ -12,19 +12,39 @@ namespace MojiBattle
         public const string GlyphOrder = "一口山火鬱AIOX";
 
         readonly FighterBuildData[] builds = new FighterBuildData[2];
+        readonly bool tournament;
+        readonly bool friend;
+        readonly bool challenge;
+        readonly bool draft;
+        readonly bool run;
+        readonly bool worldCup;
         public int Side { get; private set; }
         public FighterBuildData Current => builds[Side];
+        public bool Editable => worldCup ? Side==0 && WorldCupRuntimeStore.Preparing : run ? Side == 0 && RunRuntimeStore.Current?.stage == RunStage.Build : !draft || (Side == 0 && DraftRuntimeStore.Current?.stage == DraftStage.Build);
         public FighterBuildData Get(int side) => builds[side];
         /// <summary>最後に入力された文字が使えなかった理由（使えれば null）。</summary>
         public string CharacterError { get; private set; }
         public event Action Changed;
 
-        public FighterCustomizer()
+        public FighterCustomizer(bool tournament = false)
         {
-            builds[0] = BuildRuntimeStore.Get(0).Clone();
+            this.tournament = tournament;
+            challenge = GameFlow.ChallengeMode;
+            draft = GameFlow.DraftMode;
+            run = GameFlow.RunMode;
+            worldCup=GameFlow.WorldCupMode;
+            friend = GameFlow.FriendMode && FriendRoomSession.Instance?.Draft != null;
+            builds[0] = tournament ? TournamentRuntimeStore.Draft : BuildRuntimeStore.Get(0).Clone();
+            if (friend) builds[0] = FriendRoomSession.Instance.Draft.Clone();
+            if (challenge) builds[0] = ChallengeRuntimeStore.Draft;
             builds[1] = BuildRuntimeStore.Get(1).Clone();
+            if (challenge) builds[1] = ChallengeRuntimeStore.Current.Opponent;
+            if (draft) { builds[0] = DraftRuntimeStore.Current.player.Clone(); builds[1] = DraftRuntimeStore.Current.com.Clone(); }
+            if(run) { builds[0]=RunRuntimeStore.Current.player.Clone(); builds[1]=RunRuntimeStore.Current.Opponent.Build.Clone(); }
+            if(worldCup)builds[0]=WorldCupRuntimeStore.Preparing?WorldCupRuntimeStore.Draft:WorldCupRuntimeStore.Current.Entrants[0].Build;
             foreach (var b in builds)
                 if (!IsAvailable(b.character, b.fontType, out _)) b.character = "一";
+            if(challenge)ChallengeRuntimeStore.SetDraft(builds[0]);
         }
 
         public static List<string> AvailableCharacters(FontStyleId font)
@@ -39,7 +59,7 @@ namespace MojiBattle
 
         public void SelectSide(int side)
         {
-            Side = Mathf.Clamp(side, 0, 1);
+            Side = worldCup || tournament || friend || challenge ? 0 : Mathf.Clamp(side, 0, 1);
             CharacterError = null;
             Changed?.Invoke();
         }
@@ -47,6 +67,14 @@ namespace MojiBattle
         /// <summary>文字を入力。ベイク済みでない文字は理由を残して変更しない。</summary>
         public bool SetCharacter(string ch)
         {
+            if (!Editable) return false;
+            if(run && !string.IsNullOrEmpty(RunRuntimeStore.Current.lockedGlyph) && ch?.Trim()!=RunRuntimeStore.Current.lockedGlyph)
+            { CharacterError="挑戦中の文字は変更できません。"; Changed?.Invoke(); return false; }
+            if (draft && ch?.Trim() != DraftRuntimeStore.Current.player.character)
+            { CharacterError = "ドラフトで選んだ文字は変更できません。"; Changed?.Invoke(); return false; }
+            if (challenge && ChallengeRuntimeStore.Current.FixedCharacter != null
+                && ch?.Trim() != ChallengeRuntimeStore.Current.FixedCharacter)
+            { CharacterError = "このお題では文字「" + ChallengeRuntimeStore.Current.FixedCharacter + "」を使います。"; Changed?.Invoke(); return false; }
             if (!IsAvailable(ch, Current.fontType, out var reason))
             {
                 CharacterError = reason;
@@ -55,24 +83,34 @@ namespace MojiBattle
             }
             CharacterError = null;
             Current.character = ch.Trim();
+            // 必殺技は文字ごと。別の文字に変えたら、その文字で最初に登録した技を装備する（無ければ標準）
+            if (Current.special?.character != Current.character)
+            {
+                var moves = SpecialMoveLibrary.For(Current.character);
+                Current.special = moves.Count > 0 ? moves[0].Clone() : null;
+            }
             Commit();
             return true;
         }
 
         public void SetFont(FontStyleId font)
         {
+            if (!Editable) return;
             if (!IsAvailable(Current.character, font, out var reason)) { CharacterError = reason; Changed?.Invoke(); return; }
+            CharacterError = null;
             Current.fontType = font;
             Commit();
         }
 
-        public void SetSize(WeaponSize s) { Current.weaponSize = s; Commit(); }
-        public void SetGrip(GripType g) { Current.gripType = g; Commit(); }
-        public void SetGripPosition(float p) { Current.gripPosition = Mathf.Clamp01(p); Current.customGrip = false; Commit(); }
+        public void SetSize(WeaponSize s) { if (!Editable) return; Current.weaponSize = challenge && ChallengeRuntimeStore.Current.FixedSize.HasValue
+            ? ChallengeRuntimeStore.Current.FixedSize.Value : worldCup ? WeaponSize.M : tournament ? WeaponSize.S : s; Commit(); }
+        public void SetGrip(GripType g) { if (!Editable) return; Current.gripType = g; Commit(); }
+        public void SetGripPosition(float p) { if (!Editable) return; Current.gripPosition = Mathf.Clamp01(p); Current.customGrip = false; Commit(); }
 
-        /// <summary>プレビューの字形をクリックして選んだ場所を握る（外接矩形内の正規化座標）。</summary>
+        /// <summary>プレビューで選んだ場所を握る（外接矩形内の正規化座標）。</summary>
         public void SetGripPoint(Vector2 normalized)
         {
+            if (!Editable) return;
             Current.gripPoint = new Vector2(Mathf.Clamp01(normalized.x), Mathf.Clamp01(normalized.y));
             Current.customGrip = true;
             Commit();
@@ -80,12 +118,21 @@ namespace MojiBattle
 
         /// <summary>握る場所を中央（長軸の中央）に戻す。</summary>
         public void ResetGrip() => SetGripPosition(0.5f);
-        public void SetStyle(BattleStyle s) { Current.battleStyle = s; Commit(); }
-        public void SetFlip(WeaponFlip f) { Current.weaponFlip = f; Commit(); }
+        public void SetStyle(BattleStyle s) { if (!Editable) return; Current.battleStyle = s; Commit(); }
+        public void SetFlip(WeaponFlip f) { if (!Editable) return; Current.weaponFlip = f; Commit(); }
+        /// <summary>必殺技を装備する（null で標準の必殺技に戻す）。</summary>
+        public void SetSpecial(SpecialMoveData move) { if (!Editable) return; Current.special = move?.character == Current.character ? move.Clone() : null; Commit(); }
 
         void Commit()
         {
-            BuildRuntimeStore.Set(Side, Current);
+            if(worldCup) WorldCupRuntimeStore.SetDraft(Current);
+            else if(run) RunRuntimeStore.SetBuild(Current);
+            else if (draft) DraftRuntimeStore.SetBuild(Current);
+            else if (challenge) ChallengeRuntimeStore.SetDraft(Current);
+            else if (friend) FriendRoomSession.Instance.SaveDraft(Current);
+            else if (tournament) TournamentRuntimeStore.SetDraft(Current);
+            else BuildRuntimeStore.Set(Side, Current);
+            AchievementStore.Customized();
             Changed?.Invoke();
         }
     }

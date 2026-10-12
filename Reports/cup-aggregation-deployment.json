@@ -1,0 +1,128 @@
+﻿{
+  "id": "dpl_AjNQ55rao16Thg9YTXb8Fm2B2TjC",
+  "name": "moji-fighter-x",
+  "url": "moji-fighter-j723ewivk-swgb1003-5441s-projects.vercel.app",
+  "target": "production",
+  "readyState": "READY",
+  "createdAt": 1791783801779,
+  "duration": {
+    "startTime": 1791783803969,
+    "timeToReady": 8839
+  },
+  "buildMachine": {
+    "cores": 2,
+    "memory": 8192,
+    "machine": "basic",
+    "selectionType": "fixed",
+    "selectionSource": "plan-default"
+  },
+  "aliases": [
+    "moji-fighter-x.vercel.app",
+    "moji-fighter-x-swgb1003-5441s-projects.vercel.app"
+  ],
+  "builds": [
+    {
+      "id": "bld_e84ekj1st",
+      "deploymentId": "dpl_AjNQ55rao16Thg9YTXb8Fm2B2TjC",
+      "entrypoint": ".",
+      "readyState": "READY",
+      "readyStateAt": 1791783801676,
+      "createdAt": 1791783801676,
+      "createdIn": "sfo1",
+      "use": "@vercel/vc-build",
+      "config": {
+        "installCommand": "",
+        "buildCommand": "",
+        "nodeVersion": "24.x",
+        "projectCreatedAt": 1791435509938,
+        "vercelConfig": {
+          "$schema": "https://openapi.vercel.sh/vercel.json",
+          "framework": null,
+          "buildCommand": "",
+          "installCommand": "",
+          "headers": [
+            {
+              "source": "/Build/(.*).gz",
+              "headers": [
+                {
+                  "key": "Content-Encoding",
+                  "value": "gzip"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "public, max-age=31536000, immutable"
+                }
+              ]
+            },
+            {
+              "source": "/Build/(.*).wasm.gz",
+              "headers": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/wasm"
+                }
+              ]
+            },
+            {
+              "source": "/Build/(.*).js.gz",
+              "headers": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/javascript"
+                }
+              ]
+            },
+            {
+              "source": "/Build/(.*).data.gz",
+              "headers": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/octet-stream"
+                }
+              ]
+            },
+            {
+              "source": "/",
+              "headers": [
+                {
+                  "key": "Cache-Control",
+                  "value": "no-cache"
+                }
+              ]
+            },
+            {
+              "source": "/index.html",
+              "headers": [
+                {
+                  "key": "Cache-Control",
+                  "value": "no-cache"
+                }
+              ]
+            },
+            {
+              "source": "/rooms-api/(.*)",
+              "headers": [
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ]
+            }
+          ],
+          "rewrites": [
+            {
+              "source": "/rooms-api/:path*",
+              "destination": "https://moji-fighter-x-rooms.onrender.com/:path*"
+            }
+          ],
+          "name": "moji-fighter-x",
+          "version": 2
+        }
+      },
+      "middleware": [],
+      "output": [],
+      "fingerprint": null
+    }
+  ],
+  "contextName": "swgb1003-5441s-projects"
+}

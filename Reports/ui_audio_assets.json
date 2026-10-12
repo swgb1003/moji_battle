@@ -1,0 +1,16 @@
+[
+  {
+    "key": "title_start",
+    "seconds": 1.49,
+    "removedLeadSeconds": 0.0,
+    "peak": 0.85,
+    "rms": 0.0597
+  },
+  {
+    "key": "battle_start",
+    "seconds": 1.73,
+    "removedLeadSeconds": 0.0,
+    "peak": 0.85,
+    "rms": 0.1232
+  }
+]

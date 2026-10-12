@@ -20,17 +20,27 @@ namespace MojiBattle
         public GripType gripType = GripType.OneHanded;
         [Tooltip("0=字形の外接矩形の端（左／下）、0.5=中央、1=反対の端。内部では安全範囲へ Clamp する")]
         [Range(0f, 1f)] public float gripPosition = 0.5f;
-        [Tooltip("true なら gripPoint（プレビューの字形をクリックして選んだ場所）を握る。false なら gripPosition（長軸上の位置）")]
+        [Tooltip("true なら gripPoint（プレビューでドラッグして選んだ場所）を握る。false なら gripPosition（長軸上の位置）")]
         public bool customGrip;
         [Tooltip("握る場所。字形の外接矩形内の正規化座標（x: 左0→右1、y: 下0→上1）")]
         public Vector2 gripPoint = new Vector2(0.5f, 0.5f);
         public BattleStyle battleStyle = BattleStyle.Aggressive;
         [Tooltip("字形を反転して持つ（なし / 左右 / 上下 / 両方 = 180°回転）。握る場所は反転後の字形で選ぶ")]
         public WeaponFlip weaponFlip = WeaponFlip.None;
+        [Tooltip("装備中の必殺技（AI が技名から設計したもの）。名前が空なら文字に合わせた初期必殺技")]
+        public SpecialMoveData special;
 
         public static FighterBuildData Default(string character) => new FighterBuildData { character = character };
 
-        public FighterBuildData Clone() => (FighterBuildData)MemberwiseClone();
+        public FighterBuildData Clone()
+        {
+            var c = (FighterBuildData)MemberwiseClone();
+            c.special = special?.Clone();
+            return c;
+        }
+
+        /// <summary>この文字で出せる装備中の必殺技（無い・別の文字のものなら null）。</summary>
+        public SpecialMoveData EquippedSpecial => SpecialMoveRules.Sanitize(special, character);
 
         public FighterLoadout ToLoadout() => new FighterLoadout(character, fontType) { build = Clone() };
 
@@ -43,7 +53,7 @@ namespace MojiBattle
     {
         public static string Size(WeaponSize s) => s.ToString();
 
-        /// <summary>握る場所の表示（クリックで選んだ場所は横・縦の位置、長軸指定は割合）。</summary>
+        /// <summary>握る場所の表示（ドラッグで選んだ場所は横・縦の位置、長軸指定は割合）。</summary>
         public static string GripPlace(FighterBuildData b) =>
             b.customGrip ? $"握り 横{Mathf.RoundToInt(b.gripPoint.x * 100f)}%・縦{Mathf.RoundToInt(b.gripPoint.y * 100f)}%"
                          : $"握り{Mathf.RoundToInt(b.gripPosition * 100f)}%";

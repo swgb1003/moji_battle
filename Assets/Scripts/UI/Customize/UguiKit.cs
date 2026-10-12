@@ -68,6 +68,7 @@ namespace MojiBattle
             var img = Box(parent, name, x, y, w, h).gameObject.AddComponent<Image>();
             img.color = color;
             if (outline > 0f) AddOutline(img.gameObject, outline);
+            PaperUi.Surface(img, name, w, h);
             return img;
         }
 
@@ -120,6 +121,11 @@ namespace MojiBattle
             colors.disabledColor = new Color(0.9f, 0.9f, 0.9f, 1f);
             btn.colors = colors;
             btn.targetGraphic = img;
+            PaperUi.Face(img).SetDepth(PaperUi.ButtonDepth);
+            img.gameObject.AddComponent<RetroButtonMotion>();
+            if (string.IsNullOrEmpty(label) && w >= 200 && h >= 110 && parent is RectTransform card
+                && Mathf.Abs(card.rect.width - w) < 1 && Mathf.Abs(card.rect.height - h) < 1)
+                PaperUi.Card(card);
             if (onClick != null) btn.onClick.AddListener(() => onClick());
             var text = Label(img.transform, "Label", label, 0f, 0f, w, h, fontSize, Ink, TextAnchor.MiddleCenter);
             var rt = text.rectTransform;

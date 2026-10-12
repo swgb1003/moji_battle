@@ -1,0 +1,15 @@
+{
+  "baseCommit": "e2b60e25a4a4c7b34759b032832b2829f079bfc5",
+  "team": "team_T9S6jm2dWj9hQHWiULpbSwxx",
+  "project": "prj_dysF5ncQzt0MeAgRoHEDSazVQ3eG",
+  "environment": "production",
+  "sourceSha256": {
+    "Assets/Scripts/UI/DraftScreen.cs": "6fafbca7d368453cba713a291359765ca19221e9428f90fe1bf87c7459407b4a",
+    "Assets/Scripts/UI/ScreenAudioDirector.cs": "eef3882a73b225f765b468aa61bd6edca30fc576c8bcad1c376631caf77a0ad5",
+    "Assets/Scripts/UI/BattleMusicSettings.cs": "c70a530ca7555eb7d7264e00b7dec732d9715acfe8627d4b4e7cafdfb0e2b41f",
+    "Assets/Resources/Audio/BattleMusic.asset": "e2124b5ea6d7de8993bef84c4c4759080c6c1da3f1811b5801327d28f619417a",
+    "Assets/Audio/draft.mp3": "859deb6a9dd4e7c7d47baa984053106644448044d32ae5502b658daa20e5837d",
+    "Assets/Audio/draft.mp3.meta": "83889a28561216da2e03803dc0d25209e0341ccd8957d6e627fbe97a286c7337",
+    "Assets/Tests/PlayMode/DraftFlowTests.cs": "5e5365eea330c575737d6fffdb269eaa0a704fcd5ce43b61af996202c2035267"
+  }
+}

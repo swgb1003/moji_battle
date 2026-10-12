@@ -16,6 +16,7 @@ namespace MojiBattle
         public int comboRemaining;
         public bool attackHadContact;
         public float windupDuration, activeDuration, recoveryDuration;
+        public bool tempoAttack;
         public float swingFromPsi, swingToPsi;
         public AttackStyle attackStyle;
         public float attackReadyAt;
@@ -39,6 +40,21 @@ namespace MojiBattle
         public float smashedAt = -999f;
         /// <summary>叩き落としの狙いの角度 ψ（武器がここまで振り下ろされたら当たりを判定する）</summary>
         public float smashAimPsi;
+        public int aerialStage;
+        public float aerialStartedAt, aerialReadyAt;
+        public float aerialVelocityX;
+
+        /// <summary>跳び斬りで跳び上がった（溜めの前半はかがみ、後半は空中）</summary>
+        public bool leapJumped;
+        public float dashReadyAt, whirlReadyAt;
+        public float rangedReadyAt;
+        public bool rangedReleased;
+        public float rangedJumpY;
+        public bool parryArmed;
+        public float parryOpensAt, parryUntil, parryReadyAt;
+        public float riposteAt = -1f;
+        /// <summary>跳び斬りの跳び上がりの時刻・初速（空中では体をこの放物線に沿わせる）</summary>
+        public float leapJumpTime, leapVx, leapVy;
 
         // 投げ
         /// <summary>武器が手から離れている（投げてから拾うまで）</summary>
@@ -52,6 +68,7 @@ namespace MojiBattle
 
         // 防御・転倒
         public float guardLoad;
+        public float armorPressure;
         public float guardPsiTarget = float.NaN;
         public float knockdownAccum;
         public float stateDurationOverride;
@@ -69,6 +86,9 @@ namespace MojiBattle
 
         // 回避
         public float evadeReadyAt;
+        public float duckReadyAt, feintReadyAt, bindReadyAt, kickReadyAt, wallJumpReadyAt, pickupSlashReadyAt, hookReadyAt;
+        public bool duckCounterPending;
+        public float bindPsi;
         public float evadeEndedAt = -999f;
         public EvadeKind evadeKind;
 
@@ -87,6 +107,7 @@ namespace MojiBattle
 
         public void Decay(float dt, CombatBalance b)
         {
+            armorPressure = Mathf.Max(0f, armorPressure - b.heavyArmorPressureDecay * dt);
             guardLoad = Mathf.Max(0f, guardLoad - b.guardLoadDecayPerSec * dt);
             knockdownAccum = Mathf.Max(0f, knockdownAccum - b.knockdownAccumDecayPerSec * dt);
         }

@@ -1,0 +1,81 @@
+﻿{
+    "environment":  "production",
+    "source":  "working tree with existing changes",
+    "baseCommit":  "e2b60e25a4a4c7b34759b032832b2829f079bfc5",
+    "files":  [
+                  {
+                      "sha256":  "fea4acb150b6a370b44c22178573d49e7b6b4e5ebcfa5ec4000c38bddaa72771",
+                      "path":  "Assets/Scripts/Core/DraftRuntimeStore.cs"
+                  },
+                  {
+                      "sha256":  "47aa24ed51ab91e2feacdbc92a56f2e5161b20bc4c5123b7a9442e6d0d683cdd",
+                      "path":  "Assets/Scripts/Core/GameFlow.cs"
+                  },
+                  {
+                      "sha256":  "c14165bee29b7fd3d2fcb7a15590517382b3fb289d8d5a77413ba08bf387d5d5",
+                      "path":  "Assets/Scripts/Core/BattleBootstrap.cs"
+                  },
+                  {
+                      "sha256":  "5932b7cf427d01a89c540a2878815d299b1b7ef173d0688dac9bc7da00275b05",
+                      "path":  "Assets/Scripts/Customize/FighterCustomizer.cs"
+                  },
+                  {
+                      "sha256":  "7d80257eb798ccea11f7746793a26d58bf3cad6a9d6929c77215ecbdccec8efe",
+                      "path":  "Assets/Scripts/UI/DraftScreen.cs"
+                  },
+                  {
+                      "sha256":  "d59f7311c09210a26f195f995c7e9203684c828f99bd6f22f04f77fb9902a353",
+                      "path":  "Assets/Scripts/UI/DraftResultScreen.cs"
+                  },
+                  {
+                      "sha256":  "225309d3e78070b7b78c95750a7717ed207bb983a97ed51ebad43465b58c1f38",
+                      "path":  "Assets/Scripts/UI/DraftInkRing.cs"
+                  },
+                  {
+                      "sha256":  "9f55eaf83f56c8066324fef3e2ecc676462a5e27353479f5b347f6dcd364e2b3",
+                      "path":  "Assets/Scripts/UI/Customize/DraftCustomize.cs"
+                  },
+                  {
+                      "sha256":  "5787cd9ebf1360074d4cf5d7bfea670a33fb722a02555ef1a260395ab98f9cb8",
+                      "path":  "Assets/Scripts/UI/Customize/CustomizeScreen.cs"
+                  },
+                  {
+                      "sha256":  "98e7bbbed36ab374f1f0efb5e5032406a03a9d459fbaa4ea0fe1488254870ad8",
+                      "path":  "Assets/Scripts/UI/Customize/FighterPreviewController.cs"
+                  },
+                  {
+                      "sha256":  "e205a8c2a00a416fda5004012e98facf44e109560b81b1ad519f610de0b8caf6",
+                      "path":  "Assets/Scripts/UI/ModeSelectScreen.cs"
+                  },
+                  {
+                      "sha256":  "a79b111eba49cafac92672e9431d9b0b8e9f29176891130023fe0ac951b22dd8",
+                      "path":  "Assets/Scripts/UI/TournamentMenuGraphic.cs"
+                  },
+                  {
+                      "sha256":  "257c06ad8151bd60d9677589c781e766fdea2645d3b226ba1b8c86d0fabc1280",
+                      "path":  "Assets/Scripts/UI/BattleHudPresenter.cs"
+                  },
+                  {
+                      "sha256":  "118bbf78bdae0d7ccff21ed768085e446b29a0fa91c226df34801706be1a2c4c",
+                      "path":  "Assets/Scripts/Editor/GlyphBaker.cs"
+                  },
+                  {
+                      "sha256":  "33fca2f5f4d8eba9d3fa087a959d5acffc1a952ad5b8d58e9a3ee540300b52a5",
+                      "path":  "Assets/Scripts/Editor/ProjectSetup.cs"
+                  },
+                  {
+                      "sha256":  "6d07a6110c6e7331c4c01e932ddd4f9aa9323efd10a8757730f3e29a0dc7fcf0",
+                      "path":  "Assets/Scripts/Editor/WebBuild.cs"
+                  },
+                  {
+                      "sha256":  "bc75a007e9d4280434fb7aea04bebdc37e67c0216c822fd1c651c081e8bcc1a0",
+                      "path":  "Assets/Scenes/Draft.unity"
+                  },
+                  {
+                      "sha256":  "eb9b8f7510e13dc2b76c836fb97504a4e74e121c01300676af10dbae2f295167",
+                      "path":  "ProjectSettings/EditorBuildSettings.asset"
+                  }
+              ],
+    "team":  "team_T9S6jm2dWj9hQHWiULpbSwxx",
+    "project":  "prj_dysF5ncQzt0MeAgRoHEDSazVQ3eG"
+}

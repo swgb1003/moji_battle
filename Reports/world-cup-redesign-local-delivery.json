@@ -1,0 +1,76 @@
+{
+  "sourceFilesMatched": 919,
+  "project": {
+    "projectId": "prj_dysF5ncQzt0MeAgRoHEDSazVQ3eG",
+    "orgId": "team_T9S6jm2dWj9hQHWiULpbSwxx",
+    "projectName": "moji-fighter-x"
+  },
+  "baseCommit": "e2b60e25a4a4c7b34759b032832b2829f079bfc5",
+  "verified": [
+    {
+      "file": "Build/2f7abe905ff0b63c5cc2b8d19d5b3a4a.data.gz",
+      "bytes": 99209468,
+      "sha256": "2506ed8015c353ab7044b0483910a58ca245a666bf4e8c02fad5f6f99915ec13"
+    },
+    {
+      "file": "Build/6d8b0a9f8653b8d07209154d8a7a7364.framework.js.gz",
+      "bytes": 84137,
+      "sha256": "db1df8ee3343aa2398403eec8577f2476283b593f977b2f4ce52f2088bb91ab4"
+    },
+    {
+      "file": "Build/9d232b204313295b6ecbda01b7c23dad.wasm.gz",
+      "bytes": 6958143,
+      "sha256": "f41518ac379f91d4e35b243e52f1ffdb0523e118b598cbd46950d436d8d8f30e"
+    },
+    {
+      "file": "Build/e255dc89da852b68f35bf19b3aecd896.loader.js",
+      "bytes": 26454,
+      "sha256": "1ccf7c57d3638cdd44b85b08a6eb27aa536aa51ae11f88f2144b80d43cfe1dc2"
+    },
+    {
+      "file": "Licenses/Brush/OFL.txt",
+      "bytes": 4386,
+      "sha256": "ef7c85c72ae94381c8bc4832ae4e6fbabdeafa2bb8a31313cd75dce95a690256"
+    },
+    {
+      "file": "Licenses/Gothic/OFL.txt",
+      "bytes": 4388,
+      "sha256": "cec239a4ff08f8b4c5691bd45bec938bf2cc6f1c254b9a49a85caf0f92f1ef6c"
+    },
+    {
+      "file": "Licenses/Mincho/OFL.txt",
+      "bytes": 4399,
+      "sha256": "41fba056279be5f45ff9a99e44b7b53897b42732f5806d8e666e0ab49ac6bd38"
+    },
+    {
+      "file": "Licenses/RoundedGothic/OFL.txt",
+      "bytes": 4402,
+      "sha256": "2a20cf7ce1909d8ee1e949095d340f7d7656705f7c810a2d6faf56800ad0cb3d"
+    },
+    {
+      "file": "Licenses/Unicode/LICENSE.txt",
+      "bytes": 2034,
+      "sha256": "8437ba5f4e4c8ae0268c3df5cf106006f2d045ff3452eedd1f27e8eb26c5f327"
+    },
+    {
+      "file": "Licenses/WorldCupHeading/OFL.txt",
+      "bytes": 4301,
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+    },
+    {
+      "file": "build-info.json",
+      "bytes": 102,
+      "sha256": "e92f3ee2ea610990d9a19d21206ebb0d6e9669df0603fae927cd8da51070bd13"
+    },
+    {
+      "file": "index.html",
+      "bytes": 5533,
+      "sha256": "6bb653f642acb0329670b5e43c05bff39f1c09e19ce7e31c8226ae74e765a25b"
+    }
+  ],
+  "build": {
+    "unity": "6000.0.61f1",
+    "version": "1.0",
+    "builtAtUtc": "2026-10-11T16:54:24.8088103Z"
+  }
+}

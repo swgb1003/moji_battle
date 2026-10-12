@@ -15,6 +15,16 @@ namespace MojiBattle
             int n = c.contactCount;
             if (n == 0) return;
             var cp = c.GetContact(0);
+            Owner.Context.Events.Raise(new SurfaceContactEvent
+            {
+                fighter = Owner.Id,
+                isWall = surface.Kind == ArenaSurface.SurfaceKind.Wall,
+                down = Owner.Runtime.IsDown,
+                speed = Mathf.Max(Mathf.Abs(Vector2.Dot(c.relativeVelocity, cp.normal)),
+                    Mathf.Abs(Vector2.Dot(Owner.PreBodyVelocity, cp.normal))),
+                time = Owner.Context.SimTime,
+                point = cp.point,
+            });
             Owner.Context.Env.Report(new EnvContact
             {
                 fighter = Owner,

@@ -1,164 +1,369 @@
-﻿using UnityEngine;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace MojiBattle
 {
-    /// <summary>
-    /// P1 観戦 HUD。上部 140px 相当に名前・HP・残り時間、下部に観戦操作のみ（AI操作ボタンは置かない）。
-    /// カメラに追従するワールド空間要素で描くため、オフスクリーン撮影にも写る。P4 で UGUI + TMP に置き換える。
-    /// </summary>
+    /// <summary>Printed spectator UI with a large, clipped camera view.</summary>
     [DefaultExecutionOrder(100)]
     public sealed class BattleHudPresenter : MonoBehaviour
     {
-        const float RefH = 1080f;
+        public const float ArenaX = 42, ArenaWidth = 1836;
+        public static float ArenaY => GameFlow.WorldCupMode || GameFlow.RunMode || GameFlow.ChallengeMode || GameFlow.DraftMode ? 245 : 185;
+        public static float ArenaHeight => GameFlow.WorldCupMode || GameFlow.RunMode || GameFlow.ChallengeMode || GameFlow.DraftMode ? 726 : 786;
+        public static float GroundViewport => 38f / ArenaHeight;
         MatchDirector director;
         CameraRig rig;
-        readonly Bar[] bars = new Bar[2];
-        readonly HudText[] names = new HudText[2], statsText = new HudText[2], buildText = new HudText[2];
-        HudText timer, center, sub, footer, speed, seedText;
-        readonly float[] trail = new float[2];
-
-        struct Bar { public SpriteRenderer bg, trail, fill; }
-
-        sealed class HudText
-        {
-            public TextMesh tm;
-            public float px, py, h;
-        }
+        RectTransform root, arena;
+        RawImage battleImage;
+        RenderTexture battleTexture;
+        Camera displayCamera;
+        Image groundLine, groundWash;
+        readonly Text[] names = new Text[2], hp = new Text[2];
+        readonly RectTransform[] fill = new RectTransform[2], trail = new RectTransform[2];
+        readonly float[] trailValue = { 1, 1 };
+        readonly UguiKit.ChoiceButton[] speeds = new UguiKit.ChoiceButton[4];
+        Text timer, step, status, center, sub, technique, techniqueEnglish;
+        Image techniqueStripe;
+        GameObject details, announcement, techniqueTag;
+        UguiKit.ChoiceButton pause, again, detailButton;
+        Vector2 techniquePoint;
+        float techniqueLife;
+        bool isTournament;
+        public RawImage BattleImage => battleImage;
+        bool HasLocalInterventions => director.Context.Interventions!=null &&
+            (director.Context.Interventions.Side(0).controller==InterventionController.Local || director.Context.Interventions.Side(1).controller==InterventionController.Local);
+        public RectTransform Arena => arena;
+        public Camera DisplayCamera => displayCamera;
+        public bool DetailsVisible => details != null && details.activeSelf;
 
         public void Bind(MatchDirector d, CameraRig cameraRig)
         {
-            director = d;
-            rig = cameraRig;
-            var t = transform;
-            for (int i = 0; i < 2; i++)
-            {
-                var f = d.Fighters[i];
-                var team = FighterFactory.TeamColor(i);
-                bars[i] = new Bar
-                {
-                    bg = UiKit.Rect(t, "HpBg", FighterFactory.Ink, 50),
-                    trail = UiKit.Rect(t, "HpTrail", Color.white, 51),
-                    fill = UiKit.Rect(t, "HpFill", team, 52),
-                };
-                trail[i] = 1f;
-                var anchor = i == 0 ? TextAnchor.UpperLeft : TextAnchor.UpperRight;
-                string side = i == 0 ? "左・朱" : "右・群青";
-                names[i] = MakeText($"{f.Loadout.grapheme}  {GlyphCatalog.FontDisplayName(f.Loadout.font)}  [{side}]", team, i == 0 ? 64 : 1856, 26, 40, anchor);
-                var s = f.Stats;
-                // カスタマイズの試合はビルド（サイズ / 持ち方 / スタイル）を小さく表示（カスタマイズ仕様 19）
-                string build = f.Mods.customized ? $"{f.Mods.size} / {CustomizeLabels.Grip(f.Mods.grip)} / {f.Mods.gripLabel} / {CustomizeLabels.Style(f.Mods.style)}" : "";
-                buildText[i] = MakeText(build, team, i == 0 ? 64 : 1856, 150, 26, anchor);
-                statsText[i] = MakeText($"攻{s.attack} 防{s.defense} 速{s.speed} 耐{s.durability}  重量{new string('★', s.WeightStars)}  {f.WeightClass}",
-                    FighterFactory.Ink, i == 0 ? 64 : 1856, 116, 24, anchor);
-            }
-            timer = MakeText("60", FighterFactory.Ink, 960, 30, 72, TextAnchor.UpperCenter);
-            center = MakeText("", FighterFactory.Ink, 960, 380, 120, TextAnchor.MiddleCenter);
-            sub = MakeText("", FighterFactory.Ink, 960, 500, 34, TextAnchor.MiddleCenter);
-            footer = MakeText("Space 停止 / 1・2・3 速度 / R・T 再戦 / Z・X・N・M 文字 / C 当たり判定 / D AI / B カスタマイズ",
-                new Color(0.22f, 0.22f, 0.22f), 64, 1040, 24, TextAnchor.LowerLeft);
-            speed = MakeText("1×", FighterFactory.Ink, 1420, 1040, 30, TextAnchor.LowerCenter);
-            seedText = MakeText($"seed {d.Config.seed}", new Color(0.22f, 0.22f, 0.22f), 1856, 1040, 24, TextAnchor.LowerRight);
+            director = d; rig = cameraRig;
+            root = RetroUi.Screen("BattleCanvas", out var canvas, 2);
+            canvas.transform.SetParent(transform, false);
+            // Keep an actual camera rendering Display 1 as well as the offscreen battle camera.
+            // Overlay canvases alone do not suppress the Game view's "No cameras rendering" message.
+            var display = new GameObject("BattleDisplayCamera");
+            display.transform.SetParent(transform, false);
+            displayCamera = display.AddComponent<Camera>();
+            displayCamera.orthographic = true;
+            displayCamera.cullingMask = 0;
+            displayCamera.clearFlags = CameraClearFlags.SolidColor;
+            displayCamera.backgroundColor = RetroUi.Paper;
+            displayCamera.depth = -100;
+            displayCamera.targetDisplay = rig.Cam.targetDisplay;
+            RetroUi.Button(root, "BattleBack", "← 戻る", 72, 35, 138, 30, 22, Back, RetroUi.Ink, false);
+            RetroUi.Block(root, "HeaderRule", 230, 51, 590, 1, RetroUi.Ink);
+            step = RetroUi.Label(root, "BattleStep", "03 / BATTLE", 832, 31, 280, 42, 26, null, TextAnchor.MiddleCenter);
+            RetroUi.Block(root, "HeaderRule", 1130, 51, 550, 1, RetroUi.Ink);
+            RetroUi.Button(root, "BattleSettings", "⚙ 設定", 1480, 29, 170, 42, 24, SettingsScreen.Open, shadow: false);
+            RetroUi.Label(root, "Brand", "MOJI Fighter X", 1684, 32, 160, 40, 20, null, TextAnchor.MiddleRight);
+            RetroUi.Block(root, "HeaderBottom", 42, 81, 1836, 1, RetroUi.Ink);
+            for (int i = 0; i < 2; i++) BuildPlayer(i);
+            float offset=GameFlow.WorldCupMode || GameFlow.RunMode || GameFlow.ChallengeMode || GameFlow.DraftMode?60:0;
+            RetroUi.Block(root, "TimerRule", 808, 102+offset, 1, 66, RetroUi.Rule);
+            RetroUi.Block(root, "TimerRule", 1112, 102+offset, 1, 66, RetroUi.Rule);
+            RetroUi.Label(root, "TimeCaption", "TIME", 885, 86+offset, 152, 25, 21, null, TextAnchor.MiddleCenter);
+            timer = RetroUi.Label(root, "BattleTimer", "60", 883, 103+offset, 152, 79, 74, null, TextAnchor.MiddleCenter);
+            RetroUi.Frame(root, 1048, 128+offset, 60, 32, RetroUi.Red, 1);
+            RetroUi.Label(root, "Automatic", "AUTO", 1048, 128+offset, 60, 32, 20, RetroUi.Red, TextAnchor.MiddleCenter);
+            arena = RetroUi.Group(root, "BattleArena", ArenaX, ArenaY, ArenaWidth, ArenaHeight);
+            arena.gameObject.AddComponent<RectMask2D>();
+            var paper = RetroUi.Group(arena, "ArenaPaper", 0, 0, ArenaWidth, ArenaHeight).gameObject.AddComponent<RawImage>();
+            paper.texture = Resources.Load<Texture2D>("UI/BattlePaper"); paper.raycastTarget = false;
+            groundWash = RetroUi.Block(arena, "GroundWash", 0, ArenaHeight - 38, ArenaWidth, 38, new Color(.85f, .81f, .70f, .23f));
+            groundLine = RetroUi.Block(arena, "GroundLine", 0, ArenaHeight - 40, ArenaWidth, 5, RetroUi.Ink);
+            battleImage = RetroUi.Group(arena, "BattleView", 0, 0, ArenaWidth, ArenaHeight).gameObject.AddComponent<RawImage>();
+            battleImage.raycastTarget = false;
+            // Only hide the stage's renderers. Colliders and simulation remain unchanged.
+            foreach (var sr in transform.Find("Arena").GetComponentsInChildren<SpriteRenderer>()) sr.enabled = false;
+            ResizeTarget();
+            foreach (var f in d.Fighters) f.View.PrintedCallouts = true;
+            BuildTechniqueTag(); BuildAnnouncement(); BuildControls(); BuildDetails();
+            d.Events.Motion += OnMotion; d.Events.Hit += OnHit; d.Events.Guard += OnGuard;
+            RetroUi.Enter(root.gameObject, 0, 0);
         }
 
-        HudText MakeText(string s, Color c, float px, float py, float h, TextAnchor anchor)
+        public void SetRunInfo()
         {
-            var tm = UiKit.Text(transform, "HudText", s, c, 1f, 60, anchor);
-            tm.fontStyle = FontStyle.Bold; // 細字は小さい画面で背景に溶けるため太字
-            tm.alignment = anchor == TextAnchor.UpperLeft || anchor == TextAnchor.LowerLeft ? TextAlignment.Left
-                : anchor == TextAnchor.UpperRight || anchor == TextAnchor.LowerRight ? TextAlignment.Right : TextAlignment.Center;
-            return new HudText { tm = tm, px = px, py = py, h = h };
+            var s=RunRuntimeStore.Current;step.text="RUN / BATTLE";
+            RetroUi.Label(root,"RunBattleRound",$"第{s.round}戦 / 全5戦",740,89,440,54,31,null,TextAnchor.MiddleCenter);
+            names[0].text="あなた / "+s.player.character;names[1].text=s.Opponent.Name;
+            again.image.gameObject.SetActive(false);root.Find("BattleAgainShadow")?.gameObject.SetActive(false);
+            RetroUi.Label(root,"RunBattlePerks",RunUi.Perks(s),70,930,1100,38,23,RetroUi.Muted);
+        }
+        public void SetWorldCupInfo(WorldCupSession s,WorldCupMatch m)
+        {
+            step.text="WORLD CUP / BATTLE";step.rectTransform.anchoredPosition=new Vector2(650,-31);step.rectTransform.sizeDelta=new Vector2(600,42);
+            RetroUi.Label(root,"WorldCupBattleRound",m.Name,520,89,880,54,31,null,TextAnchor.MiddleCenter);
+            names[0].text=(m.LeftId==0?"YOU / ":"COM / ")+s.Entrants[m.LeftId].Build.character;
+            names[1].text=(m.RightId==0?"YOU / ":"COM / ")+s.Entrants[m.RightId].Build.character;
+            again.image.gameObject.SetActive(false);root.Find("BattleAgainShadow")?.gameObject.SetActive(false);
+        }
+        void BuildPlayer(int side)
+        {
+            var f = director.Fighters[side]; var team = RetroUi.Team(side);
+            float offset=GameFlow.WorldCupMode || GameFlow.RunMode || GameFlow.ChallengeMode || GameFlow.DraftMode?60:0;
+            float tileX = side == 0 ? 72 : 1756, textX = side == 0 ? 201 : 1245;
+            RetroUi.Block(root, "PlayerTile" + side, tileX, 93+offset, 92, 83, team);
+            var glyph = RetroUi.Label(root, "PlayerGlyph" + side, f.Loadout.grapheme, tileX, 92+offset, 92, 84, 66, RetroUi.Paper, TextAnchor.MiddleCenter);
+            glyph.font = GlyphFontLibrary.Default.Get(f.Loadout.font).font;
+            string style = f.Mods.customized ? CustomizeLabels.Style(f.Mods.style) : "オート";
+            names[side] = RetroUi.Label(root, "PlayerName" + side, $"PLAYER 0{side + 1}  {f.Loadout.grapheme} / {style}", textX, 94+offset, 474, 32, 22, null,
+                side == 0 ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight);
+            float barX = side == 0 ? 201 : 1294;
+            RetroUi.Frame(root, barX - 2, 133+offset, 429, 29, RetroUi.Ink, 2);
+            trail[side] = RetroUi.Block(root, "HpTrail" + side, barX, 135+offset, 425, 25, RetroUi.Wash).rectTransform;
+            fill[side] = RetroUi.Block(root, "HpFill" + side, barX, 135+offset, 425, 25, team).rectTransform;
+            if (side == 1)
+                foreach (var rect in new[] { trail[side], fill[side] })
+                { rect.pivot = new Vector2(1, 1); rect.anchoredPosition = new Vector2(barX + 425, -135-offset); }
+            hp[side] = RetroUi.Label(root, "HpValue" + side, "", side == 0 ? 644 : 1136, 126+offset, 140, 40, 24, null,
+                side == 0 ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight);
+        }
+
+        void ResizeTarget()
+        {
+            float scale = Mathf.Min(Screen.width / 1920f, Screen.height / 1080f);
+            int h = Mathf.Clamp(Mathf.RoundToInt(ArenaHeight * scale), 256, 1440);
+            int w = Mathf.RoundToInt(h * ArenaWidth / ArenaHeight);
+            if (battleTexture != null && battleTexture.width == w && battleTexture.height == h) return;
+            if (battleTexture != null) { battleTexture.Release(); Destroy(battleTexture); }
+            battleTexture = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32) { name = "BattleArenaTexture", antiAliasing = 2 };
+            battleTexture.Create(); battleImage.texture = battleTexture;
+            rig.Cam.targetTexture = battleTexture;
+            rig.Cam.aspect = ArenaWidth / ArenaHeight;
+            rig.Cam.backgroundColor = Color.clear;
+            rig.Cam.cullingMask = ~(1 << CustomizeScreen.PreviewLayer);
+        }
+
+        void BuildControls()
+        {
+            RetroUi.Block(root, "ControlsRule", 42, 971, 1836, 1, RetroUi.Ink);
+            var dot = RetroUi.Block(root, "LiveDot", 98, 994, 25, 25, RetroUi.Red);
+            dot.sprite = UiKit.DiscSprite;
+            UguiKit.AddOutline(dot.gameObject, 1, RetroUi.Ink);
+            status = RetroUi.Label(root, "BattleStatus", "観戦中", 140, 982, 385, 48, 32);
+            pause = RetroUi.Button(root, "BattlePause", "Ⅱ  一時停止", 718, 983, 211, 46, 24, () => TimeController.SetPaused(!TimeController.Paused), shadow: false);
+            for (int i = 0; i < speeds.Length; i++)
+            {
+                float value = i == 0 ? .5f : i == 1 ? 1 : i == 2 ? 2 : 4;
+                speeds[i] = RetroUi.Button(root, "BattleSpeed" + i, value.ToString("0.#") + "×", 958 + 102 * i, 983, 102, 46, 24,
+                    () => TimeController.SetSpectatorSpeed(value), shadow: false);
+            }
+            detailButton = RetroUi.Button(root, "BattleDetails", "詳細", 1427, 983, 151, 46, 24, ToggleDetails, shadow: false);
+            again = RetroUi.Button(root, "BattleAgain", "もう一度 →", 1604, 983, 240, 40, 24, () => FindFirstObjectByType<BattleBootstrap>()?.RematchSameBuild(), RetroUi.Red);
+        }
+
+        void BuildDetails()
+        {
+            var panel = RetroUi.Group(root, "BattleDetailsPanel", 1000, 425, 840, 528); details = panel.gameObject;
+            RetroUi.Block(panel, "PanelShadow", 8, 8, 840, 528, RetroUi.Ink);
+            RetroUi.Block(panel, "PanelPaper", 0, 0, 840, 528, RetroUi.Paper);
+            RetroUi.Frame(panel, 0, 0, 840, 528, RetroUi.Ink);
+            RetroUi.Label(panel, "DetailsTitle", "対戦の詳細", 32, 15, 580, 60, 34);
+            RetroUi.Button(panel, "BattleDetailsClose", "閉じる ×", 658, 24, 151, 42, 22, ToggleDetails, shadow: false);
+            for (int i = 0; i < 2; i++)
+            {
+                var f = director.Fighters[i]; var s = f.Stats; float x = 32 + i * 390;
+                RetroUi.Label(panel, "DetailPlayer" + i, $"PLAYER 0{i + 1}「{f.Loadout.grapheme}」", x, 83, 360, 44, 28, RetroUi.Team(i));
+                string build = f.Mods.customized ? $"{f.Mods.size} / {CustomizeLabels.Grip(f.Mods.grip)}\n{f.Mods.gripLabel} / {CustomizeLabels.Style(f.Mods.style)}" : "既定の構え";
+                RetroUi.Label(panel, "DetailStats" + i, $"{GlyphCatalog.FontDisplayName(f.Loadout.font)}\n攻撃 {s.attack}    防御 {s.defense}\n速度 {s.speed}    耐久 {s.durability}\n重量 {new string('★', s.WeightStars)}\n{build}", x, 133, 365, 228, 24);
+            }
+            RetroUi.Block(panel, "DetailsRule", 32, 374, 776, 1, RetroUi.Rule);
+            RetroUi.Label(panel, "BattleSeed", $"SEED {director.Config.seed}   /   SPACE : 一時停止\n1・2・3 : 速度    C : 当たり判定    D : AI表示\nK : 必殺技    L : 声援・踏ん張り（声援ゲージを消費）", 32, 390, 770, 98, 20, RetroUi.Muted);
+            details.SetActive(false);
+        }
+
+        public void ToggleDetails()
+        {
+            details.SetActive(!details.activeSelf);
+            if (details.activeSelf) RetroUi.Enter(details, 0, 12);
+            RetroUi.Selected(detailButton, details.activeSelf, RetroUi.Ink);
+        }
+
+        void BuildAnnouncement()
+        {
+            var panel = RetroUi.Group(root, "BattleAnnouncement", 430, 400, 1060, 250); announcement = panel.gameObject;
+            RetroUi.Block(panel, "AnnouncementPaper", 0, 0, 1060, 250, new Color(RetroUi.Paper.r, RetroUi.Paper.g, RetroUi.Paper.b, .95f));
+            RetroUi.Frame(panel, 0, 0, 1060, 250, RetroUi.Ink, 2);
+            center = RetroUi.Label(panel, "BattleAnnouncementTitle", "", 24, 20, 1012, 130, 84, null, TextAnchor.MiddleCenter);
+            sub = RetroUi.Label(panel, "BattleAnnouncementSubtitle", "", 32, 155, 996, 75, 26, null, TextAnchor.MiddleCenter);
+            announcement.SetActive(false);
+        }
+
+        void BuildTechniqueTag()
+        {
+            var tag = RetroUi.Group(arena, "PrintedTechniqueTag", 0, 0, 240, 100); techniqueTag = tag.gameObject;
+            RetroUi.Block(tag, "TagPaper", 0, 0, 240, 100, RetroUi.Paper);
+            RetroUi.Frame(tag, 0, 0, 240, 100, RetroUi.Ink, 1);
+            techniqueStripe = RetroUi.Block(tag, "TagStripe", 0, 0, 7, 100, RetroUi.Red);
+            technique = RetroUi.Label(tag, "TechniqueName", "突き", 12, 5, 216, 58, 34, RetroUi.Red, TextAnchor.MiddleCenter);
+            technique.resizeTextForBestFit = true; technique.resizeTextMinSize = 22; technique.resizeTextMaxSize = 34;
+            techniqueEnglish = RetroUi.Label(tag, "TechniqueEnglish", "THRUST", 12, 62, 216, 26, 18, null, TextAnchor.MiddleCenter);
+            techniqueEnglish.resizeTextForBestFit = true; techniqueEnglish.resizeTextMinSize = 12; techniqueEnglish.resizeTextMaxSize = 18;
+            tag.localRotation = Quaternion.Euler(0, 0, 8); techniqueTag.SetActive(false);
+        }
+
+        public void ShowTechnique(string japanese, string english, int fighter, Vector2 point)
+        {
+            if (!isActiveAndEnabled || !director.Fighters[fighter].View.isActiveAndEnabled) return;
+            technique.text = japanese.TrimEnd('！'); techniqueEnglish.text = english;
+            technique.color = techniqueStripe.color = RetroUi.Team(fighter);
+            techniquePoint = point; techniqueLife = .65f;
+            techniqueTag.SetActive(true); RetroUi.Enter(techniqueTag, 0, 12);
+        }
+        void OnMotion(FighterMotionEvent e)
+        {
+            string label = AttackTechniques.Callout(e.kind);
+            string english = e.kind == FighterMotionKind.GroundWave ? "GROUND WAVE"
+                : e.kind == FighterMotionKind.StrokeShot ? "STROKE SHOT"
+                : e.kind == FighterMotionKind.AerialChase ? "AIR CHASE"
+                : e.kind == FighterMotionKind.AerialSlash ? "AIR SLASH"
+                : e.kind == FighterMotionKind.AerialSmash ? "AIR FINISH"
+                : e.kind == FighterMotionKind.BindCounter ? "BIND COUNTER" : e.kind.ToString().ToUpperInvariant();
+            if (label.Length > 0) ShowTechnique(label, english, e.fighter, director.Fighters[e.fighter].HeadWorld);
+        }
+        void OnHit(HitEvent e)
+        {
+            fill[e.defender]?.GetComponent<PaperFaceEffect>()?.Impact();
+            root.Find("PlayerTile" + e.defender)?.GetComponent<PaperFaceEffect>()?.Impact();
+            if (e.style == AttackStyle.Thrust) ShowTechnique("突き", "THRUST", e.attacker, e.point);
+            else if (e.style == AttackStyle.Bash) ShowTechnique("盾当て", "BASH", e.attacker, e.point);
+        }
+        void OnGuard(GuardEvent e)
+        {
+            if (e.parried) ShowTechnique("受け流し", "PARRY", e.defender, e.point);
+        }
+
+        public void SetTournamentInfo(TournamentSession session, TournamentMatch match)
+        {
+            isTournament = true; step.text = TournamentSession.RoundName(match.Round) + $"  /  {session.Wins}/3勝";
+            names[0].text = $"YOU  {director.Config.left.grapheme}";
+            names[1].text = session.Entrants[match.RightId].Name + $"  {director.Config.right.grapheme}";
+            again.button.interactable = false; again.label.text = "大会対戦中";
+        }
+        public void SetFriendInfo(int side)
+        {
+            step.text = "FRIEND BATTLE";
+            for (int i = 0; i < 2; i++) names[i].text = (i == side ? "YOU " : "FRIEND ") + director.Fighters[i].Loadout.grapheme;
+            pause.button.interactable = false; pause.label.text = "オンライン対戦";
+            foreach (var speed in speeds) speed.button.interactable = false;
+            again.button.interactable = false; again.label.text = "ルーム対戦中";
+        }
+        public void SetChallengeInfo()
+        {
+            var d=ChallengeRuntimeStore.Current;
+            step.text="05 / CHALLENGE / BATTLE";
+            step.rectTransform.anchoredPosition=new Vector2(640,-31);step.rectTransform.sizeDelta=new Vector2(640,42);
+            foreach(Transform child in root)if(child.name=="HeaderRule")
+            {
+                var rect=child.GetComponent<RectTransform>();
+                if(rect.anchoredPosition.x<800)rect.sizeDelta=new Vector2(410,1);
+                else {rect.anchoredPosition=new Vector2(1280,-51);rect.sizeDelta=new Vector2(160,1);}
+            }
+            var banner=RetroUi.Group(root,"ChallengeBattleBanner",580,92,760,50);
+            RetroUi.Block(banner,"MissionPaper",0,0,760,50,RetroUi.Paper);
+            RetroUi.Frame(banner,0,0,760,50,RetroUi.Rule,1);
+            RetroUi.Block(banner,"MissionStripe",0,0,4,50,RetroUi.Red);
+            var label=RetroUi.Label(banner,"ChallengeBattleCondition",$"{d.Id+1:00}　{d.Name} ｜ 条件：{d.Condition}",16,0,728,50,23,null,TextAnchor.MiddleCenter);
+            label.resizeTextForBestFit=true;label.resizeTextMinSize=18;label.resizeTextMaxSize=23;
+            label.horizontalOverflow=HorizontalWrapMode.Overflow;label.verticalOverflow=VerticalWrapMode.Truncate;
+            for(int i=0;i<2;i++)names[i].text=(i==0?"あなた":"COM")+" / "+director.Fighters[i].Loadout.grapheme+" / "+CustomizeLabels.StyleShort(director.Fighters[i].Mods.style);
+            again.button.gameObject.SetActive(false);root.Find("BattleAgainShadow").gameObject.SetActive(false);
+        }
+        public void SetDraftInfo()
+        {
+            step.text="DRAFT / BATTLE";
+            step.rectTransform.anchoredPosition=new Vector2(720,-31);step.rectTransform.sizeDelta=new Vector2(480,42);
+            DraftUi.Score(root,580,91,760);
+            for(int i=0;i<2;i++)names[i].text=(i==0?"あなた":"COM")+" / "+director.Fighters[i].Loadout.grapheme+" / "+CustomizeLabels.StyleShort(director.Fighters[i].Mods.style);
+            again.button.gameObject.SetActive(false);root.Find("BattleAgainShadow").gameObject.SetActive(false);
+        }
+        void Back()
+        {
+            if(GameFlow.WorldCupMode){GameFlow.BackFromWorldCupBattle();return;}
+            if(GameFlow.RunMode){GameFlow.BackFromRunBattle();return;}
+            if(GameFlow.DraftMode)
+            { if(DraftRuntimeStore.BackToBuild())GameFlow.ToDraftBuild();else GameFlow.ToDraftPicks(); return; }
+            if (GameFlow.FriendMode) { FriendRoomSession.Instance.BackToLobby(); return; }
+            if (GameFlow.ChallengeMode) { GameFlow.ToChallengePrepare(); return; }
+            if (!isTournament) GameFlow.ToCustomize();
+            else if (director.Ended) GameFlow.ToTournamentBoard();
+            else GameFlow.ToModeSelect();
         }
 
         void LateUpdate()
         {
             if (director == null || rig == null || rig.Cam == null) return;
-            var cam = rig.Cam;
-            float u = 2f * cam.orthographicSize / RefH;
-            float refW = RefH * cam.aspect;
-            Vector3 origin = cam.transform.position + new Vector3(-refW * 0.5f * u, RefH * 0.5f * u, 10f);
-            Vector3 W(float px, float py) => origin + new Vector3(px * u * (refW / 1920f), -py * u, 0f);
-
+            ResizeTarget();
+            float groundY = (1 - rig.Cam.WorldToViewportPoint(Vector3.zero).y) * ArenaHeight;
+            groundLine.gameObject.SetActive(groundY >= 0 && groundY <= ArenaHeight);
+            groundLine.rectTransform.anchoredPosition = new Vector2(0, -groundY - 2);
+            float floorY = Mathf.Clamp(groundY, 0, ArenaHeight);
+            groundWash.rectTransform.anchoredPosition = new Vector2(0, -floorY);
+            groundWash.rectTransform.sizeDelta = new Vector2(ArenaWidth, ArenaHeight - floorY);
             for (int i = 0; i < 2; i++)
             {
-                var rt = director.Fighters[i].Runtime;
-                float ratio = Mathf.Clamp01(rt.hp / rt.maxHp);
-                trail[i] = Mathf.MoveTowards(Mathf.Max(trail[i], ratio), ratio, Time.unscaledDeltaTime * 0.6f);
-                float barW = 720f, barH = 34f, y = 78f;
-                float x0 = i == 0 ? 64f : 1856f - barW;
-                SetRect(bars[i].bg, W(x0 + barW * 0.5f, y + barH * 0.5f), barW * u * refW / 1920f + 4f * u, barH * u + 4f * u);
-                float trailW = barW * trail[i], fillW = barW * ratio;
-                // 左は右側から、右は左側から減る（中央から外へ）
-                float tx = i == 0 ? x0 + trailW * 0.5f : x0 + barW - trailW * 0.5f;
-                float fx = i == 0 ? x0 + fillW * 0.5f : x0 + barW - fillW * 0.5f;
-                SetRect(bars[i].trail, W(tx, y + barH * 0.5f), trailW * u * refW / 1920f, barH * u);
-                SetRect(bars[i].fill, W(fx, y + barH * 0.5f), fillW * u * refW / 1920f, barH * u);
-                Place(names[i], W, u, cam);
-                Place(statsText[i], W, u, cam);
-                Place(buildText[i], W, u, cam);
+                var r = director.Fighters[i].Runtime;
+                float ratio = Mathf.Clamp01(r.hp / r.maxHp);
+                trailValue[i] = Mathf.MoveTowards(Mathf.Max(trailValue[i], ratio), ratio, Time.unscaledDeltaTime * .45f);
+                fill[i].sizeDelta = new Vector2(425 * ratio, 25);
+                trail[i].sizeDelta = new Vector2(425 * trailValue[i], 25);
+                hp[i].text = $"{Mathf.CeilToInt(Mathf.Max(0, r.hp))} / {Mathf.CeilToInt(r.maxHp)}";
             }
-
-            timer.tm.text = director.Overtime ? "延長" : Mathf.CeilToInt(director.TimeRemaining).ToString("00");
-            Place(timer, W, u, cam);
-
-            string big = "", small = "";
-            if (director.CountdownRemaining > 0f)
+            timer.text = director.Overtime ? "延長" : Mathf.CeilToInt(director.TimeRemaining).ToString("00");
+            timer.color = !director.Ended && director.TimeRemaining <= 10 ? RetroUi.Red : RetroUi.Ink;
+            pause.label.text = TimeController.Paused ? "▶  再開" : "Ⅱ  一時停止";
+            status.text = director.Ended ? "試合終了" : TimeController.Paused ? "一時停止中" : HasLocalInterventions ? "観戦＋応援中" : "観戦中";
+            for (int i = 0; i < speeds.Length; i++) RetroUi.Selected(speeds[i], Mathf.Approximately(TimeController.SpectatorSpeed, i == 0 ? .5f : i == 1 ? 1 : i == 2 ? 2 : 4), RetroUi.Ink);
+            if (techniqueLife > 0 && !TimeController.Paused) techniqueLife -= Time.unscaledDeltaTime;
+            techniqueTag.SetActive(techniqueLife > 0 && !director.Ended);
+            if (techniqueTag.activeSelf)
             {
-                int n = Mathf.CeilToInt(director.CountdownRemaining);
-                big = n.ToString();
-                small = "完全オート戦闘 — 予想しながら観戦";
+                Vector3 p = rig.Cam.WorldToViewportPoint(techniquePoint + Vector2.up * 1.2f);
+                techniqueTag.GetComponent<RectTransform>().anchoredPosition = new Vector2(Mathf.Clamp(p.x * ArenaWidth - 120, 20, ArenaWidth - 260),
+                    -Mathf.Clamp((1 - p.y) * ArenaHeight - 85, 30, ArenaHeight - 145));
             }
-            else if (director.Clock < 0.8f && !director.Ended && director.Config.durationSeconds > 0f && director.StepCount > 5) big = "FIGHT!";
-            if (director.Overtime && director.OvertimeElapsed < 1.5f && !director.Ended) { big = "延長戦"; small = "先に当てた方の勝ち"; }
-            if (director.KoInProgress && !director.Ended) big = "K.O.";
+            UpdateAnnouncement();
+        }
+
+        void UpdateAnnouncement()
+        {
+            string title = "", caption = "";
+            bool involved = HasLocalInterventions;
+            if (director.CountdownRemaining > 0)
+            {
+                title = Mathf.CeilToInt(director.CountdownRemaining).ToString();
+                if (GameSettings.ShowInstructions) caption = involved ? "オート戦闘　K 必殺 ／ L 声援・踏ん張り" : "完全オート戦闘";
+            }
+            else if (director.Clock < .8f && !director.Ended && director.StepCount > 5) title = "FIGHT!";
+            if (director.KoInProgress && !director.Ended) title = "K.O.";
+            if (director.Overtime && director.OvertimeElapsed < 1.5f && !director.Ended) { title = "延長戦"; caption = "先に当てた方の勝ち"; }
             if (director.Ended)
             {
                 var r = director.Result;
-                string reason = r.finishReason.StartsWith("SUDDEN") ? "延長戦" : r.finishReason.StartsWith("TIME") ? "TIME UP" : r.finishReason == "DOUBLE_KO" ? "DOUBLE K.O." : "K.O.";
-                if (r.winner < 0) big = $"{reason}  引き分け";
-                else
-                {
-                    var w = director.Fighters[r.winner];
-                    big = $"「{w.Loadout.grapheme}」の勝ち  {reason}";
-                    center.tm.color = FighterFactory.TeamColor(r.winner);
-                }
-                var m0 = r.metrics[0];
-                var m1 = r.metrics[1];
-                small = $"{r.elapsedSeconds:F1}秒  残HP {r.hpRemaining[0]:F0} / {r.hpRemaining[1]:F0}  与ダメ {m0.damageDealt:F0} / {m1.damageDealt:F0}  " +
-                        $"ガード {m0.guards} / {m1.guards}  最大吹っ飛び {m0.maxKnockbackDistance:F1} / {m1.maxKnockbackDistance:F1}";
+                title = r.winner < 0 ? "DRAW" : $"「{director.Fighters[r.winner].Loadout.grapheme}」の勝ち";
+                center.color = r.winner < 0 ? RetroUi.Ink : RetroUi.Team(r.winner);
+                string reason = r.finishReason.StartsWith("TIME") ? "TIME UP" : r.finishReason.StartsWith("SUDDEN") ? "延長戦" : "K.O.";
+                caption = $"{reason}   /   {r.elapsedSeconds:F1}秒\n残HP {r.hpRemaining[0]:F0} / {r.hpRemaining[1]:F0}   与ダメ {r.metrics[0].damageDealt:F0} / {r.metrics[1].damageDealt:F0}";
             }
-            else center.tm.color = FighterFactory.Ink;
-            center.tm.text = big;
-            sub.tm.text = small;
-            Place(center, W, u, cam);
-            Place(sub, W, u, cam);
-            speed.tm.text = TimeController.Paused ? "一時停止中" : $"{TimeController.SpectatorSpeed:0.#}×";
-            Place(speed, W, u, cam);
-            Place(footer, W, u, cam);
-            Place(seedText, W, u, cam);
+            else center.color = RetroUi.Ink;
+            bool visible = title.Length > 0;
+            if (visible && !announcement.activeSelf) { announcement.SetActive(true); RetroUi.Enter(announcement, 0, 12); }
+            else if (!visible) announcement.SetActive(false);
+            center.text = title; sub.text = caption;
         }
 
-        static void SetRect(SpriteRenderer sr, Vector3 pos, float w, float h)
+        void OnDestroy()
         {
-            sr.transform.position = pos;
-            sr.transform.localScale = new Vector3(Mathf.Max(0f, w), h, 1f);
-        }
-
-        static void Place(HudText t, System.Func<float, float, Vector3> W, float u, Camera cam)
-        {
-            t.tm.transform.position = W(t.px, t.py);
-            UiKit.FitText(t.tm, t.h * u, cam);
-        }
-
-        void OnGUI()
-        {
-            // 観戦操作のみ。AI・棒人間への操作は置かない。
-            float s = Screen.height / RefH;
-            float bw = 120 * s, bh = 44 * s, y = Screen.height - bh - 56 * s;
-            float x = Screen.width * 0.5f - (bw * 4 + 30 * s) * 0.5f;
-            if (GUI.Button(new Rect(x, y, bw, bh), TimeController.Paused ? "再開" : "一時停止")) TimeController.SetPaused(!TimeController.Paused);
-            if (GUI.Button(new Rect(x + (bw + 10 * s), y, bw, bh), "0.5×")) TimeController.SetSpectatorSpeed(0.5f);
-            if (GUI.Button(new Rect(x + (bw + 10 * s) * 2, y, bw, bh), "1×")) TimeController.SetSpectatorSpeed(1f);
-            if (GUI.Button(new Rect(x + (bw + 10 * s) * 3, y, bw, bh), "2×")) TimeController.SetSpectatorSpeed(2f);
+            if (director != null) { director.Events.Motion -= OnMotion; director.Events.Hit -= OnHit; director.Events.Guard -= OnGuard; }
+            if (battleTexture != null)
+            {
+                if (rig != null && rig.Cam != null && rig.Cam.targetTexture == battleTexture)
+                { rig.Cam.targetTexture = null; rig.Cam.ResetAspect(); }
+                battleTexture.Release(); Destroy(battleTexture);
+            }
         }
     }
 }

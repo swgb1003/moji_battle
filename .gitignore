@@ -4,6 +4,7 @@
 /[Bb]uild/
 /[Bb]uilds/
 /[Ll]ogs/
+/Tools/__pycache__/
 /[Uu]ser[Ss]ettings/
 /[Mm]emoryCaptures/
 *.csproj
@@ -16,9 +17,13 @@
 .vs/
 .vscode/
 /Reports/*.xml
+/Reports/*.pid
 /Reports/Seq/
 /Reports/trace_*.txt
 /Assets/InitTestScene*.unity
 /Assets/InitTestScene*.unity.meta
 Reports/p2_round_robin_only.md
 TestResults-*.xml
+
+# Server dependencies
+Server/node_modules/

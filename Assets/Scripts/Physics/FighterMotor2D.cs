@@ -33,15 +33,37 @@ namespace MojiBattle
                     }
                     break;
                 case FighterState.AttackWindup:
+                    if (AttackTechniques.IsRanged(rt.attackStyle)) { if (rt.leapJumped) return; target = 0f; break; }
+                    if (AttackTechniques.IsKick(rt.attackStyle) || rt.attackStyle == AttackStyle.HookPull) { target = 0f; break; }
+                    if (rt.attackStyle == AttackStyle.DashSlash || rt.attackStyle == AttackStyle.Whirl) { target = 0f; break; }
                     if (rt.attackStyle == AttackStyle.Smash) return; // 叩き落としの踏み込みの勢いを保つ
+                    if (rt.attackStyle == AttackStyle.Leap) { if (rt.leapJumped) return; target = 0f; break; } // かがむ間は止まる
                     if (rt.attackStyle == AttackStyle.Thrust) target = -walk * 0.35f * toward; // 半歩引く
                     else target = walk * (self.WeightClass == WeightClass.Heavy ? 0.3f : 0.25f) * toward;
                     break;
                 case FighterState.AttackActive:
-                    if (rt.attackStyle == AttackStyle.Thrust || rt.attackStyle == AttackStyle.Bash || rt.attackStyle == AttackStyle.Smash) return; // 踏み込み・体当たりの勢いを保つ
-                    if (rt.attackStyle == AttackStyle.Spin) { target = 0f; break; } // 回転斬りはその場で回る
+                    if (AttackTechniques.IsRanged(rt.attackStyle)) { if (rt.leapJumped) return; target = 0f; break; }
+                    if (AttackTechniques.IsKick(rt.attackStyle) || rt.attackStyle == AttackStyle.HookPull) { target = 0f; break; }
+                    if (rt.attackStyle == AttackStyle.DashSlash)
+                    {
+                        if (rt.stateTime < b.dashDriveSeconds && self.DistanceToOpponent > Mathf.Max(0.55f, self.AttackRange * 0.6f)) return;
+                        target = 0f;
+                        break;
+                    }
+                    if (rt.attackStyle == AttackStyle.Thrust || rt.attackStyle == AttackStyle.Bash || rt.attackStyle == AttackStyle.Smash || rt.attackStyle == AttackStyle.Leap) return; // 踏み込み・体当たりの勢いを保つ
+                    if (rt.attackStyle == AttackStyle.Spin || rt.attackStyle == AttackStyle.Whirl) { target = 0f; break; } // 回転中は踏ん張る
                     // 振りの間は踏み込みを維持（重い武器の反動で後ろへ流されないよう踏ん張る）
                     target = Mathf.Max(walk * 0.6f, StatCalculator.Lerp01(b.stepInSpeedLight, b.stepInSpeedHeavy, self.Stats.weightScore)) * toward;
+                    break;
+                case FighterState.AttackRecovery:
+                    // The late reset can overlap a short spacing step; the damaging follow-through stays planted.
+                    if (!rt.tempoAttack || rt.stateTime < Mathf.Max(b.followThroughHitSeconds, rt.recoveryDuration * .55f)
+                        || rt.attackStyle != AttackStyle.Overhead && rt.attackStyle != AttackStyle.Rising
+                        && rt.attackStyle != AttackStyle.Thrust && rt.attackStyle != AttackStyle.Sweep
+                        && rt.attackStyle != AttackStyle.LowSweep) break;
+                    if (!rt.attackHadContact && self.BackSpace > .7f) target = -walk * .55f * toward;
+                    else if (rt.attackHadContact && !self.Opponent.Runtime.IsDown
+                        && self.DistanceToOpponent > Mathf.Max(.6f, self.AttackRange * .65f)) target = walk * .45f * toward;
                     break;
             }
 
@@ -50,7 +72,8 @@ namespace MojiBattle
 
             float totalMass = self.Body.mass + self.WeaponBody.mass;
             float vx = self.Body.linearVelocity.x;
-            float force = Mathf.Clamp(totalMass * (target - vx) * b.moveAccelGain, -totalMass * b.maxMoveAccel, totalMass * b.maxMoveAccel);
+            float accel = b.combatTempo ? b.tempoMoveAccelScale : 1f;
+            float force = Mathf.Clamp(totalMass * (target - vx) * b.moveAccelGain * accel, -totalMass * b.maxMoveAccel * accel, totalMass * b.maxMoveAccel * accel);
             self.Body.AddForce(new Vector2(force, 0f), ForceMode2D.Force);
         }
 
@@ -64,6 +87,14 @@ namespace MojiBattle
             if (!self.IsGrounded) return;
             float dv = self.TowardOpponent * speed - self.Body.linearVelocity.x;
             self.AddVelocity(new Vector2(dv, 0f));
+        }
+
+        /// <summary>盾当ての体当たり。</summary>
+        public void ApplyTechniqueDash()
+        {
+            float distance = Mathf.Max(0f, self.DistanceToOpponent - Mathf.Max(0.55f, self.AttackRange * 0.6f));
+            float speed = Mathf.Min(self.Balance.dashSpeed, Mathf.Min(distance, self.Balance.dashMaxTravel) / self.Balance.dashDriveSeconds);
+            ApplyDash(speed);
         }
 
         /// <summary>盾当ての体当たり。</summary>
@@ -92,6 +123,9 @@ namespace MojiBattle
             Vector2 v = kind == EvadeKind.Backstep
                 ? new Vector2(-toward * b.backstepSpeed, b.backstepHop)
                 : new Vector2(toward * b.hopOverSpeedX, b.hopOverSpeedY);
+            if (kind == EvadeKind.Duck) v = new Vector2(0f, 0f);
+            if (kind == EvadeKind.WallJump) v = new Vector2(toward * b.wallJumpSpeedX, b.wallJumpSpeedY);
+            if (kind == EvadeKind.RecoverRoll) v = new Vector2(-toward * b.backstepSpeed * .75f, b.backstepHop * .5f);
             self.AddVelocity(v - self.Body.linearVelocity);
         }
     }

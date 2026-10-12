@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-07 15:01:02Z" end-time="2026-10-07 15:01:04Z" duration="1.6128982">
+  <test-suite type="TestSuite" id="1118" name="MOJI Fighter X" fullname="MOJI Fighter X" runstate="Runnable" testcasecount="91" result="Passed" start-time="2026-10-07 15:01:02Z" end-time="2026-10-07 15:01:04Z" duration="1.612898" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1114" name="MojiBattle.Tests.PlayMode.dll" fullname="C:/Users/swgb1/Documents/ChatGPT/文字武器バトル/Reports/UI/TournamentBorderVerification/Library/ScriptAssemblies/MojiBattle.Tests.PlayMode.dll" runstate="Runnable" testcasecount="91" result="Passed" start-time="2026-10-07 15:01:02Z" end-time="2026-10-07 15:01:04Z" duration="1.601307" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="21388" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1115" name="MojiBattle" fullname="MojiBattle" runstate="Runnable" testcasecount="91" result="Passed" start-time="2026-10-07 15:01:02Z" end-time="2026-10-07 15:01:04Z" duration="1.596997" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1116" name="Tests" fullname="MojiBattle.Tests" runstate="Runnable" testcasecount="91" result="Passed" start-time="2026-10-07 15:01:02Z" end-time="2026-10-07 15:01:04Z" duration="1.595249" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1097" name="TournamentBorderCapture" fullname="MojiBattle.Tests.TournamentBorderCapture" classname="MojiBattle.Tests.TournamentBorderCapture" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-10-07 15:01:02Z" end-time="2026-10-07 15:01:04Z" duration="1.591232" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1098" name="CaptureEmptyAndPopulatedBracketBorders" fullname="MojiBattle.Tests.TournamentBorderCapture.CaptureEmptyAndPopulatedBracketBorders" methodname="CaptureEmptyAndPopulatedBracketBorders" classname="MojiBattle.Tests.TournamentBorderCapture" runstate="Runnable" seed="1462319214" result="Passed" start-time="2026-10-07 15:01:02Z" end-time="2026-10-07 15:01:04Z" duration="1.577151" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[Saving results to: C:\Users\swgb1\Documents\ChatGPT\文字武器バトル\Reports\UI\tournament-border-capture.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

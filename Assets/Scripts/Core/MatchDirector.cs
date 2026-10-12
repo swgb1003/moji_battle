@@ -21,10 +21,28 @@ namespace MojiBattle
         public bool Ended { get; private set; }
         public MatchResult Result { get; private set; }
         public int StepCount { get; private set; }
+        public int WeaponLockBreaks { get; private set; }
+        public bool SilentSimulation { get; set; }
+        public bool CollectStepTelemetry { get; set; } = true;
+        public bool FastSimulationQueries { get; set; }
+        public bool CapturePresentationPose { get; set; } = true;
+        public bool RemotePlayback { get; set; }
+        public void ApplyRemoteClock(FriendBattleFrame frame)
+        {
+            if (!RemotePlayback) return;
+            Clock = frame.clock; CountdownRemaining = frame.countdown; KoInProgress = frame.ko; Overtime = frame.overtime;
+            Context.SimTime = frame.simTime; Context.MatchClock = frame.clock;
+            Context.MatchOver = frame.ended || frame.ko;
+            if (frame.ended && !Ended) { Ended = true; Result = frame.result; Events.Raise(Result); MatchEnded?.Invoke(Result); }
+        }
         public event Action<MatchResult> MatchEnded;
 
         float koRemaining;
         float stackedTime, clinchTime;
+        float weaponLockTime, weaponLockUntil = -1f;
+        Vector2 weaponLockPositions;
+        bool trackingWeaponLock;
+        readonly ContactPoint2D[] weaponLockContacts = new ContactPoint2D[64];
         float unstackRestoreAt = -1f;
         Fighter unstackTop;
         bool unstackBoth;
@@ -36,13 +54,18 @@ namespace MojiBattle
         readonly bool[] looseApplied = new bool[2];
         /// <summary>連携（打ち上げ → 叩き落とし）の間、体どうし・自分の武器と相手の体の衝突を外しているか</summary>
         readonly bool[] comboGhost = new bool[2];
+        /// <summary>跳び斬りの空中動作で、相手の武器に足が乗らないよう体を素通りさせる。</summary>
+        readonly bool[] leapGhost = new bool[2];
         readonly System.Collections.Generic.HashSet<Collider2D> weaponColliderSet = new System.Collections.Generic.HashSet<Collider2D>();
+        readonly System.Collections.Generic.Dictionary<Collider2D,int> colliderKinds = new System.Collections.Generic.Dictionary<Collider2D,int>();
         /// <summary>武器どうしの衝突が今有効か（接触ゲート）</summary>
         public bool WeaponsColliding { get; private set; } = true;
         readonly System.Collections.Generic.List<(Collider2D a, Collider2D b)> separatedPairs = new System.Collections.Generic.List<(Collider2D, Collider2D)>();
+        readonly System.Collections.Generic.Dictionary<(Collider2D,Collider2D),int> separatedCounts = new System.Collections.Generic.Dictionary<(Collider2D,Collider2D),int>();
         readonly ContactPoint2D[] footContacts = new ContactPoint2D[24];
         int pendingWinner;
         string pendingReason;
+        readonly KoEvent[] finishSources = new KoEvent[2];
 
         public CombatEvents Events => Context.Events;
         public float TimeRemaining => Mathf.Max(0f, Config.durationSeconds - Clock);
@@ -65,19 +88,28 @@ namespace MojiBattle
             ctx.RestoreCollision = (x, y) => SetPair(x, y, false);
             ctx.ApplyWeaponGate = UpdateWeaponGate;
             ctx.SeparateWeaponOverlaps = SeparateWeaponOverlaps;
-            foreach (var f in Fighters)
-            foreach (var c in f.WeaponColliders) weaponColliderSet.Add(c);
+            ctx.Ranged = new RangedCombat(this);
+            ctx.Events.Hit += RecordFinishHit;
+            ctx.Events.EnvImpact += RecordFinishImpact;
+            for(int i=0;i<Fighters.Length;i++)
+            {
+                foreach(var c in Fighters[i].WeaponColliders){weaponColliderSet.Add(c);colliderKinds[c]=1<<i;}
+                foreach(var c in Fighters[i].BodyColliders)colliderKinds[c]=4<<i;
+            }
             UpdateWeaponGate();
             foreach (var f in Fighters) f.CachePreStep();
         }
 
-        void FixedUpdate()
+        void FixedUpdate() => SimulateStep();
+
+        /// <summary>Also used by the tournament's COM matches, with this component disabled.</summary>
+        public void SimulateStep()
         {
-            if (Context == null) return;
+            if (Context == null || RemotePlayback) return;
             float dt = Time.fixedDeltaTime;
             var ctx = Context;
             StepCount++;
-            double t0 = Time.realtimeSinceStartupAsDouble;
+            double t0 = CollectStepTelemetry ? Time.realtimeSinceStartupAsDouble : 0;
 
             if (!Ended && !KoInProgress)
             {
@@ -110,12 +142,16 @@ namespace MojiBattle
             }
 
             ctx.SimTime += dt;
+            ctx.Interventions?.Tick(ctx.SimTime, dt);
             if (StepCount % 5 == 0) ResolveDeepPenetration();
             ResolveStandingOnWeapon();
             ResolveStacking(dt);
             ResolveHingeStretch(dt);
+            ResolveWeaponLock(dt);
             Fighters[0].Tick(ctx.SimTime, dt);
             Fighters[1].Tick(ctx.SimTime, dt);
+            // 向き反転・横振りの Collider 拡張で壁をまたいだら、壁の外側へ押し出される前に戻す。
+            ResolveOutsideSideWalls();
             UpdateLooseWeapons();
             UpdateComboGhost();
             UpdateWeaponGate();
@@ -124,20 +160,83 @@ namespace MojiBattle
             Fighters[1].CachePreStep();
             // 専用物理ワールドを 1 ステップ進める（接触コールバックはこの中で報告キューへ入る）
             if (physicsScene.IsValid()) physicsScene.Simulate(dt);
-            Fighters[0].CapturePose();
-            Fighters[1].CapturePose();
+            ctx.Ranged.Tick(dt);
+            // 回転する長い武器は連続衝突判定でも薄い壁を越えることがある。
+            ResolveOutsideSideWalls();
+            if(CapturePresentationPose){Fighters[0].CapturePose();Fighters[1].CapturePose();}
             DetectOverlapHits();
-            if (!Ended)
+            if (!Ended && CollectStepTelemetry)
             {
                 Telemetry.Step(dt);
                 Telemetry.RecordStepCost((float)((Time.realtimeSinceStartupAsDouble - t0) * 1000.0));
             }
         }
 
+        /// <summary>
+        /// 壁の外へ出た Collider を場内へ戻す。保持中は本体と武器を同量動かし、握りを引き伸ばさない。
+        /// 通常の壁接触の微小なめり込みは物理に任せ、明確に越えた場合だけ補正する。
+        /// </summary>
+        void ResolveOutsideSideWalls()
+        {
+            foreach (var f in Fighters)
+            {
+                var bounds = f.BodyColliders[0].bounds;
+                foreach (var c in f.BodyColliders) bounds.Encapsulate(c.bounds);
+                bool attached = !f.Runtime.weaponDetached;
+                if (attached) bounds.Encapsulate(WeaponBounds(f));
+                float dx = SideWallCorrection(bounds);
+                if (dx != 0f)
+                {
+                    f.Body.position += new Vector2(dx, 0f);
+                    StopOutwardVelocity(f.Body, dx);
+                    if (attached)
+                    {
+                        f.WeaponBody.position += new Vector2(dx, 0f);
+                        StopOutwardVelocity(f.WeaponBody, dx);
+                        f.WeaponBody.angularVelocity = f.Body.angularVelocity;
+                        SeparateWeaponOverlaps(f);
+                    }
+                    // 補正前の場外姿勢へ描画補間しない。
+                    f.CapturePose();
+                    f.CapturePose();
+                    Telemetry?.Note($"RESOLVE side-wall {f.Id} dx={dx:F2}");
+                }
+                if (!attached)
+                {
+                    float weaponDx = SideWallCorrection(WeaponBounds(f));
+                    if (weaponDx == 0f) continue;
+                    f.WeaponBody.position += new Vector2(weaponDx, 0f);
+                    StopOutwardVelocity(f.WeaponBody, weaponDx);
+                    f.WeaponBody.angularVelocity = 0f;
+                    f.CapturePose();
+                    f.CapturePose();
+                }
+            }
+        }
+
+        float SideWallCorrection(Bounds bounds)
+        {
+            const float tolerance = 0.12f, margin = 0.04f;
+            float half = Context.ArenaHalfWidth;
+            if (bounds.min.x < -half - tolerance) return -half + margin - bounds.min.x;
+            if (bounds.max.x > half + tolerance) return half - margin - bounds.max.x;
+            return 0f;
+        }
+
+        static void StopOutwardVelocity(Rigidbody2D body, float correction)
+        {
+            var velocity = body.linearVelocity;
+            if (velocity.x * correction >= 0f) return;
+            velocity.x = 0f;
+            body.linearVelocity = velocity;
+        }
+
         void Update()
         {
+            if (SilentSimulation) return;
             TimeController.Tick(Time.unscaledDeltaTime);
-            if (KoInProgress && !Ended && !TimeController.Paused)
+            if (RemotePlayback) return;
+            if (KoInProgress && !Ended && !TimeController.Paused && !TimeController.FreezeActive)
             {
                 koRemaining -= Time.unscaledDeltaTime;
                 if (koRemaining <= 0f)
@@ -206,6 +305,82 @@ namespace MojiBattle
             stackedTime = 0f;
         }
 
+        /// <summary>Large glyphs can interlock while their owners are well outside body-clinch range.</summary>
+        void ResolveWeaponLock(float dt)
+        {
+            var a = Fighters[0]; var b = Fighters[1];
+            if (weaponLockUntil >= 0f)
+            {
+                if (Context.SimTime < weaponLockUntil) return;
+                weaponLockUntil = -1f;
+                SetBodyVsWeapon(a, b, false);
+                SetBodyVsWeapon(b, a, false);
+            }
+            bool heavyDuel = a.HeavyTempoEnabled && b.HeavyTempoEnabled;
+            bool eligible = Context.AiEnabled && !Context.MatchOver
+                && Mathf.Max(a.Weapon.maxSide, b.Weapon.maxSide) >= 2.2f
+                && LockEligible(a, heavyDuel) && LockEligible(b, heavyDuel)
+                && Context.SimTime - Context.LastDamageTime >= 2f;
+            bool contact = eligible && (TouchesOpponent(a) || TouchesOpponent(b));
+            bool moved = trackingWeaponLock && (Mathf.Abs(a.X - weaponLockPositions.x) > .2f
+                || Mathf.Abs(b.X - weaponLockPositions.y) > .2f);
+            if (!contact || moved)
+            {
+                trackingWeaponLock = false; weaponLockTime = 0f;
+                return;
+            }
+            if (!trackingWeaponLock)
+            {
+                trackingWeaponLock = true;
+                weaponLockPositions = new Vector2(a.X, b.X);
+            }
+            weaponLockTime += dt;
+            if (weaponLockTime < (heavyDuel ? .55f : .75f)) return;
+
+            trackingWeaponLock = false; weaponLockTime = 0f;
+            weaponLockUntil = Context.SimTime + .65f;
+            WeaponLockBreaks++;
+            SetBodyVsWeapon(a, b, true);
+            SetBodyVsWeapon(b, a, true);
+            UpdateWeaponGate();
+            float side = a.X <= b.X ? -1f : 1f;
+            foreach (var f in Fighters)
+            {
+                f.Brain.OnWeaponLockBroken(Context.SimTime);
+                float direction = f == a ? side : -side;
+                float room = Context.ArenaHalfWidth - .5f - direction * f.X;
+                // A heavy windup/recovery can itself be the interlock. Give both
+                // bodies and their held weapons the same recoil rather than
+                // leaving them motionless until the attack phase eventually ends.
+                if (room > .25f && (f.Runtime.CanBeControlled || heavyDuel))
+                    f.AddVelocity(new Vector2(direction * 2.2f - f.Body.linearVelocity.x, 0f));
+                Context.Events.Raise(new FighterMotionEvent { fighter = f.Id, kind = FighterMotionKind.BindEscape, time = Context.SimTime });
+            }
+            Telemetry?.Note("RESOLVE weapon-lock");
+        }
+
+        static bool LockEligible(Fighter f, bool heavyDuel)
+        {
+            var s = f.Runtime.state;
+            // Large weapons can prop both owners just above the floor. Waiting
+            // for grounded=true there keeps a stationary interlock alive forever.
+            bool nearFloor = heavyDuel && f.Body.position.y < .5f;
+            return (f.IsGrounded || nearFloor) && !f.Runtime.weaponDetached && (s == FighterState.Approach || s == FighterState.Guard
+                || s == FighterState.AttackWindup || s == FighterState.AttackActive || s == FighterState.AttackRecovery);
+        }
+
+        bool TouchesOpponent(Fighter f)
+        {
+            int count = f.WeaponBody.GetContacts(weaponLockContacts);
+            for (int i = 0; i < count; i++)
+            {
+                var c = weaponLockContacts[i];
+                var other = c.collider != null && c.collider.attachedRigidbody == f.WeaponBody ? c.otherCollider : c.collider;
+                if (other != null && (other.attachedRigidbody == f.Opponent.Body || other.attachedRigidbody == f.Opponent.WeaponBody)) return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// 相手の武器の上に足で乗ってしまった場合（槍を踏みつけて相手がガードも攻撃もできなくなる等）、
         /// 0.5 秒だけその体と相手の武器の衝突を外して下へ落とす。
@@ -216,6 +391,14 @@ namespace MojiBattle
             {
                 var f = Fighters[i];
                 var opp = f.Opponent;
+                // 跳び斬りの頂点・振り下ろしは意図した空中動作。足元の接触で保持トルクを抜かない。
+                var rt = f.Runtime;
+                if (rt.attackStyle == AttackStyle.Leap && rt.leapJumped
+                    && (rt.state == FighterState.AttackWindup || rt.state == FighterState.AttackActive || rt.state == FighterState.AttackRecovery))
+                {
+                    perchedTime[i] = 0f;
+                    continue;
+                }
                 // 浮いたまま静止している時間は、落とす処理の最中も数え続ける
                 bool hanging = !f.Runtime.IsDown && f.Body.position.y > 0.5f && Mathf.Abs(f.Body.linearVelocity.y) < 0.4f;
                 if (dropRestoreAt[i] >= 0f)
@@ -271,11 +454,18 @@ namespace MojiBattle
             var b = Fighters[1];
             bool want;
             // 落ちている武器は障害物にしない
-            if (a.Runtime.weaponPassThrough || b.Runtime.weaponPassThrough || a.Runtime.WeaponLoose || b.Runtime.WeaponLoose) want = false;
+            if (Context.SimTime < weaponLockUntil || a.Runtime.weaponPassThrough || b.Runtime.weaponPassThrough || a.Runtime.WeaponLoose || b.Runtime.WeaponLoose) want = false;
             else if (!Context.Balance.weaponsCollideOnlyWhenEngaged) want = true;
-            else want = Blockable(a, b) || Blockable(b, a);
+            else want = (a.Runtime.state == FighterState.Bind && b.Runtime.state == FighterState.Bind)
+                || Blockable(a, b) || Blockable(b, a);
             if (want == WeaponsColliding) return;
             WeaponsColliding = want;
+            if(!want && FastSimulationQueries)
+            {
+                separatedCounts.Clear();
+                foreach(var pair in separatedPairs)
+                {separatedCounts.TryGetValue(pair,out int count);separatedCounts[pair]=count+1;}
+            }
             foreach (var x in a.WeaponColliders)
             foreach (var y in b.WeaponColliders)
             {
@@ -283,10 +473,18 @@ namespace MojiBattle
                 else
                 {
                     Physics2D.IgnoreCollision(x, y, true);
-                    separatedPairs.Remove((x, y));
-                    separatedPairs.Remove((y, x));
+                    RemoveGatedPair(x,y);
+                    RemoveGatedPair(y,x);
                 }
             }
+        }
+
+        void RemoveGatedPair(Collider2D x,Collider2D y)
+        {
+            var pair=(x,y);
+            if(!FastSimulationQueries){separatedPairs.Remove(pair);return;}
+            if(!separatedCounts.TryGetValue(pair,out int count) || count==0)return;
+            separatedPairs.Remove(pair);separatedCounts[pair]=count-1;
         }
 
         /// <summary>
@@ -392,8 +590,20 @@ namespace MojiBattle
                 var f = Fighters[i];
                 var rt = f.Runtime;
                 var s = rt.state;
-                bool want = !rt.IsDown && (rt.launchConnectedAt >= 0f
-                            || (rt.attackStyle == AttackStyle.Smash && (s == FighterState.AttackWindup || s == FighterState.AttackActive || s == FighterState.AttackRecovery)));
+                bool wallJumping = s == FighterState.Evade && rt.evadeKind == EvadeKind.WallJump;
+                bool leaping = wallJumping || rt.aerialStage > 0 || (rt.attackStyle == AttackStyle.Leap && rt.leapJumped && !rt.IsDown
+                               && (s == FighterState.AttackWindup || s == FighterState.AttackActive || s == FighterState.AttackRecovery));
+                if (leaping != leapGhost[i])
+                {
+                    leapGhost[i] = leaping;
+                    foreach (var bc in f.BodyColliders)
+                    foreach (var w in f.Opponent.WeaponColliders) SetGhost(bc, w, leaping);
+                }
+                bool want = !rt.IsDown && (wallJumping || rt.aerialStage > 0 || rt.launchConnectedAt >= 0f
+                            || (rt.attackStyle == AttackStyle.Smash && (s == FighterState.AttackWindup || s == FighterState.AttackActive || s == FighterState.AttackRecovery))
+                            // 跳び斬り: 跳んでいる間は相手の上に乗らないよう素通りさせる（当たりは重なりで判定）
+                            || (rt.attackStyle == AttackStyle.Leap && ((s == FighterState.AttackWindup && rt.leapJumped) || s == FighterState.AttackActive
+                                || (s == FighterState.AttackRecovery && !f.IsGrounded))));
                 if (want == comboGhost[i]) continue;
                 comboGhost[i] = want;
                 var opp = f.Opponent;
@@ -415,15 +625,30 @@ namespace MojiBattle
         /// <summary>落ちている武器と相手の体の組・連携中の組（他の安定化処理が衝突を戻さないようにする）。</summary>
         bool LooseBlocked(Collider2D x, Collider2D y)
         {
+            if(FastSimulationQueries && Context.SimTime>=weaponLockUntil && !looseApplied[0] && !looseApplied[1]
+                && !comboGhost[0] && !comboGhost[1] && !leapGhost[0] && !leapGhost[1])return false;
+            int xKind=0,yKind=0;
+            if(FastSimulationQueries){colliderKinds.TryGetValue(x,out xKind);colliderKinds.TryGetValue(y,out yKind);}
             for (int i = 0; i < 2; i++)
             {
                 var f = Fighters[i];
-                bool xw = System.Array.IndexOf(f.WeaponColliders, x) >= 0, yw = System.Array.IndexOf(f.WeaponColliders, y) >= 0;
-                bool xo = System.Array.IndexOf(f.Opponent.BodyColliders, x) >= 0, yo = System.Array.IndexOf(f.Opponent.BodyColliders, y) >= 0;
-                if ((looseApplied[i] || comboGhost[i]) && ((xw && yo) || (yw && xo))) return true;
+                bool xw = FastSimulationQueries?(xKind&(1<<i))!=0:System.Array.IndexOf(f.WeaponColliders, x) >= 0;
+                bool yw = FastSimulationQueries?(yKind&(1<<i))!=0:System.Array.IndexOf(f.WeaponColliders, y) >= 0;
+                bool xo = FastSimulationQueries?(xKind&(4<<(1-i)))!=0:System.Array.IndexOf(f.Opponent.BodyColliders, x) >= 0;
+                bool yo = FastSimulationQueries?(yKind&(4<<(1-i)))!=0:System.Array.IndexOf(f.Opponent.BodyColliders, y) >= 0;
+                if (leapGhost[i])
+                {
+                    bool xb = FastSimulationQueries?(xKind&(4<<i))!=0:System.Array.IndexOf(f.BodyColliders, x) >= 0;
+                    bool yb = FastSimulationQueries?(yKind&(4<<i))!=0:System.Array.IndexOf(f.BodyColliders, y) >= 0;
+                    bool xow = FastSimulationQueries?(xKind&(1<<(1-i)))!=0:System.Array.IndexOf(f.Opponent.WeaponColliders, x) >= 0;
+                    bool yow = FastSimulationQueries?(yKind&(1<<(1-i)))!=0:System.Array.IndexOf(f.Opponent.WeaponColliders, y) >= 0;
+                    if ((xb && yow) || (yb && xow)) return true;
+                }
+                if ((Context.SimTime < weaponLockUntil || looseApplied[i] || comboGhost[i]) && ((xw && yo) || (yw && xo))) return true;
                 if (comboGhost[i])
                 {
-                    bool xb = System.Array.IndexOf(f.BodyColliders, x) >= 0, yb = System.Array.IndexOf(f.BodyColliders, y) >= 0;
+                    bool xb = FastSimulationQueries?(xKind&(4<<i))!=0:System.Array.IndexOf(f.BodyColliders, x) >= 0;
+                    bool yb = FastSimulationQueries?(yKind&(4<<i))!=0:System.Array.IndexOf(f.BodyColliders, y) >= 0;
                     if ((xb && yo) || (yb && xo)) return true;
                 }
             }
@@ -595,9 +820,12 @@ namespace MojiBattle
                 if (f.Runtime.state != FighterState.KO) f.Knockdown.EnterKO(Context.SimTime);
                 point = f.ChestWorld;
             }
-            Events.Raise(new KoEvent { winner = outcome, point = point, time = Context.SimTime });
+            var finish = outcome >= 0 ? finishSources[1 - outcome] : default;
+            finish.winner = outcome; finish.point = point; finish.time = Context.SimTime;
+            if (outcome < 0) finish.finish = FinishKind.DoubleKO;
+            Events.Raise(finish);
             var b = Context.Balance;
-            if (TimeController.PresentationEffectsEnabled)
+            if (!SilentSimulation && TimeController.PresentationEffectsEnabled)
             {
                 koRemaining = b.koPresentationSeconds;
                 TimeController.SetKoSlow(true, b.koTimeScale);
@@ -605,6 +833,20 @@ namespace MojiBattle
             else Finish(pendingWinner, pendingReason);
         }
 
+        void RecordFinishHit(HitEvent e)
+        {
+            bool impact = AttackTechniques.IsKick(e.style) || e.style == AttackStyle.Bash
+                || e.style == AttackStyle.GroundWave;
+            finishSources[e.defender] = new KoEvent { style = e.style,
+                finish = e.style == AttackStyle.Smash ? FinishKind.Ground : impact ? FinishKind.Impact : FinishKind.Slash,
+                direction = e.style == AttackStyle.Thrust ? new Vector2(Fighters[e.attacker].Facing, 0)
+                    : new Vector2(Fighters[e.attacker].Facing, -.65f) };
+        }
+        void RecordFinishImpact(EnvImpactEvent e)
+        {
+            finishSources[e.fighter] = new KoEvent { finish = e.isWall ? FinishKind.Impact : FinishKind.Ground,
+                style = AttackStyle.Smash, direction = e.isWall ? Vector2.right : Vector2.down };
+        }
         void TimeUp()
         {
             var l = Fighters[0].Runtime;
@@ -646,7 +888,8 @@ namespace MojiBattle
 
         void OnDestroy()
         {
-            if (KoInProgress && !Ended) TimeController.SetKoSlow(false, 1f);
+            if (Context != null) { Events.Hit -= RecordFinishHit; Events.EnvImpact -= RecordFinishImpact; }
+            if (!SilentSimulation && KoInProgress && !Ended) TimeController.SetKoSlow(false, 1f);
         }
     }
 }

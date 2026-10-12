@@ -18,6 +18,13 @@ namespace MojiBattle.EditorTools
         const string ScenePath = "Assets/Scenes/Battle.unity";
         const string TitleScenePath = "Assets/Scenes/Title.unity";
         const string CustomizeScenePath = "Assets/Scenes/Customize.unity";
+        const string ModeSelectScenePath = "Assets/Scenes/ModeSelect.unity";
+        const string TournamentScenePath = "Assets/Scenes/Tournament.unity";
+        const string FriendRoomScenePath = "Assets/Scenes/FriendRoom.unity";
+        const string ChallengeScenePath = "Assets/Scenes/Challenges.unity";
+        const string DraftScenePath = "Assets/Scenes/Draft.unity";
+        const string RunScenePath = "Assets/Scenes/Run.unity";
+        const string WorldCupScenePath="Assets/Scenes/WorldCup.unity";
 
         [MenuItem("MojiBattle/Setup P1 Battle Scene")]
         public static void Run()
@@ -29,6 +36,13 @@ namespace MojiBattle.EditorTools
             Directory.CreateDirectory("Assets/Scenes");
             CreateUiScene<TitleScreen>(TitleScenePath, "TitleScreen");
             CreateUiScene<CustomizeScreen>(CustomizeScenePath, "CustomizeScreen");
+            CreateUiScene<ModeSelectScreen>(ModeSelectScenePath, "ModeSelectScreen");
+            CreateUiScene<TournamentScreen>(TournamentScenePath, "TournamentScreen");
+            CreateUiScene<FriendRoomScreen>(FriendRoomScenePath, "FriendRoomScreen");
+            CreateUiScene<ChallengeScreen>(ChallengeScenePath, "ChallengeScreen");
+            CreateUiScene<DraftScreen>(DraftScenePath, "DraftScreen");
+            CreateUiScene<RunScreen>(RunScenePath, "RunScreen");
+            CreateUiScene<WorldCupScreen>(WorldCupScenePath,"WorldCupScreen");
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
@@ -45,15 +59,23 @@ namespace MojiBattle.EditorTools
             EditorBuildSettings.scenes = new[]
             {
                 new EditorBuildSettingsScene(TitleScenePath, true),
+                new EditorBuildSettingsScene(ModeSelectScenePath, true),
                 new EditorBuildSettingsScene(CustomizeScenePath, true),
+                new EditorBuildSettingsScene(TournamentScenePath, true),
                 new EditorBuildSettingsScene(ScenePath, true),
+                new EditorBuildSettingsScene(FriendRoomScenePath, true),
+                new EditorBuildSettingsScene(ChallengeScenePath, true),
+                new EditorBuildSettingsScene(DraftScenePath, true),
+                new EditorBuildSettingsScene(RunScenePath, true),
+                new EditorBuildSettingsScene(WorldCupScenePath,true),
             };
 
             PlayerSettings.defaultScreenWidth = 1920;
             PlayerSettings.defaultScreenHeight = 1080;
-            PlayerSettings.productName = "文字武器オートバトル";
+            PlayerSettings.productName = "MOJI Fighter X";
             Time.fixedDeltaTime = TimeController.BaseFixedDelta;
             AssetDatabase.SaveAssets();
+            AchievementSetup.Prepare();
             Debug.Log("[MojiBattle] Setup complete: " + ScenePath);
         }
 
@@ -72,6 +94,20 @@ namespace MojiBattle.EditorTools
             EditorSceneManager.SaveScene(scene, path);
         }
 
+        /// <summary>Add the new mode scenes without regenerating existing scenes or balance assets.</summary>
+        [MenuItem("MojiBattle/Setup Tournament Scenes")]
+        public static void SetupTournamentScenes()
+        {
+            if (!File.Exists(ModeSelectScenePath)) CreateUiScene<ModeSelectScreen>(ModeSelectScenePath, "ModeSelectScreen");
+            if (!File.Exists(TournamentScenePath)) CreateUiScene<TournamentScreen>(TournamentScenePath, "TournamentScreen");
+            var scenes = new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            foreach (var path in new[] { ModeSelectScenePath, TournamentScenePath })
+                if (!scenes.Exists(s => s.path == path)) scenes.Add(new EditorBuildSettingsScene(path, true));
+            EditorBuildSettings.scenes = scenes.ToArray();
+            AssetDatabase.SaveAssets();
+            Debug.Log("[MojiBattle] Tournament scenes ready.");
+        }
+
         static T EnsureAsset<T>(string path) where T : ScriptableObject
         {
             var a = AssetDatabase.LoadAssetAtPath<T>(path);
@@ -80,6 +116,50 @@ namespace MojiBattle.EditorTools
             a = ScriptableObject.CreateInstance<T>();
             AssetDatabase.CreateAsset(a, path);
             return a;
+        }
+        [MenuItem("MojiBattle/Setup Challenge Scene")]
+        public static void SetupChallengeScene()
+        {
+            if (!File.Exists(ChallengeScenePath)) CreateUiScene<ChallengeScreen>(ChallengeScenePath,"ChallengeScreen");
+            var scenes=new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            if (!scenes.Exists(s=>s.path==ChallengeScenePath)) scenes.Add(new EditorBuildSettingsScene(ChallengeScenePath,true));
+            EditorBuildSettings.scenes=scenes.ToArray(); AssetDatabase.SaveAssets();
+        }
+        [MenuItem("MojiBattle/Setup Draft Scene")]
+        public static void SetupDraftScene()
+        {
+            GlyphBaker.BakeDraft();
+            if (!File.Exists(DraftScenePath)) CreateUiScene<DraftScreen>(DraftScenePath,"DraftScreen");
+            var scenes=new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            if (!scenes.Exists(s=>s.path==DraftScenePath)) scenes.Add(new EditorBuildSettingsScene(DraftScenePath,true));
+            EditorBuildSettings.scenes=scenes.ToArray(); AssetDatabase.SaveAssets();
+        }
+        [MenuItem("MojiBattle/Setup Run Scene")]
+        public static void SetupRunScene()
+        {
+            if(!File.Exists(RunScenePath))CreateUiScene<RunScreen>(RunScenePath,"RunScreen");
+            var scenes=new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            if(!scenes.Exists(s=>s.path==RunScenePath))scenes.Add(new EditorBuildSettingsScene(RunScenePath,true));
+            EditorBuildSettings.scenes=scenes.ToArray();AssetDatabase.SaveAssets();
+        }
+        [MenuItem("MojiBattle/Setup World Cup Scene")]
+        public static void SetupWorldCupScene()
+        {
+            if(!File.Exists(WorldCupScenePath))CreateUiScene<WorldCupScreen>(WorldCupScenePath,"WorldCupScreen");
+            var scenes=new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            if(!scenes.Exists(s=>s.path==WorldCupScenePath))scenes.Add(new EditorBuildSettingsScene(WorldCupScenePath,true));
+            EditorBuildSettings.scenes=scenes.ToArray();AssetDatabase.SaveAssets();
+        }
+        [MenuItem("MojiBattle/Setup Friend Room Scene")]
+        public static void SetupFriendRoomScene()
+        {
+            if (!File.Exists(FriendRoomScenePath)) CreateUiScene<FriendRoomScreen>(FriendRoomScenePath, "FriendRoomScreen");
+            var scenes = new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            if (!scenes.Exists(s => s.path == FriendRoomScenePath)) scenes.Add(new EditorBuildSettingsScene(FriendRoomScenePath, true));
+            EditorBuildSettings.scenes = scenes.ToArray();
+            // HTTP is available only in development players; public release endpoints should use HTTPS.
+            PlayerSettings.insecureHttpOption = InsecureHttpOption.DevelopmentOnly;
+            AssetDatabase.SaveAssets();
         }
     }
 }

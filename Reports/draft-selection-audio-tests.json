@@ -1,0 +1,35 @@
+{
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "cases": [
+    {
+      "name": "MojiBattle.Tests.DraftFlowTests.ClickedCandidateStaysSelectedAcrossHoverAndFocusUntilAnotherActivation",
+      "result": "Passed"
+    },
+    {
+      "name": "MojiBattle.Tests.DraftFlowTests.DraftGuideAndPicksLoopSuppliedMusicAcrossSettingsAndReturnToCustomizeMusic",
+      "result": "Passed"
+    },
+    {
+      "name": "MojiBattle.Tests.DraftFlowTests.FullSeriesMenuPickBuildVsBattleResultsAndRestartPreserveSavedBuilds",
+      "result": "Passed"
+    },
+    {
+      "name": "MojiBattle.Tests.ScreenAudioTests.AudioCreatedInLoadedTitle_StartsMusicWithoutAnotherSceneTransition",
+      "result": "Passed"
+    },
+    {
+      "name": "MojiBattle.Tests.ScreenAudioTests.CustomizeBattleStart_PlaysDoubleTaiko_AndStopsMenuDuringCountdown",
+      "result": "Passed"
+    },
+    {
+      "name": "MojiBattle.Tests.ScreenAudioTests.TitleStart_SwitchesMusic_AndMetalCueSurvivesSceneChange",
+      "result": "Passed"
+    },
+    {
+      "name": "MojiBattle.Tests.ScreenAudioTests.TournamentEntry_PlaysTaiko_AndBracketUsesTournamentMusic",
+      "result": "Passed"
+    }
+  ]
+}

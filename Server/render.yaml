@@ -1,0 +1,23 @@
+# Use this Blueprint from a repository containing only the Server directory's files.
+services:
+  - type: web
+    name: moji-fighter-x-rooms
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: PORT
+        value: "8787"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ALLOWED_ORIGIN
+        value: https://moji-fighter-x.vercel.app,https://moji-fighter-*-swgb1003-5441s-projects.vercel.app
+      # Secret: set in the Render dashboard (never commit the value).
+      - key: ANTHROPIC_API_KEY
+        sync: false

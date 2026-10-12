@@ -138,7 +138,7 @@ namespace MojiBattle.Tests
         public void NineGlyphStatsAreSpreadAndFollowTargetTendency()
         {
             var stats = Nine.ToDictionary(g => g, g => StatCalculator.Compute(Load(g), B));
-            Assert.Greater(stats.Values.Max(s => s.attack) - stats.Values.Min(s => s.attack), 30, "攻撃がほぼ同値");
+            Assert.That(stats.Values.Max(s => s.attack) - stats.Values.Min(s => s.attack), Is.InRange(20, 30), "攻撃の個性は残し、密度による極端な差を抑える");
             Assert.Greater(stats.Values.Max(s => s.speed) - stats.Values.Min(s => s.speed), 30, "速度がほぼ同値");
             Assert.Greater(stats.Values.Max(s => s.defense) - stats.Values.Min(s => s.defense), 20, "防御がほぼ同値");
             var bySpeed = stats.OrderByDescending(kv => kv.Value.speed).Select(kv => kv.Key).ToList();
@@ -150,6 +150,32 @@ namespace MojiBattle.Tests
             Assert.Greater(bySpeed.IndexOf("鬱"), 6, "鬱は速度下位");
             var classes = stats.Values.Select(s => StatCalculator.Classify(s.weightScore, B)).Distinct().Count();
             Assert.GreaterOrEqual(classes, 2, "重量クラスが1種類しかない");
+        }
+
+        [Test]
+        public void GlyphsShareHealthBudget_AndKeepDifferentPhysicalWeights()
+        {
+            var values = Nine.Select(g => StatCalculator.Compute(Load(g), B)).ToArray();
+            Assert.LessOrEqual(values.Max(s => s.maxHp) / values.Min(s => s.maxHp), 1.2f, "密度だけでHPに大差を付けない");
+            Assert.LessOrEqual((float)values.Max(s => s.attack) / values.Min(s => s.attack), 1.65f);
+            Assert.Greater(values.Max(s => s.weaponMass) / values.Min(s => s.weaponMass), 2f, "吹き飛ばしに使う物理的な重さは残す");
+        }
+
+        [Test]
+        public void PrecisionComesFromShape_RegardlessOfNameOrAxis()
+        {
+            var slender = new GlyphDefinitionRuntime { grapheme = "arbitrary", features = new GlyphFeatures { inkBounds = new RectInt(0, 0, 180, 30) }, normalized = new NormalizedGlyphFeatures { A = 10 } };
+            float precision = StatCalculator.Precision(slender);
+            Assert.Greater(precision, .8f);
+            slender.grapheme = "鬱";
+            slender.features.inkBounds = new RectInt(0, 0, 30, 180);
+            Assert.AreEqual(precision, StatCalculator.Precision(slender));
+            slender.features.inkBounds = new RectInt(0, 0, 180, 180);
+            Assert.AreEqual(0f, StatCalculator.Precision(slender));
+            slender.features.inkBounds = new RectInt(0, 0, 180, 30);
+            slender.normalized = new NormalizedGlyphFeatures { A = 100 };
+            Assert.AreEqual(0f, StatCalculator.Precision(slender));
+            Assert.AreEqual(0f, StatCalculator.Precision(null));
         }
 
         /// <summary>同じ設定では同じ値になる（ベイク結果 = マスクの再解析）。Collider は 64 個以下。</summary>

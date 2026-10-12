@@ -18,15 +18,16 @@ MonoBehaviour:
   mH: 0.1
   mMin: 5
   mMax: 100
-  atkM: 0.6
-  atkC: 0.4
-  atkMin: 30
-  atkMax: 100
+  atkBase: 45
+  atkM: 0.2
+  atkC: 0.1
+  atkMin: 45
+  atkMax: 75
   defW: 0.5
-  defA: 0.3
-  defM: 0.2
+  defA: 0.1
+  defM: 0.1
   defMin: 20
-  defMax: 85
+  defMax: 75
   spdBase: 105
   spdM: 0.85
   spdC: 0.1
@@ -38,8 +39,8 @@ MonoBehaviour:
   durB: 0.2
   durMin: 20
   durMax: 100
-  hpBase: 50
-  hpPerDurability: 0.7
+  hpBase: 90
+  hpPerDurability: 0.2
   weaponMassBase: 1.1
   weaponMassPerM: 0.035
   bodyMassBase: 2
@@ -87,6 +88,7 @@ MonoBehaviour:
   attackTimingJitter: 0.12
   threatWindow: 0.6
   guardMinDwell: 0.3
+  horizontalGuardDwellScale: 1.5
   evadeCooldown: 1
   tooCloseDistance: 0.9
   minAttackDistance: 0.8
@@ -112,6 +114,36 @@ MonoBehaviour:
   attackCooldownLight: 0.15
   attackCooldownHeavy: 1.4
   heavyWhiffRecoveryMultiplier: 1.7
+  heavyTempo: 1
+  heavyWindupScale: 0.82
+  heavyRecoveryScale: 0.55
+  heavyMaxWindup: 1.2
+  heavyMaxRecovery: 1
+  heavyMaxPoseWait: 1.65
+  heavyTempoCooldown: 0.45
+  heavyTempoWhiffMultiplier: 1.25
+  heavyWindupTorque: 0.65
+  heavyReturnTorque: 0.75
+  heavyFollowThroughFraction: 0.3
+  heavyDuelPressureSeconds: 2
+  heavyDuelMinWillingness: 0.55
+  heavyDuelDefenseScale: 0.65
+  combatTempo: 1
+  tempoWindupScale: 0.8
+  tempoRecoveryScale: 0.5
+  tempoMaxWindup: 0.75
+  tempoMaxRecovery: 0.4
+  tempoPoseWaitExtra: 0.12
+  tempoSwingWaitExtra: 0.3
+  tempoPoseTorque: 1.8
+  tempoCooldownScale: 0.6
+  tempoAiScale: 0.5
+  tempoTimingJitter: 0.05
+  tempoMoveAccelScale: 1.3
+  tempoRetreatScale: 0.65
+  tempoRecoverDelayMin: 0.4
+  tempoRecoverDelayMax: 0.8
+  tempoMaxKnockdownTime: 2.5
   followThroughFraction: 0.6
   punishReachFactor: 0.8
   light:
@@ -190,8 +222,8 @@ MonoBehaviour:
   guardImpulseRatio: 0.5
   clashPush: 1.5
   clashWeaponKnock: 1
-  overpowerMassRatio: 1.8
   overpowerMomentumRatio: 1.3
+  clashMinMomentum: 4
   clashLoserStagger: 0.45
   reachFactor: 0.75
   lateGameStart: 20
@@ -229,6 +261,10 @@ MonoBehaviour:
   sweepMaxYawSpeed: 720
   heavyArmorDuringAttack: 1
   heavyArmorMassRatio: 0.5
+  heavyArmorBreakHpFraction: 0.22
+  heavyArmorPressureDecay: 8
+  precisionTipBonus: 0.35
+  precisionGuardPierceBonus: 0.35
   specialAttackCap: 0.5
   stab:
     weight: 0
@@ -292,6 +328,38 @@ MonoBehaviour:
     impulse: 1.1
     upBias: -1
   settleSpeed: 0.6
+  expandedActions: 1
+  aerialCombos: 1
+  aerialCooldown: 7
+  aerialTimeout: 1.1
+  aerialSlashDamage: 0.55
+  aerialJumpSpeed: 5.8
+  aerialMaxSpeedX: 4.5
+  bindCounters: 1
+  duckDuration: 0.38
+  duckChance: 0.32
+  duckCooldown: 3
+  feintDuration: 0.28
+  feintCooldown: 4
+  feintChance: 0.1
+  bindDuration: 0.5
+  bindCooldown: 5
+  bindMomentumRatio: 1.75
+  bindMassRatio: 1.35
+  kickRange: 1.05
+  kickCooldown: 3
+  kickChance: 0.16
+  kickDamage: 0.22
+  kickPushSpeed: 2.3
+  wallJumpDistance: 1.2
+  wallJumpCooldown: 5
+  wallJumpSpeedX: 5.8
+  wallJumpSpeedY: 7.4
+  pickupSlashCooldown: 4
+  hookCooldown: 4
+  hookChance: 0.18
+  hookMaxMassRatio: 1.5
+  hookStagger: 0.4
   settleAngularSpeed: 90
   recoverDelayMin: 1
   recoverDelayMax: 2
@@ -307,3 +375,36 @@ MonoBehaviour:
   suddenDeathMaxSeconds: 30
   readyBlendRange: 15
   carryPsi: 80
+  rangedAttacks: 1
+  groundWaveRange: 9.5
+  groundWaveSpeed: 6.5
+  groundWaveCooldown: 5.5
+  groundWaveCrouch: 0.22
+  groundWaveApex: 0.8
+  strokeShotRange: 7.5
+  strokeShotSpeed: 9
+  strokeShotCooldown: 3.2
+  rangedChance: 0.12
+  rangedSpacing: 1
+  rangedSpacingChance: 0.32
+  rangedSpacingNeutralChance: 0.05
+  rangedSpacingSeconds: 2.4
+  rangedSpacingCooldown: 4
+  rangedSpacingMargin: 0.65
+  rangedSpacingBackstepChance: 0.65
+  groundWave:
+    weight: 0.1
+    windup: 1
+    active: 1
+    recovery: 1
+    damage: 0.75
+    impulse: 0.5
+    upBias: -1
+  strokeShot:
+    weight: 0.1
+    windup: 1
+    active: 1
+    recovery: 1
+    damage: 0.5
+    impulse: 0.25
+    upBias: -1

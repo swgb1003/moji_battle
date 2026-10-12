@@ -9,7 +9,7 @@ namespace MojiBattle.EditorTools
 
         void OnPreprocessAsset()
         {
-            if (!assetPath.Replace('\\', '/').StartsWith("Assets/Art/Fonts/")) return;
+            if (!assetPath.Replace('\\', '/').StartsWith("Assets/Art/Fonts/") && !assetPath.StartsWith("Assets/Resources/UI/WorldCup/Fonts/")) return;
             if (assetImporter is TrueTypeFontImporter ti)
             {
                 ti.fontTextureCase = FontTextureCase.Dynamic;

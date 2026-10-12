@@ -38,6 +38,8 @@ namespace MojiBattle
             loaded = true;
         }
 
+        public static void ResetSaved() { ResetToDefaults(); Save(); }
+
         static void EnsureLoaded()
         {
             if (loaded) return;

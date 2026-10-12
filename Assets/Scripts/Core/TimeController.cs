@@ -16,11 +16,14 @@ namespace MojiBattle
         static bool paused;
         static float koScale = 1f;
         static float hitStopRemaining;
+        static float freezeRemaining;
 
         public static float SpectatorSpeed => spectatorSpeed;
         public static bool Paused => paused;
         public static bool KoSlowActive => koScale < 1f;
         public static bool HitStopActive => hitStopRemaining > 0f;
+        /// <summary>必殺技のカットイン中（試合の時間が完全に止まる）。</summary>
+        public static bool FreezeActive => freezeRemaining > 0f;
         /// <summary>ヒットストップ等の演出を無効化する（大量シミュレーション用）。</summary>
         public static bool PresentationEffectsEnabled = true;
 
@@ -30,6 +33,15 @@ namespace MojiBattle
             paused = false;
             koScale = 1f;
             hitStopRemaining = 0f;
+            freezeRemaining = 0f;
+            Apply();
+        }
+
+        /// <summary>試合の時間を unscaledSeconds の間だけ完全に止める（必殺技のカットイン）。</summary>
+        public static void TriggerFreeze(float unscaledSeconds)
+        {
+            if (!PresentationEffectsEnabled) return;
+            freezeRemaining = Mathf.Max(freezeRemaining, unscaledSeconds);
             Apply();
         }
 
@@ -61,7 +73,14 @@ namespace MojiBattle
         /// <summary>毎フレーム unscaled 時間で呼ぶ。</summary>
         public static void Tick(float unscaledDeltaTime)
         {
-            if (hitStopRemaining > 0f && !paused)
+            if (paused) return;
+            if (freezeRemaining > 0f)
+            {
+                freezeRemaining -= unscaledDeltaTime;
+                if (freezeRemaining <= 0f) { freezeRemaining = 0f; Apply(); }
+                return; // 止まっている間はヒットストップを進めない
+            }
+            if (hitStopRemaining > 0f)
             {
                 hitStopRemaining -= unscaledDeltaTime;
                 if (hitStopRemaining <= 0f) { hitStopRemaining = 0f; Apply(); }
@@ -70,7 +89,7 @@ namespace MojiBattle
 
         static void Apply()
         {
-            float s = paused ? 0f : spectatorSpeed * koScale * (hitStopRemaining > 0f ? HitStopScale : 1f);
+            float s = paused || freezeRemaining > 0f ? 0f : spectatorSpeed * koScale * (hitStopRemaining > 0f ? HitStopScale : 1f);
             Time.timeScale = s;
             Time.fixedDeltaTime = BaseFixedDelta;
         }

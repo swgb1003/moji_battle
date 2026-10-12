@@ -14,5 +14,29 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Battle.unity
     guid: be69c6a39d6ad9241b333e6c147f8693
+  - enabled: 1
+    path: Assets/Scenes/ModeSelect.unity
+    guid: 0f40c223999d4924ac9f23aad5c7ab38
+  - enabled: 1
+    path: Assets/Scenes/Tournament.unity
+    guid: 330736b61010405b9c8d0ecb370bb077
+  - enabled: 1
+    path: Assets/Scenes/FriendRoom.unity
+    guid: 11b95995292139a4d81c8b5f7fd5d1be
+  - enabled: 1
+    path: Assets/Scenes/Achievements.unity
+    guid: 7d89d15da2f86214fa6996e4cea2dad6
+  - enabled: 1
+    path: Assets/Scenes/Challenges.unity
+    guid: 73c492de8b1a6844494e409ecf208462
+  - enabled: 1
+    path: Assets/Scenes/Draft.unity
+    guid: 14c3bae8f1d6ea3448af6ac4728be9b1
+  - enabled: 1
+    path: Assets/Scenes/Run.unity
+    guid: 0b880444d90ea5a46a626cc4c8b0ac95
+  - enabled: 1
+    path: Assets/Scenes/WorldCup.unity
+    guid: 72cc0713da40d1a43bdaac78504a41f6
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

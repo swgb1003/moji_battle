@@ -1,0 +1,31 @@
+{
+  "before": {
+    "matches": 12,
+    "seconds": 238.1,
+    "quietFraction": 0.09164216715665686,
+    "recoveryFraction": 0.2653506929861403,
+    "attackStartsPerMinute": 26.963460730785386,
+    "hitsPerMinute": 10.583788324233515,
+    "firstActiveAverageSeconds": 2.433333333333333,
+    "meanResetSeconds": 0.7262068965517241,
+    "stretchedSeconds": 0.06
+  },
+  "after": {
+    "matches": 12,
+    "seconds": 236.68,
+    "quietFraction": 0.07639006253168835,
+    "recoveryFraction": 0.2508872739563968,
+    "attackStartsPerMinute": 32.44887611965523,
+    "hitsPerMinute": 12.421835389555518,
+    "firstActiveAverageSeconds": 1.9733333333333334,
+    "meanResetSeconds": 0.5301785714285715,
+    "stretchedSeconds": 0.04
+  },
+  "changesPercent": {
+    "quietFraction": -16.643107750710374,
+    "attackStartsPerMinute": 20.343884798908253,
+    "hitsPerMinute": 17.366627232268605,
+    "firstActiveAverageSeconds": -18.904109589041084,
+    "meanResetSeconds": -26.993454076787394
+  }
+}

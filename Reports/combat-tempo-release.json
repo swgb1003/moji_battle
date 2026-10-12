@@ -1,0 +1,22 @@
+{
+  "deploymentId": "dpl_3e7goYeHLuzU2DT8FAmAtqejQygJ",
+  "state": "READY",
+  "target": "production",
+  "project": "prj_dysF5ncQzt0MeAgRoHEDSazVQ3eG",
+  "team": "team_T9S6jm2dWj9hQHWiULpbSwxx",
+  "productionUrl": "https://moji-fighter-x.vercel.app",
+  "uniqueUrl": "https://moji-fighter-9yfymvz7s-swgb1003-5441s-projects.vercel.app",
+  "inspectorUrl": "https://vercel.com/swgb1003-5441s-projects/moji-fighter-x/3e7goYeHLuzU2DT8FAmAtqejQygJ",
+  "buildInfo": {
+    "unity": "6000.0.61f1",
+    "version": "1.0",
+    "builtAtUtc": "2026-10-11T05:43:19.4840729Z"
+  },
+  "sourceHashMismatches": [],
+  "localVerifiedFiles": 11,
+  "productionVerifiedFiles": 11,
+  "errorLevelRuntimeLogs": "No entries found; since 1h, limit 50, no-follow",
+  "remoteBuildSeconds": 4,
+  "browserAutomation": "Native simulation/rendering and HTTP delivery only; browser console, rendering, audio and IndexedDB not automated",
+  "deploymentProtectionChanged": false
+}

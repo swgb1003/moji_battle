@@ -14,7 +14,7 @@ namespace MojiBattle
 
         public void Destroy()
         {
-            if (Root != null) Object.Destroy(Root);
+            if (Root != null) { Root.SetActive(false); Object.Destroy(Root); }
             if (Scene.IsValid() && Scene.isLoaded) SceneManager.UnloadSceneAsync(Scene);
         }
     }
@@ -25,7 +25,7 @@ namespace MojiBattle
         static int sceneCounter;
 
         public static BattleInstance Build(MatchConfig config, CombatBalance balance, GlyphCalibration calibration,
-            bool presentation, float countdown, out string error)
+            bool presentation, float countdown, out string error, bool tournamentFinal = false)
         {
             error = null;
             if (!GlyphCatalog.TryGet(config.left.grapheme, config.left.font, balance, calibration, out var gl, out var reasonL))
@@ -50,6 +50,7 @@ namespace MojiBattle
                 Events = new CombatEvents(),
                 ArenaHalfWidth = balance.arenaHalfWidth,
                 Customize = CustomizeBalance.Default,
+                MatchSeed = config.seed,
             };
             ctx.Hits = new HitResolver(ctx);
             ctx.Env = new EnvironmentImpactResolver(ctx);
@@ -60,6 +61,14 @@ namespace MojiBattle
             var right = FighterFactory.Create(1, config.right, gr, ctx, rng.Fork(2), root.transform);
             left.Opponent = right;
             right.Opponent = left;
+            // Heavy resets and the return from ranged spacing load the hinge in close contact.
+            // Give those fights extra solver passes instead of moving the weapon
+            // back to the hand by changing its position.
+            if (left.HeavyTempoEnabled || right.HeavyTempoEnabled)
+            {
+                Physics2D.velocityIterations = balance.rangedSpacing ? 40 : 28;
+                Physics2D.positionIterations = balance.rangedSpacing ? 20 : 14;
+            }
 
             var director = root.AddComponent<MatchDirector>();
             director.Init(config, ctx, left, right, countdown, scene.GetPhysicsScene2D());
@@ -75,6 +84,8 @@ namespace MojiBattle
                     cam = camGo.AddComponent<Camera>();
                 }
                 cam.orthographic = true;
+                if (Object.FindFirstObjectByType<AudioListener>() == null)
+                    cam.gameObject.AddComponent<AudioListener>();
                 cam.backgroundColor = FighterFactory.Paper;
                 cam.clearFlags = CameraClearFlags.SolidColor;
                 cam.transform.position = new Vector3(0f, 3.5f, -10f);
@@ -86,6 +97,9 @@ namespace MojiBattle
                 hud.Bind(director, rig);
                 var vfx = root.AddComponent<CombatVfxDirector>();
                 vfx.Bind(director, rig);
+                root.AddComponent<CombatInkEffects>().Bind(director);
+                root.AddComponent<RangedProjectileView>().Bind(director);
+                root.AddComponent<CombatAudioDirector>().Bind(director, tournamentFinal);
                 root.AddComponent<ColliderDebugView>().Bind(director);
             }
             return instance;

@@ -1,0 +1,12 @@
+{
+  "baseCommit": "e2b60e25a4a4c7b34759b032832b2829f079bfc5",
+  "team": "team_T9S6jm2dWj9hQHWiULpbSwxx",
+  "project": "prj_dysF5ncQzt0MeAgRoHEDSazVQ3eG",
+  "environment": "production",
+  "sourceSha256": {
+    "Assets/Scripts/UI/DraftScreen.cs": "8c5e93ef4916e5958e0acd86a1abf35371cad87efb10f44d2f6bb418bd511ecf",
+    "Assets/Scripts/UI/DraftResultScreen.cs": "00ecd08e423560e1d7192b44884458a5640f414efe18c0fabeeaf33dd553d48b",
+    "Assets/Scripts/UI/Customize/DraftCustomize.cs": "570fc477dec99d61e2633c0367b4f38127281e733b97651e59aed07565829a9f",
+    "Assets/Scripts/UI/ChallengeResultScreen.cs": "83f48fe67110fdf9b7921932a659263102e70acf9883965a2da902f75f2b797f"
+  }
+}

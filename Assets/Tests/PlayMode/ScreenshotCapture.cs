@@ -44,6 +44,43 @@ namespace MojiBattle.Tests
         }
 
         [UnityTest]
+        public IEnumerator CaptureLeapMotion()
+        {
+            SimHarness.Begin(false);
+            battle = SimHarness.Build(13, presentation: true, countdown: 1000f, left: "火", right: "山");
+            var a = battle.Left;
+            var d = battle.Right;
+            Vector2 delta = new Vector2(a.X + a.AttackRange * 1.8f, 0.02f) - d.Body.position;
+            d.Body.position += delta;
+            d.WeaponBody.position += delta;
+            d.Body.transform.position += (Vector3)delta;
+            d.WeaponBody.transform.position += (Vector3)delta;
+            yield return null;
+            // AI 停止用の長いカウントダウン表示が動作確認画像に重ならないよう隠す。
+            foreach (var text in battle.Root.GetComponentsInChildren<TextMesh>())
+                if (text.transform.parent == battle.Root.transform && text.anchor == TextAnchor.MiddleCenter)
+                    text.gameObject.SetActive(false);
+            a.StartAttack(battle.Context.SimTime, AttackStyle.Leap);
+            bool crouch = false, rise = false, apex = false, strike = false, land = false;
+            for (int i = 0; i < 250 && !land; i++)
+            {
+                yield return null;
+                var state = a.Runtime;
+                if (!crouch && !state.leapJumped && state.stateTime >= 0.1f)
+                { Capture("leap_01_crouch", 1280, 720); crouch = true; }
+                if (!rise && state.leapJumped && a.Body.linearVelocity.y > 1f && a.Body.position.y > 0.4f)
+                { Capture("leap_02_rise", 1280, 720); rise = true; }
+                if (!apex && state.state == FighterState.AttackActive)
+                { Capture("leap_03_overhead", 1280, 720); apex = true; }
+                if (!strike && state.state == FighterState.AttackActive && a.WeaponMotor.CurrentPsi < -60f)
+                { Capture("leap_04_strike", 1280, 720); strike = true; }
+                if (apex && state.state == FighterState.Approach && a.Body.position.y < 0.3f)
+                { Capture("leap_05_landed", 1280, 720); land = true; }
+            }
+            Assert.IsTrue(crouch && rise && apex && strike && land, "跳び斬りの各姿勢を撮影できる");
+        }
+
+        [UnityTest]
         [Timeout(900000)]
         public IEnumerator CaptureBattleMoments()
         {

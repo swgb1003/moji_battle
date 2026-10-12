@@ -1,0 +1,9 @@
+{
+    "environment": "Unity native PlayMode; six identical World Cup COM fixtures",
+    "previousSeconds": 21.8907385,
+    "optimizedSeconds": 18.787671100000006,
+    "speedup": 1.1651650906322285,
+    "previousYieldCount": 1009,
+    "optimizedYieldCount": 263,
+    "identicalResults": true
+}

@@ -8,12 +8,13 @@ namespace MojiBattle
     public class FighterTelemetry
     {
         public static readonly int StyleCount = Enum.GetValues(typeof(AttackStyle)).Length;
+        public static readonly int StateCount = Enum.GetValues(typeof(FighterState)).Length;
         public string grapheme;
         public string weightClass;
         public FighterStats stats;
         public float attackRange, walkSpeed;
         public int weaponColliders;
-        public float[] stateSeconds = new float[10];
+        public float[] stateSeconds = new float[StateCount];
         public List<float> windups = new List<float>();
         public List<float> hitImpulses = new List<float>();
         public List<float> hitDamages = new List<float>();
@@ -35,7 +36,7 @@ namespace MojiBattle
         public float maxHingeStretch;
         /// <summary>握りのずれが 0.2 を超えていたステップ数</summary>
         public int stretchedSteps;
-        public int[] stretchStateSteps = new int[10];
+        public int[] stretchStateSteps = new int[StateCount];
         public int maxComboHits;
         /// <summary>横振りの回数 / 横振りの命中</summary>
         public int sweeps, sweepHits;

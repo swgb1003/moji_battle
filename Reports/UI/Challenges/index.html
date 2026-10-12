@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>お題バトル — デザインと実装</title>
+<style>
+[hidden]{display:none!important}
+*{box-sizing:border-box}body{margin:0;background:#f2ebdb;color:#20211f;font-family:system-ui,sans-serif}main{max-width:1500px;margin:auto;padding:24px}h1{font-size:24px;margin:0 0 8px}p{margin:0 0 20px;color:#726d61}nav,.controls{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}button{border:1px solid #a19985;background:transparent;color:#20211f;padding:10px 18px;font:inherit;cursor:pointer}button[aria-pressed=true]{background:#20211f;color:#f2ebdb}.stage{position:relative;aspect-ratio:16/9;background:#ded7c3;border:1px solid #a19985}.stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}label{display:flex;gap:16px;align-items:center}input{width:260px;accent-color:#ba3c2d}.legend{display:flex;justify-content:space-between;font-size:14px;margin:8px 0}small{color:#726d61}
+</style>
+<main>
+<h1>お題バトル — デザインと実装</h1>
+<p>6画面のデザイン案とUnityで動作する実画面。ステータス・クリア数・称号数は実際の保存データと対戦内容を表示します。</p>
+<nav aria-label="画面選択" id="screens"></nav>
+<div class="controls" id="modes">
+<button data-mode="actual" aria-pressed="true">実装</button><button data-mode="design" aria-pressed="false">デザイン案</button><button data-mode="compare" aria-pressed="false">重ねて比較</button>
+</div>
+<div class="stage"><img id="design" alt="承認されたデザイン案"><img id="actual" alt="Unityで撮影した実画面"></div>
+<div class="legend"><span id="caption"></span><span id="mode-caption">実装</span></div>
+<label id="slider" hidden>境界位置<input type="range" min="0" max="100" value="50" aria-label="実装画像とデザイン案の比較境界"></label>
+<small>実画面は1920×1080と880×450で検証。未達成・敗北・引き分けの画像も、このフォルダーに保存しています。</small>
+</main>
+<script>
+const pages=[['メニュー','01_menu'],['お題一覧','02_list'],['お題の詳細','03_detail'],['対戦準備','04_prepare'],['バトル','05_battle'],['結果','06_result']];
+let selected=0,mode='actual';const design=document.querySelector('#design'),actual=document.querySelector('#actual'),slider=document.querySelector('#slider'),range=slider.querySelector('input');
+pages.forEach(([title],index)=>{const b=document.createElement('button');b.textContent=(index+1)+'. '+title;b.addEventListener('click',()=>{selected=index;render()});document.querySelector('#screens').appendChild(b)});
+document.querySelectorAll('#modes button').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;render()}));range.addEventListener('input',render);
+function render(){const [title,file]=pages[selected];design.src='../../Design/ChallengeBattle-20261010/'+file+'.png';actual.src=file+'.png';design.hidden=mode==='actual';actual.hidden=mode==='design';actual.style.clipPath=mode==='compare'?'inset(0 '+(100-range.value)+'% 0 0)':'none';slider.hidden=mode!=='compare';document.querySelector('#caption').textContent=(selected+1)+'. '+title;document.querySelector('#mode-caption').textContent=mode==='compare'?'左：実装 ／ 右：デザイン案':mode==='actual'?'実装':'デザイン案';document.querySelectorAll('#screens button').forEach((b,i)=>b.setAttribute('aria-pressed',String(i===selected)));document.querySelectorAll('#modes button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)))}render();
+</script>
+</html>

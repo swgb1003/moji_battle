@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="3" result="Passed" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-07 06:10:43Z" end-time="2026-10-07 06:11:00Z" duration="16.8192265">
+  <test-suite type="TestSuite" id="1098" name="MOJI Fighter X" fullname="MOJI Fighter X" runstate="Runnable" testcasecount="75" result="Passed" start-time="2026-10-07 06:10:43Z" end-time="2026-10-07 06:11:00Z" duration="16.819227" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1094" name="MojiBattle.Tests.PlayMode.dll" fullname="C:/Users/swgb1/Documents/ChatGPT/文字武器バトル/Library/ScriptAssemblies/MojiBattle.Tests.PlayMode.dll" runstate="Runnable" testcasecount="75" result="Passed" start-time="2026-10-07 06:10:43Z" end-time="2026-10-07 06:11:00Z" duration="16.803709" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="18500" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1095" name="MojiBattle" fullname="MojiBattle" runstate="Runnable" testcasecount="75" result="Passed" start-time="2026-10-07 06:10:43Z" end-time="2026-10-07 06:11:00Z" duration="16.799313" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1096" name="Tests" fullname="MojiBattle.Tests" runstate="Runnable" testcasecount="75" result="Passed" start-time="2026-10-07 06:10:43Z" end-time="2026-10-07 06:11:00Z" duration="16.797037" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1065" name="MenuUiTests" fullname="MojiBattle.Tests.MenuUiTests" classname="MojiBattle.Tests.MenuUiTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-07 06:10:43Z" end-time="2026-10-07 06:11:00Z" duration="16.792004" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1067" name="ButtonMotion_WorksWhilePaused_AndReducedMotionSettlesImmediately" fullname="MojiBattle.Tests.MenuUiTests.ButtonMotion_WorksWhilePaused_AndReducedMotionSettlesImmediately" methodname="ButtonMotion_WorksWhilePaused_AndReducedMotionSettlesImmediately" classname="MojiBattle.Tests.MenuUiTests" runstate="Runnable" seed="2060303278" result="Passed" start-time="2026-10-07 06:10:43Z" end-time="2026-10-07 06:10:45Z" duration="1.761587" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1066" name="Menus_Render_AndControlsPreserveBothBuilds" fullname="MojiBattle.Tests.MenuUiTests.Menus_Render_AndControlsPreserveBothBuilds" methodname="Menus_Render_AndControlsPreserveBothBuilds" classname="MojiBattle.Tests.MenuUiTests" runstate="Runnable" seed="708454329" result="Passed" start-time="2026-10-07 06:10:45Z" end-time="2026-10-07 06:10:55Z" duration="9.663363" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1068" name="ResultActions_RematchThenReturnKeepsLoadout" fullname="MojiBattle.Tests.MenuUiTests.ResultActions_RematchThenReturnKeepsLoadout" methodname="ResultActions_RematchThenReturnKeepsLoadout" classname="MojiBattle.Tests.MenuUiTests" runstate="Runnable" seed="1103186223" result="Passed" start-time="2026-10-07 06:10:55Z" end-time="2026-10-07 06:11:00Z" duration="5.348219" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MojiBattle] seed=801942925 KO winner=0 t=0.0s HP 92/0
+[MojiBattle] seed=829289021 KO winner=0 t=0.0s HP 92/0
+Saving results to: C:/Users/swgb1/Documents/ChatGPT/文字武器バトル/Reports/UI/menu-final.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

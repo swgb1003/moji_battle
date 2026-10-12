@@ -1,0 +1,60 @@
+{
+  "sourceFilesMatched": 884,
+  "verified": [
+    {
+      "file": "Build/501dd934f6ac884fe4d5696421c7fe9d.framework.js.gz",
+      "bytes": 84029,
+      "sha256": "66a39b27468e5365f866d31c26ba9df03c9810f2e66038d7947245f6258214d3"
+    },
+    {
+      "file": "Build/abfdfbdbd537ac7dd6a11ee6c4885f82.wasm.gz",
+      "bytes": 6938700,
+      "sha256": "9ab1dc2e60237c0cbaf94a956f22c0fecfbff924672e1643eec32be6d2828c72"
+    },
+    {
+      "file": "Build/df7470f3ceb0c267dc80ffe0fe0c3c7a.loader.js",
+      "bytes": 26454,
+      "sha256": "465837f5439711ce95af2c783d2831f02bc58f6f47d2e7d082437f5f41e472e3"
+    },
+    {
+      "file": "Build/f30f840eb7d71329bc58b258f9290a9a.data.gz",
+      "bytes": 71034356,
+      "sha256": "2adcc9f72880f37a71de96c5b84cc9864b8d4d18212ae81665135defeccd03ab"
+    },
+    {
+      "file": "Licenses/Brush/OFL.txt",
+      "bytes": 4386,
+      "sha256": "ef7c85c72ae94381c8bc4832ae4e6fbabdeafa2bb8a31313cd75dce95a690256"
+    },
+    {
+      "file": "Licenses/Gothic/OFL.txt",
+      "bytes": 4388,
+      "sha256": "cec239a4ff08f8b4c5691bd45bec938bf2cc6f1c254b9a49a85caf0f92f1ef6c"
+    },
+    {
+      "file": "Licenses/Mincho/OFL.txt",
+      "bytes": 4399,
+      "sha256": "41fba056279be5f45ff9a99e44b7b53897b42732f5806d8e666e0ab49ac6bd38"
+    },
+    {
+      "file": "Licenses/RoundedGothic/OFL.txt",
+      "bytes": 4402,
+      "sha256": "2a20cf7ce1909d8ee1e949095d340f7d7656705f7c810a2d6faf56800ad0cb3d"
+    },
+    {
+      "file": "Licenses/Unicode/LICENSE.txt",
+      "bytes": 2034,
+      "sha256": "8437ba5f4e4c8ae0268c3df5cf106006f2d045ff3452eedd1f27e8eb26c5f327"
+    },
+    {
+      "file": "build-info.json",
+      "bytes": 102,
+      "sha256": "355de3d6d1391ad3e9a59b2f72859d0e5fb003d070ea8a19a19a195083bf1645"
+    },
+    {
+      "file": "index.html",
+      "bytes": 5533,
+      "sha256": "6dce4e563397772d486289221edd65154e051923ee25383f495668d99a5e4ddf"
+    }
+  ]
+}

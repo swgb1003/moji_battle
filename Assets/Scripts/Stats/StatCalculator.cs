@@ -11,7 +11,7 @@ namespace MojiBattle
         public static FighterStats Compute(in NormalizedGlyphFeatures n, CombatBalance b)
         {
             float m = WeightScore(n, b);
-            float attack = Mathf.Clamp(b.atkM * m + b.atkC * n.C, b.atkMin, b.atkMax);
+            float attack = Mathf.Clamp(b.atkBase + b.atkM * m + b.atkC * n.C, b.atkMin, b.atkMax);
             float defense = Mathf.Clamp(b.defW * n.W + b.defA * n.A + b.defM * m, b.defMin, b.defMax);
             float speed = Mathf.Clamp(b.spdBase - b.spdM * m - b.spdC * n.C + b.spdB * n.B, b.spdMin, b.spdMax);
             float durability = Mathf.Clamp(b.durA * n.A + b.durM * m + b.durB * n.B, b.durMin, b.durMax);
@@ -41,6 +41,17 @@ namespace MojiBattle
             weightScore < b.lightMaxWeight ? WeightClass.Light
             : weightScore >= b.heavyMinWeight ? WeightClass.Heavy
             : WeightClass.Medium;
+
+        /// <summary>疎で細長い字形ほど先端の精密な攻撃を得意とする。文字名・サイズ・左右反転に依存しない。</summary>
+        public static float Precision(GlyphDefinitionRuntime glyph)
+        {
+            if (glyph == null) return 0f;
+            var bounds = glyph.features.inkBounds;
+            float shortSide = Mathf.Min(bounds.width, bounds.height);
+            if (shortSide <= 0f) return 0f;
+            float aspect = Mathf.Max(bounds.width, bounds.height) / shortSide;
+            return (1f - Mathf.Clamp01(glyph.normalized.A / 100f)) * Mathf.InverseLerp(1.2f, 2.5f, aspect);
+        }
 
         public static float Lerp01(float a, float b, int weightScore) => Mathf.Lerp(a, b, weightScore / 100f);
 

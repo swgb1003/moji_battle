@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="最強の文字使いは君だ。文字を武器に戦うMOJI Fighter X。ワタナベチャレンジカップにも挑戦！">
+  <meta name="theme-color" content="#20211f">
+  <title>MOJI Fighter X — 最強の文字使いは君だ</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23f2ebdb'/%3E%3Ctext x='32' y='47' text-anchor='middle' font-size='45' font-family='serif' fill='%23ba3c2d'%3E字%3C/text%3E%3C/svg%3E">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #20211f; color: #f2ebdb; font-family: system-ui, sans-serif; }
+    main { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 0 12px 44px; }
+    #player { position: relative; width: min(100%, calc((100dvh - 44px) * 16 / 9)); aspect-ratio: 16 / 9; }
+    #player:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; }
+    canvas { width: 100%; height: 100%; display: block; background: #f2ebdb; outline: none; touch-action: none; }
+    #cover { position: absolute; inset: 0; background: #f2ebdb; color: #20211f; display: grid; place-items: center; padding: 24px; }
+    #cover[hidden] { display: none; }
+    .card { text-align: center; width: min(480px, 100%); }
+    h1 { font-size: clamp(24px, 5vw, 48px); letter-spacing: .05em; margin: 0 0 12px; }
+    .tagline { margin-bottom: 32px; }
+    progress { width: 100%; height: 10px; accent-color: #ba3c2d; }
+    #status { font-size: 14px; min-height: 2em; }
+    button { border: 1px solid #f2ebdb; background: #20211f; color: #f2ebdb; padding: 9px 16px; font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 3px solid #ba3c2d; outline-offset: 4px; }
+    #play { padding: 16px 28px; font-weight: 700; font-size: 18px; }
+    footer { position: fixed; bottom: 0; left: 0; width: 100%; min-height: 44px; display: flex; gap: 16px; justify-content: center; align-items: center; padding: 5px max(12px, env(safe-area-inset-right)); font-size: 12px; }
+    #error { color: #ba3c2d; white-space: pre-wrap; }
+    @media (max-width: 600px) { .tagline { margin-bottom: 16px; } footer span { max-width: 210px; } }
+  </style>
+</head>
+<body>
+<main>
+  <div id="player">
+    <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1" aria-label="MOJI Fighter X ゲーム画面"></canvas>
+    <div id="cover">
+      <div class="card">
+        <h1>MOJI Fighter X</h1>
+        <p class="tagline">最強の文字使いは君だ</p>
+        <progress id="progress" max="1" value="0" aria-label="読み込み状況"></progress>
+        <p id="status" role="status">ゲームを読み込んでいます…</p>
+        <button id="play" hidden>クリックしてはじめる</button>
+        <p id="error" role="alert" hidden></p>
+      </div>
+    </div>
+  </div>
+</main>
+<footer><span>音が出ます。スマートフォンは横向き推奨。</span><button id="fullscreen" disabled>全画面</button></footer>
+<script>
+  const canvas = document.getElementById('unity-canvas');
+  const cover = document.getElementById('cover');
+  const status = document.getElementById('status');
+  const progress = document.getElementById('progress');
+  const play = document.getElementById('play');
+  const fullscreen = document.getElementById('fullscreen');
+  let game;
+  const fail = () => {
+    progress.hidden = true;
+    status.textContent = '読み込みに失敗しました。';
+    const error = document.getElementById('error');
+    error.textContent = 'ページを再読み込みしてください。うまく起動しない場合は、最新版のChrome・Edge・Safariでお試しください。';
+    error.hidden = false;
+  };
+  const loader = document.createElement('script');
+  loader.src = 'Build/{{{ LOADER_FILENAME }}}';
+  loader.onerror = fail;
+  loader.onload = () => createUnityInstance(canvas, {
+    dataUrl: 'Build/{{{ DATA_FILENAME }}}',
+    frameworkUrl: 'Build/{{{ FRAMEWORK_FILENAME }}}',
+    codeUrl: 'Build/{{{ CODE_FILENAME }}}',
+    streamingAssetsUrl: 'StreamingAssets',
+    companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+    productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+    productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+    devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+    showBanner: (message, type) => { if (type === 'error') { console.error(message); fail(); } else console.warn(message); }
+  }, value => {
+    progress.value = value;
+    status.textContent = '読み込み中 ' + Math.round(value * 100) + '%';
+  }).then(instance => {
+    game = instance;
+    window.mojiSendMessage = (target, method, value) => game.SendMessage(target, method, value);
+    progress.hidden = true;
+    status.textContent = '準備ができました';
+    play.hidden = false;
+    fullscreen.disabled = false;
+  }).catch(error => { console.error(error); fail(); });
+  document.body.appendChild(loader);
+  play.addEventListener('click', () => {
+    game.SendMessage('ScreenAudio', 'ResumeBrowserAudio');
+    cover.hidden = true;
+    canvas.focus();
+  });
+  fullscreen.addEventListener('click', () => {
+    const player = document.getElementById('player');
+    if (player.requestFullscreen) player.requestFullscreen().catch(error => console.warn(error));
+    canvas.focus();
+  });
+</script>
+</body>
+</html>

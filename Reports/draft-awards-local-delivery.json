@@ -1,0 +1,60 @@
+{
+  "url": "http://127.0.0.1:8017",
+  "verified": [
+    {
+      "file": "Build/0af9f15179b0927d0b947ec27bd5397b.framework.js.gz",
+      "bytes": 83771,
+      "sha256": "7e10ce1928b969733c5fa8b844408ef1bb57eaa68f57b38863cbbc50a5a7fb87"
+    },
+    {
+      "file": "Build/6163447b3adce09558f5f9fec0827be2.wasm.gz",
+      "bytes": 6801803,
+      "sha256": "bf75217775a8ab4a4f2b65d7f17f3457fed1f3570cc7bfdb2e1b3c599e706f05"
+    },
+    {
+      "file": "Build/75b024b75fb4d13335b3137c1d9bc5ec.loader.js",
+      "bytes": 26454,
+      "sha256": "357a6de36990e23baf86e7a8735150e2d8b9761f6ad8b9ef10c1fc6ae72405c6"
+    },
+    {
+      "file": "Build/f745f1e633e7c2d2296c07b8675350b0.data.gz",
+      "bytes": 62787267,
+      "sha256": "54546c92b6e842da2b74cfc4dc28a9c8f5ea4e2ca2421697a877463fab2ecc9d"
+    },
+    {
+      "file": "Licenses/Brush/OFL.txt",
+      "bytes": 4386,
+      "sha256": "ef7c85c72ae94381c8bc4832ae4e6fbabdeafa2bb8a31313cd75dce95a690256"
+    },
+    {
+      "file": "Licenses/Gothic/OFL.txt",
+      "bytes": 4388,
+      "sha256": "cec239a4ff08f8b4c5691bd45bec938bf2cc6f1c254b9a49a85caf0f92f1ef6c"
+    },
+    {
+      "file": "Licenses/Mincho/OFL.txt",
+      "bytes": 4399,
+      "sha256": "41fba056279be5f45ff9a99e44b7b53897b42732f5806d8e666e0ab49ac6bd38"
+    },
+    {
+      "file": "Licenses/RoundedGothic/OFL.txt",
+      "bytes": 4402,
+      "sha256": "2a20cf7ce1909d8ee1e949095d340f7d7656705f7c810a2d6faf56800ad0cb3d"
+    },
+    {
+      "file": "Licenses/Unicode/LICENSE.txt",
+      "bytes": 2034,
+      "sha256": "8437ba5f4e4c8ae0268c3df5cf106006f2d045ff3452eedd1f27e8eb26c5f327"
+    },
+    {
+      "file": "build-info.json",
+      "bytes": 102,
+      "sha256": "a887a45cf844ed1c3ce94a36da9aa32dad9d96873fc7f774834f68f648394061"
+    },
+    {
+      "file": "index.html",
+      "bytes": 5533,
+      "sha256": "19b6685ac4b5f571c817afb198d7c3247db4147c61310bfff480df51e03a22b7"
+    }
+  ]
+}

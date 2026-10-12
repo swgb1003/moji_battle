@@ -1,0 +1,13 @@
+{
+  "id": "dpl_CKeMzKvMFwdvEX7iuG5364zYoLUi",
+  "readyState": "READY",
+  "target": "production",
+  "team": "team_T9S6jm2dWj9hQHWiULpbSwxx",
+  "project": "prj_dysF5ncQzt0MeAgRoHEDSazVQ3eG",
+  "url": "https://moji-fighter-8g8alfrim-swgb1003-5441s-projects.vercel.app",
+  "productionUrl": "https://moji-fighter-x.vercel.app",
+  "builtAtUtc": "2026-10-11T01:57:18.9471054Z",
+  "playTestsPassed": 7,
+  "localDeliveryChecks": 11,
+  "productionDeliveryChecks": 11
+}

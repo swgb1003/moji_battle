@@ -343,6 +343,97 @@ namespace MojiBattle.Tests
             f.WeaponBody.linearVelocity = Vector2.zero;
         }
 
+        /// <summary>跳び斬り: 少し離れた相手の頭上へ跳び、真下へ振り下ろして当て、相手の上に乗らずに着地して構えに戻る。</summary>
+        [UnityTest]
+        public IEnumerator LeapAttack_JumpsOverheadAndStrikesDown()
+        {
+            SimHarness.Begin(false);
+            var fails = new StringBuilder();
+            string detail = "";
+            foreach (var (l, r) in new[] { ("一", "鬱"), ("A", "口"), ("火", "山") })
+            foreach (bool fromRight in new[] { false, true })
+            {
+                battle = SimHarness.Build(13, countdown: 1000f, left: fromRight ? r : l, right: fromRight ? l : r); // カウントダウン中は AI 停止
+                var a = fromRight ? battle.Right : battle.Left;
+                var d = a.Opponent;
+                MoveFighter(d, new Vector2(a.X + a.Facing * a.AttackRange * 1.8f, 0.02f));
+                yield return null;
+                HitEvent? hit = null;
+                float handOverHead = 99f, downSwing = 0f;
+                int hitCount = 0;
+                battle.Context.Events.Hit += e =>
+                {
+                    if (e.attacker != a.Id || e.style != AttackStyle.Leap) return;
+                    hitCount++;
+                    if (hit.HasValue) return;
+                    hit = e;
+                    handOverHead = Mathf.Abs(a.GripWorld.x - d.X);
+                    downSwing = (a.WeaponBody.angularVelocity - a.Body.angularVelocity) * a.Facing;
+                };
+                TimeController.SetSpectatorSpeed(1f);
+                float hp = d.Runtime.hp;
+                string trace = "";
+                battle.Context.Events.StateChanged += e => { if (e.fighter == a.Id) trace += $"[{e.to}@{e.time:F2} ax={a.X:F2} ay={a.Body.position.y:F2} vy={a.Body.linearVelocity.y:F1} gx={a.GripWorld.x:F2} gy={a.GripWorld.y:F2} dX={d.X:F2} psi={a.WeaponMotor.CurrentPsi:F0} jumped={a.Runtime.leapJumped}]"; };
+                a.StartAttack(battle.Context.SimTime, AttackStyle.Leap);
+                int frames = 0;
+                float peak = 0f;
+                while (frames++ < 400 && !(hit.HasValue && a.Runtime.state == FighterState.Approach))
+                {
+                    yield return null;
+                    peak = Mathf.Max(peak, a.Body.position.y);
+                }
+                for (int i = 0; i < 30; i++) yield return null;
+                string c = $"{l}->{r} right={fromRight}: peak={peak:F2} hit={(hit.HasValue ? $"{hit.Value.damage:F1} {hit.Value.part}" : "-")} handDx={handOverHead:F2} omega={downSwing:F0} hp {hp:F0}->{d.Runtime.hp:F0} end state={a.Runtime.state} y={a.Body.position.y:F2} dx={a.DistanceToOpponent:F2} {trace}";
+                detail += c + "; ";
+                if (peak < 0.7f || !hit.HasValue || hitCount != 1 || handOverHead > 0.9f || downSwing >= 0f || a.Runtime.state != FighterState.Approach || a.Runtime.leapJumped || a.Body.position.y > 0.3f)
+                    fails.AppendLine(c);
+                battle.Destroy();
+                battle = null;
+                yield return null;
+            }
+            Debug.Log("[LEAP] " + detail);
+            Assert.IsEmpty(fails.ToString(), "跳び斬りが成立しない:\n" + fails);
+        }
+
+        [UnityTest]
+        public IEnumerator LeapAttack_CustomizedWeaponLandsAndRecovers()
+        {
+            SimHarness.Begin(false);
+            foreach (var loadout in new[]
+            {
+                SimHarness.Custom("一"),
+                SimHarness.Custom("A", grip: GripType.TwoHanded),
+                SimHarness.Custom("火"),
+            })
+            {
+                var config = new MatchConfig { left = loadout, right = SimHarness.Custom("山"), seed = 13, durationSeconds = 60f };
+                battle = BattleBuilder.Build(config, CombatBalance.Default, GlyphCalibration.Default, false, 1000f, out var error);
+                Assert.IsNotNull(battle, error);
+                var a = battle.Left;
+                var d = battle.Right;
+                MoveFighter(d, new Vector2(a.X + Mathf.Min(a.AttackRange * 1.4f, a.LeapTravelRange * 0.8f), 0.02f));
+                yield return null;
+                int hits = 0;
+                battle.Context.Events.Hit += e => { if (e.attacker == a.Id && e.style == AttackStyle.Leap) hits++; };
+                a.StartAttack(battle.Context.SimTime, AttackStyle.Leap);
+                float peak = 0f;
+                int frames = 0;
+                do
+                {
+                    yield return null;
+                    peak = Mathf.Max(peak, a.Body.position.y);
+                } while (++frames < 400 && a.Runtime.state != FighterState.Approach);
+                Assert.Greater(peak, 0.7f, loadout.grapheme + " が跳ばない");
+                Assert.AreEqual(1, hits, loadout.grapheme + " のカスタマイズした武器が命中しない");
+                Assert.AreEqual(FighterState.Approach, a.Runtime.state, loadout.grapheme + " が構えに戻らない");
+                Assert.Less(a.Body.position.y, 0.3f, "相手の武器の上で硬直を終えない");
+                Assert.IsFalse(a.Runtime.leapJumped);
+                battle.Destroy();
+                battle = null;
+                yield return null;
+            }
+        }
+
         /// <summary>連携: 打ち上げが当たると相手が浮き、自動で叩き落としへつながって地面に激突（ダメージ＋跳ねて転倒）する。</summary>
         [UnityTest]
         public IEnumerator LaunchCombo_LiftsThenSmashesIntoGround()
@@ -443,6 +534,87 @@ namespace MojiBattle.Tests
             Assert.Less(gripError, 0.2f, "拾った武器が握りに戻る");
         }
 
+        /// <summary>XL の回転・向き反転で武器が壁の外へ出ても、握りを保って場内へ戻り、移動できる。</summary>
+        [UnityTest]
+        public IEnumerator XLWeaponOutsideWall_ReturnsInsideAndCanMove()
+        {
+            SimHarness.Begin(false);
+            foreach (string glyph in new[] { "一", "I", "A", "鬱" })
+            foreach (float grip in new[] { 0f, 0.5f })
+            foreach (int side in new[] { -1, 1 })
+            {
+                var config = new MatchConfig
+                {
+                    left = SimHarness.Custom(glyph, WeaponSize.XL, gripPosition: grip),
+                    right = SimHarness.Custom("口"), seed = 77, durationSeconds = 60f,
+                };
+                battle = BattleBuilder.Build(config, CombatBalance.Default, GlyphCalibration.Default, false, 1000f, out var error);
+                Assert.IsNotNull(battle, error);
+                var f = battle.Left;
+                float half = battle.Context.ArenaHalfWidth;
+                MoveFighter(battle.Right, new Vector2(0f, 0.02f));
+                f.SetFacing(side);
+                MoveFighter(f, new Vector2(side * (half - 0.45f), 0.02f));
+                f.WeaponBody.position = f.Body.GetRelativePoint(f.HandLocal(side));
+                f.WeaponBody.rotation = -f.Weapon.alpha0Deg * side;
+                f.WeaponBody.angularVelocity = 0f;
+                f.Runtime.guardPsiTarget = 0f;
+                f.SetState(FighterState.Guard);
+                f.LastTurnTime = battle.Context.SimTime + 100f;
+                Physics2D.SyncTransforms();
+                float escaped = side < 0 ? -f.WeaponColliders.Min(c => c.bounds.min.x) : f.WeaponColliders.Max(c => c.bounds.max.x);
+                if (escaped <= half + 0.3f)
+                {
+                    // 縦長字形の端持ちは、基準角に対して長い側が逆になることがある。
+                    f.WeaponBody.rotation += 180f;
+                    f.Runtime.guardPsiTarget = f.WeaponMotor.MeasurePsi();
+                    Physics2D.SyncTransforms();
+                    escaped = side < 0 ? -f.WeaponColliders.Min(c => c.bounds.min.x) : f.WeaponColliders.Max(c => c.bounds.max.x);
+                }
+                Assert.Greater(escaped, half + 0.3f, $"{glyph} grip={grip} side={side}: 壁を越える状況を再現できない");
+                for (int i = 0; i < 20; i++) yield return null;
+                float edge = side < 0 ? -f.WeaponColliders.Min(c => c.bounds.min.x) : f.WeaponColliders.Max(c => c.bounds.max.x);
+                Assert.LessOrEqual(edge, half + 0.12f, $"{glyph} grip={grip} side={side}: 武器が壁の外に残っている");
+                Assert.Less(Vector2.Distance(f.GripWorld, f.Body.GetRelativePoint(f.HandLocal(f.Facing))), 0.15f, "壁を戻すときに握りが外れない");
+                Assert.Less(Mathf.Abs(f.X), half - 0.2f, "本体も場内にいる");
+                // 場内へ戻った後は通常の AI と同じく相手へ向き直り、構えに戻して移動する。
+                f.LastTurnTime = -10f;
+                f.SetFacing(f.TowardOpponent);
+                f.SetState(FighterState.Approach);
+                f.WeaponMotor.ResetPose();
+                for (int i = 0; i < 60 && !f.IsGrounded; i++) yield return null;
+                float before = f.X;
+                f.StartEvade(EvadeKind.HopOver, battle.Context.SimTime);
+                for (int i = 0; i < 15; i++) yield return null;
+                Assert.Greater((before - f.X) * side, 0.3f, $"{glyph} grip={grip} side={side}: 壁から移動できない");
+                battle.Destroy();
+                battle = null;
+                yield return null;
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator ThrownWeaponOutsideWall_DoesNotPullOwner()
+        {
+            SimHarness.Begin(false);
+            battle = SimHarness.Build(77, countdown: 1000f);
+            var f = battle.Left;
+            f.StartAttack(battle.Context.SimTime, AttackStyle.Throw);
+            for (int i = 0; i < 150 && !f.Runtime.weaponDetached; i++) yield return null;
+            Assert.IsTrue(f.Runtime.weaponDetached, "武器を手放してから確認する");
+            f.Body.linearVelocity = Vector2.zero; // 投げる前の踏み込み・反動の移動と分けて補正を確認する。
+            float ownerX = f.X;
+            float half = battle.Context.ArenaHalfWidth;
+            f.WeaponBody.position = new Vector2(half + 2f, 3f);
+            f.WeaponBody.linearVelocity = new Vector2(10f, 0f);
+            f.WeaponBody.angularVelocity = 1000f;
+            Physics2D.SyncTransforms();
+            for (int i = 0; i < 10; i++) yield return null;
+            Assert.LessOrEqual(f.WeaponColliders.Max(c => c.bounds.max.x), half + 0.12f, "投げた武器も場内へ戻す");
+            Assert.AreEqual(ownerX, f.X, 0.15f, "手放した武器の補正で持ち主を移動させない");
+            Assert.IsFalse(f.Hinge.enabled);
+        }
+
         /// <summary>壁際で転倒 → 安全位置へ小さく移して 1〜2 秒で復帰し、姿勢が破綻しない。</summary>
         [UnityTest]
         public IEnumerator WallSideKnockdown_RecoversSafely()
@@ -464,7 +636,8 @@ namespace MojiBattle.Tests
             Assert.IsNotNull(rec, "復帰しない");
             var r = rec.Value;
             Debug.Log($"[WALL] settle+{r.sinceSettle:F2}s down+{r.sinceKnockdown:F2}s shifted={r.shiftedToSafePosition} x={f.X:F2}");
-            Assert.That(r.sinceSettle, Is.InRange(1.0f, 2.0f));
+            Assert.That(r.sinceSettle, Is.InRange(CombatBalance.Default.tempoRecoverDelayMin,
+                CombatBalance.Default.tempoRecoverDelayMax + TimeController.BaseFixedDelta));
             for (int i = 0; i < 30; i++) yield return null;
             Assert.AreEqual(0f, f.Body.rotation, 0.01f);
             Assert.GreaterOrEqual(f.X, -half + 0.2f, "壁にめり込まない");

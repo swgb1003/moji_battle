@@ -4,7 +4,7 @@ namespace MojiBattle
 {
     /// <summary>
     /// 転倒・復帰・KO（8.4）。転倒時は本体の回転固定を外して物理で転がす（武器ヒンジは保持）。
-    /// 静止を確認してから 1.0〜2.0 秒後に起き上がる。壁際・相手と重なっている場合は安全位置へ小さく移す。
+    /// 静止を確認してから短い待機で起き上がる。壁際・相手との重なりは安全位置へ小さく移す。
     /// </summary>
     public sealed class KnockdownController
     {
@@ -46,7 +46,8 @@ namespace MojiBattle
                     if (settled && rt.recoverAt < 0f)
                     {
                         rt.settledAt = time;
-                        rt.recoverAt = time + self.Brain.Rng.Range(b.recoverDelayMin, b.recoverDelayMax);
+                        rt.recoverAt = time + self.Brain.Rng.Range(b.combatTempo ? b.tempoRecoverDelayMin : b.recoverDelayMin,
+                            b.combatTempo ? b.tempoRecoverDelayMax : b.recoverDelayMax);
                     }
                     else if (!settled && rt.recoverAt >= 0f && body.linearVelocity.magnitude > b.settleSpeed * 4f)
                     {
@@ -54,13 +55,15 @@ namespace MojiBattle
                         rt.recoverAt = -1f;
                         rt.settledAt = -1f;
                     }
-                    bool timeout = rt.stateTime >= b.maxKnockdownTime;
+                    // A fast recovery still waits for landing; the original hard timeout handles trapped falls.
+                    bool timeout = rt.stateTime >= b.maxKnockdownTime || (b.combatTempo && self.IsGrounded
+                        && rt.stateTime >= b.tempoMaxKnockdownTime);
                     if ((rt.recoverAt >= 0f && time >= rt.recoverAt) || timeout) BeginRecover(time, timeout);
                     break;
                 }
                 case FighterState.Recover:
                     self.Body.linearVelocity = new Vector2(0f, Mathf.Min(0f, self.Body.linearVelocity.y));
-                    if (rt.stateTime >= b.recoverDuration) self.SetState(FighterState.Approach);
+                    if (rt.stateTime >= b.recoverDuration) self.Actions.FinishRecover(time);
                     break;
             }
         }

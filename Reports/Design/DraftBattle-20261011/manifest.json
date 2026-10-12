@@ -1,0 +1,63 @@
+{
+  "name": "文字ドラフト 画面デザイン",
+  "date": "2026-10-11",
+  "generation": "built-in image_gen",
+  "rules": {
+    "candidates": 6,
+    "pickPerSide": 1,
+    "winsToFinish": 2,
+    "firstPicker": "ラウンドごとに交代"
+  },
+  "screens": [
+    {
+      "id": "01_menu",
+      "title": "01 メニュー",
+      "filename": "01_menu.png",
+      "source": "C:\\Users\\swgb1\\AppData\\Roaming\\orca\\codex-runtime-home\\home\\generated_images\\01a12496-8356-7562-bcce-a35dc7c4ec21\\exec-7eadfa04-67c2-4365-b295-17b1890f6731.png",
+      "description": "上段に4つのモード、下段に友人対戦と称号。朱色の枠は文字ドラフトにカーソルを合わせた状態。"
+    },
+    {
+      "id": "02_intro",
+      "title": "02 モード説明",
+      "filename": "02_intro.png",
+      "source": "C:\\Users\\swgb1\\AppData\\Roaming\\orca\\codex-runtime-home\\home\\generated_images\\01a12496-8356-7562-bcce-a35dc7c4ec21\\exec-f88bb0f5-a872-4407-bf68-257bec10dbce.png",
+      "description": "共通の6候補から選ぶ、構成を調整する、先に2勝で勝利する、という遊び方を説明。"
+    },
+    {
+      "id": "03_draft",
+      "title": "03 文字ドラフト",
+      "filename": "03_draft.png",
+      "source": "C:\\Users\\swgb1\\AppData\\Roaming\\orca\\codex-runtime-home\\home\\generated_images\\01a12496-8356-7562-bcce-a35dc7c4ec21\\exec-d932661f-7fd3-45cb-9db5-684c34e4ab3f.png",
+      "description": "第2ラウンド。COMが先に盾を確保し、あなたは火を選択中。候補の性能メーターは表示例。"
+    },
+    {
+      "id": "04_build",
+      "title": "04 構成調整",
+      "filename": "04_build.png",
+      "source": "C:\\Users\\swgb1\\AppData\\Roaming\\orca\\codex-runtime-home\\home\\generated_images\\01a12496-8356-7562-bcce-a35dc7c4ec21\\exec-c340d145-b40d-413a-9f72-d862a2b6a861.png",
+      "description": "選んだ文字は固定。字体・サイズ・持ち方・戦闘スタイル・必殺技を調整。"
+    },
+    {
+      "id": "05_vs",
+      "title": "05 VS画面",
+      "filename": "05_vs.png",
+      "source": "C:\\Users\\swgb1\\AppData\\Roaming\\orca\\codex-runtime-home\\home\\generated_images\\01a12496-8356-7562-bcce-a35dc7c4ec21\\exec-f941b196-d7bd-4c72-9e2c-68b51d99ffc9.png",
+      "description": "あなたの火とCOMの盾を比較し、現在の勝敗数を確認して対戦開始。"
+    },
+    {
+      "id": "06_battle",
+      "title": "06 バトル",
+      "filename": "06_battle.png",
+      "source": "C:\\Users\\swgb1\\AppData\\Roaming\\orca\\codex-runtime-home\\home\\generated_images\\01a12496-8356-7562-bcce-a35dc7c4ec21\\exec-9a3ad1bc-2e7a-4a39-8900-15fd8c80eabe.png",
+      "description": "既存の戦闘HUDをもとに、ラウンドと勝敗数を表示。HPやゲージは表示例。"
+    },
+    {
+      "id": "07_result",
+      "title": "07 結果画面",
+      "filename": "07_result.png",
+      "source": "C:\\Users\\swgb1\\AppData\\Roaming\\orca\\codex-runtime-home\\home\\generated_images\\01a12496-8356-7562-bcce-a35dc7c4ec21\\exec-ca2a99ac-d37d-4e94-93c1-400dee589f36.png",
+      "description": "2勝して決着した結果の例。途中ラウンドでは、同じレイアウトの主ボタンを「次のドラフトへ」に変更。"
+    }
+  ]
+}
+

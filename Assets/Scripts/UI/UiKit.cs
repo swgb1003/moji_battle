@@ -8,6 +8,24 @@ namespace MojiBattle
         static Font font;
         static Material lineMaterial;
         static Sprite whiteSprite;
+        static Sprite discSprite;
+
+        public static Sprite DiscSprite
+        {
+            get
+            {
+                if (discSprite != null) return discSprite;
+                const int side = 64;
+                var texture = new Texture2D(side, side, TextureFormat.RGBA32, false);
+                var pixels = new Color[side * side];
+                for (int y = 0; y < side; y++)
+                    for (int x = 0; x < side; x++)
+                        pixels[y * side + x] = new Color(1, 1, 1, Mathf.Clamp01(31.5f - Vector2.Distance(new Vector2(x, y), new Vector2(31.5f, 31.5f))));
+                texture.SetPixels(pixels); texture.Apply();
+                discSprite = Sprite.Create(texture, new Rect(0, 0, side, side), new Vector2(.5f, .5f), side);
+                return discSprite;
+            }
+        }
 
         /// <summary>HUD・擬音用の OS フォント（武器字形には使わない）。</summary>
         public static Font Font
@@ -15,7 +33,12 @@ namespace MojiBattle
             get
             {
                 if (font == null)
+#if UNITY_WEBGL && !UNITY_EDITOR
+                    font = GlyphFontLibrary.Default?.Get(FontStyleId.Gothic)?.font
+                        ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+#else
                     font = Font.CreateDynamicFontFromOSFont(new[] { "Noto Sans JP", "Yu Gothic UI", "Meiryo", "Arial" }, 64);
+#endif
                 return font;
             }
         }

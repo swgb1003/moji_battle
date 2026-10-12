@@ -115,6 +115,24 @@ namespace MojiBattle.EditorTools
             AssetDatabase.Refresh();
             return results;
         }
+        /// <summary>Prebake the draft pool without recalibrating existing combat stats.</summary>
+        public static void BakeDraft()
+        {
+            BuildFontLibrary();
+            var balance=AssetDatabase.LoadAssetAtPath<CombatBalance>("Assets/Resources/Balance/CombatBalance.asset") ?? CombatBalance.Default;
+            foreach(var src in Fonts)
+            {
+                var font=AssetDatabase.LoadAssetAtPath<Font>(src.path);
+                var hash=Sha256(File.ReadAllBytes(src.path));var cmap=TrueTypeCmap.Load(src.path);
+                foreach(var ch in DraftRuntimeStore.Candidates)
+                {
+                    if(File.Exists(DefinitionFolder+"/"+GlyphCatalog.ResourceName(ch,src.id)+".asset"))continue;
+                    var result=BakeOne(font,src,hash,cmap,ch,balance);
+                    if(!result.ok)throw new InvalidOperationException(result.ToString());
+                }
+            }
+            AssetDatabase.SaveAssets();AssetDatabase.Refresh();
+        }
 
         static Result BakeOne(Font font, FontSource src, string fontHash, TrueTypeCmap cmap, string grapheme, CombatBalance b)
         {

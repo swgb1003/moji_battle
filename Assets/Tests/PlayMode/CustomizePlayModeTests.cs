@@ -111,7 +111,7 @@ namespace MojiBattle.Tests
             public int matches, wins;
             public float seconds, attacks, sequences, finished, cycle, guardSeconds, retreats, windowAttacks, omega, tip, swings, impulse, hits, damage, windup, windups;
             public float maxStretch, stretchedSteps;
-            public int[] stretchStates = new int[10];
+            public int[] stretchStates = new int[FighterTelemetry.StateCount];
             public float PerMin(float v) => v / Mathf.Max(1f, seconds / 60f);
         }
 
@@ -120,6 +120,15 @@ namespace MojiBattle.Tests
             for (int s = 0; s < seeds; s++)
             {
                 var battle = SimHarness.Build(seedBase + s * 13, left, right);
+                // Compare the same basic weapon attacks across sizes; mobility and counter techniques have their own timing.
+                var weaponWindups = new List<float>();
+                battle.Context.Events.StateChanged += e =>
+                {
+                    var style = battle.Left.Runtime.attackStyle;
+                    if (e.fighter == 0 && e.to == FighterState.AttackWindup
+                        && (style == AttackStyle.Overhead || style == AttackStyle.Rising || style == AttackStyle.Thrust))
+                        weaponWindups.Add(battle.Left.Runtime.windupDuration);
+                };
                 yield return SimHarness.RunToEnd(battle, 10f);
                 Assert.IsTrue(battle.Director.Ended, $"{agg.label}: 試合が終わらない");
                 var t = battle.Director.Telemetry.fighters[0];
@@ -140,11 +149,11 @@ namespace MojiBattle.Tests
                 agg.impulse += t.hitImpulses.Sum();
                 agg.hits += t.hitImpulses.Count;
                 agg.damage += t.hitDamages.Sum();
-                agg.windup += t.windups.Sum();
-                agg.windups += t.windups.Count;
+                agg.windup += weaponWindups.Sum();
+                agg.windups += weaponWindups.Count;
                 agg.maxStretch = Mathf.Max(agg.maxStretch, t.maxHingeStretch);
                 agg.stretchedSteps += t.stretchedSteps;
-                for (int k = 0; k < 10; k++) agg.stretchStates[k] += t.stretchStateSteps[k];
+                for (int k = 0; k < FighterTelemetry.StateCount; k++) agg.stretchStates[k] += t.stretchStateSteps[k];
                 battle.Destroy();
                 yield return null;
             }
@@ -155,10 +164,57 @@ namespace MojiBattle.Tests
             $"{a.impulse / Mathf.Max(1, a.hits):F1} | {a.damage / a.matches:F0} | {a.guardSeconds / Mathf.Max(1f, a.seconds):P0} | {a.retreats / Mathf.Max(1f, a.finished):P0} | " +
             $"{a.windowAttacks / Mathf.Max(1f, a.sequences):P0} | {a.maxStretch:F2} ({a.stretchedSteps / Mathf.Max(1f, a.seconds * 50f):P1} {TopStates(a)}) |";
 
-        static string TopStates(Agg a) => string.Join(",", Enumerable.Range(0, 10).Where(k => a.stretchStates[k] > 0)
+        static string TopStates(Agg a) => string.Join(",", Enumerable.Range(0, FighterTelemetry.StateCount).Where(k => a.stretchStates[k] > 0)
             .OrderByDescending(k => a.stretchStates[k]).Take(2).Select(k => $"{(FighterState)k}:{a.stretchStates[k]}"));
 
         const string Header = "| 左の構成 | 勝ち | 攻撃/分 | 1回の攻撃の所要 s | 振りの最大角速度 °/s | 切っ先の最大速度 | 平均衝撃 | 与ダメ/試合 | ガード時間 | 攻撃後の離脱 | 好機で始めた攻撃 | 握りの最大ずれ |\n|---|---|---|---|---|---|---|---|---|---|---|---|";
+
+        IEnumerator MeasureUnobstructedSwing(float gripPosition, System.Action<float> result)
+        {
+            var free = SimHarness.Build(7000, SimHarness.Custom("一", WeaponSize.XL, gripPosition: gripPosition), SimHarness.Custom("口"));
+            try
+            {
+                free.Director.enabled = false;
+                free.Context.AiEnabled = false;
+                var f = free.Left;
+                // Keep the complete physical weapon/hinge, but remove floor impacts and opponent reactions.
+                f.Body.position += Vector2.up * 4f;
+                f.WeaponBody.position += Vector2.up * 4f;
+                f.Body.constraints = RigidbodyConstraints2D.FreezeAll;
+                f.WeaponBody.gravityScale = 0f;
+                // Give both grips the same trajectory and initial pose, so aim and gravity do not confound inertia.
+                f.WeaponBody.rotation = f.Body.rotation + (90f - f.Weapon.alpha0Deg) * f.Facing;
+                f.WeaponBody.angularVelocity = 0;
+                f.StartAttack(free.Context.SimTime, AttackStyle.Overhead);
+                f.Runtime.swingFromPsi = 90f;
+                f.Runtime.swingToPsi = -30f;
+                f.Runtime.activeDuration = .6f;
+                f.SetState(FighterState.AttackActive);
+                float peak = 0f;
+                for (int i = 0; i < 500; i++)
+                {
+                    free.Director.SimulateStep();
+                    if (f.Runtime.state == FighterState.AttackActive) peak = Mathf.Max(peak, Mathf.Abs(f.WeaponBody.angularVelocity));
+                    if (peak > 0 && f.Runtime.state == FighterState.AttackRecovery) break;
+                    if (i % 100 == 0) yield return null;
+                }
+                Assert.Greater(peak, 0, "The physical weapon must actually swing.");
+                result(peak);
+            }
+            finally { free.Destroy(); }
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator GripPosition_ChangesUnobstructedAngularResponse()
+        {
+            SimHarness.Begin(false);
+            float centerOmega = 0, edgeOmega = 0;
+            yield return MeasureUnobstructedSwing(.5f, v => centerOmega = v);
+            yield return MeasureUnobstructedSwing(0f, v => edgeOmega = v);
+            Debug.Log($"[GRIP SWING] center={centerOmega:F1} edge={edgeOmega:F1}");
+            Assert.Greater(centerOmega, edgeOmega, "同じ軌道の振りでは端持ちは中央持ちより回転が遅いはず");
+        }
 
         [UnityTest]
         [Timeout(1200000)]
@@ -187,15 +243,15 @@ namespace MojiBattle.Tests
             foreach (var a in sets) report.AppendLine(Row(a));
             report.AppendLine();
             WriteReport();
-            Agg S = sets[1], XL = sets[3], edge = sets[4];
-            float Omega(Agg a) => a.omega / Mathf.Max(1, a.swings);
+            Agg S = sets[1], XL = sets[3];
             float Imp(Agg a) => a.impulse / Mathf.Max(1, a.hits);
             float Cycle(Agg a) => a.cycle / Mathf.Max(1f, a.attacks);
             float Windup(Agg a) => a.windup / Mathf.Max(1, a.windups);
-            Assert.Less(Windup(S), Windup(XL) * 0.6f, "S の方が溜めが短いはず");
+            Assert.Less(Windup(S), Windup(XL) * 0.6f, "同じ基本武器攻撃では S の方が溜めが短いはず");
             Assert.Less(Cycle(S), Cycle(XL), "S の方が 1 回の攻撃が速く終わるはず");
             Assert.Greater(Imp(XL), Imp(S) * 1.5f, "XL の方が衝撃が大きいはず");
-            Assert.Greater(Omega(XL), Omega(edge), "端持ちは中央持ちより回転が遅いはず");
+            // Angular response is compared separately with one fixed physical trajectory;
+            // natural matches mix techniques, aim angles and interrupted swings.
             // 握りのずれ（0.2 超）の時間がカスタマイズ無しの基準の 2 倍・1% のどちらか大きい方を超えない
             float Stretch(Agg a) => a.stretchedSteps / Mathf.Max(1f, a.seconds * 50f);
             float limit = Mathf.Max(0.01f, Stretch(sets[0]) * 2f);

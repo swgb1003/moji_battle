@@ -8,19 +8,20 @@ namespace MojiBattle
     public enum FighterState
     {
         Approach, AttackWindup, AttackActive, AttackRecovery,
-        Guard, Evade, Stagger, Knockdown, Recover, KO
+        Guard, Evade, Stagger, Knockdown, Recover, KO, Feint, Bind
     }
     public enum WeightClass { Light, Medium, Heavy }
     /// <summary>Approach 状態内の移動意図。離脱（Retreat）も Approach 状態として扱う。</summary>
     public enum MoveIntent { Advance, Hold, Retreat }
     public enum HitQuality { Graze, Normal, Center }
-    public enum EvadeKind { Backstep, HopOver }
+    public enum EvadeKind { Backstep, HopOver, Duck, WallJump, RecoverRoll }
     /// <summary>
     /// 振り下ろし（上から）/ 斬り上げ（下から）/ 刺す（腕を伸ばして先端で突く）/ 横薙ぎ（画面の奥を回り込んで前へ振る）/
     /// 足払い（屈んで低く奥から払う）/ 盾当て（字形を前に構えて体当たり）/ 打ち上げ（下から跳ね上げて浮かせる）/ 回転斬り（一回転して前後を払う）/
-    /// 投げ（手を離して字形を投げつける。拾うまで素手）/ 叩き落とし（打ち上げた相手を頭上から地面へ叩きつける連携の締め）。
+    /// 投げ（手を離して字形を投げつける。拾うまで素手）/ 叩き落とし（打ち上げた相手を頭上から地面へ叩きつける連携の締め）/
+    /// 跳び斬り（跳び上がって相手の頭上から垂直に振り下ろす）。
     /// </summary>
-    public enum AttackStyle { Overhead, Rising, Thrust, Sweep, LowSweep, Bash, Launch, Spin, Throw, Smash }
+    public enum AttackStyle { Overhead, Rising, Thrust, Sweep, LowSweep, Bash, Launch, Spin, Throw, Smash, Leap, DashSlash, Riposte, Whirl, FrontKick, PickupSlash, RecoverKick, HookPull, GroundWave, StrokeShot }
 
     [Serializable]
     public struct GlyphFeatures

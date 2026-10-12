@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c46a8ec975b479995d321c92c92e765, type: 3}
+  m_Name: BattleMusic
+  m_EditorClassIdentifier:
+  titleLoop: {fileID: 8300000, guid: d5a20c082d6940379990ea46f05be709, type: 3}
+  menuLoop: {fileID: 8300000, guid: 2f25c32258df45e78ed563c67dace41d, type: 3}
+  draftLoop: {fileID: 8300000, guid: 4d1294225f874b6bb248192c0b299724, type: 3}
+  tournamentLoop: {fileID: 8300000, guid: 53d077ae6620417d9d4dd7e9bed16b98, type: 3}
+  customizeLoop: {fileID: 8300000, guid: cb6c563492484108a34174c468fc33e9, type: 3}
+  battleLoop: {fileID: 8300000, guid: 39672fdc3af74518a1db30c11518c994, type: 3}
+  battleLoop2: {fileID: 8300000, guid: 6c370baa432b4f4fa2dfc6790c9892cf, type: 3}
+  battleLoop3: {fileID: 8300000, guid: 16dcb662a90d4974868a0a560f686742, type: 3}
+  finalLoop: {fileID: 8300000, guid: 956e07d0540b48d2aaee401c2224a7fa, type: 3}
+  titleStart: {fileID: 8300000, guid: cfab6b38fb4b48fda0f7730993b282e5, type: 3}
+  battleStart: {fileID: 8300000, guid: 72d3ec6f54d4490997661aedfeeb1b17, type: 3}

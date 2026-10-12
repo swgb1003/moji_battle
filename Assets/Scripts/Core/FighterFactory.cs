@@ -6,10 +6,10 @@ namespace MojiBattle
     /// <summary>棒人間・文字武器・部位 Collider・陣営表示を組み立てる。</summary>
     public static class FighterFactory
     {
-        public static readonly Color LeftColor = new Color32(0xD8, 0x3B, 0x39, 0xFF);
-        public static readonly Color RightColor = new Color32(0x26, 0x73, 0xC9, 0xFF);
-        public static readonly Color Ink = new Color32(0x10, 0x10, 0x12, 0xFF);
-        public static readonly Color Paper = new Color32(0xF4, 0xF0, 0xE8, 0xFF);
+        public static readonly Color LeftColor = new Color32(186, 60, 45, 255);
+        public static readonly Color RightColor = new Color32(51, 76, 120, 255);
+        public static readonly Color Ink = new Color32(32, 33, 31, 255);
+        public static readonly Color Paper = new Color32(242, 235, 219, 255);
 
         static PhysicsMaterial2D bodyMaterial, weaponMaterial;
 
@@ -157,6 +157,7 @@ namespace MojiBattle
             hinge.useLimits = false;
             hinge.useMotor = false;
             fighter.Hinge = hinge;
+            fighter.Actions = new FighterActions(fighter);
 
             fighter.CapturePose();
             fighter.CapturePose();

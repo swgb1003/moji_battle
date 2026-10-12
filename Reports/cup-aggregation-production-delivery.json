@@ -1,0 +1,65 @@
+{
+  "url": "https://moji-fighter-x.vercel.app",
+  "verified": [
+    {
+      "file": "Build/0a839837facf67523a6a5203873e683e.framework.js.gz",
+      "bytes": 84124,
+      "sha256": "0a839837facf67523a6a5203873e683e3c8b9d8b6a364038c81f1a101e04a4f7"
+    },
+    {
+      "file": "Build/4a1294eaf46770a25c42a2992d097d60.wasm.gz",
+      "bytes": 6983578,
+      "sha256": "de9bcb009a2a87c9a1f4fe53523038610d93b0c4cf49f409024c60acc3a6d191"
+    },
+    {
+      "file": "Build/7769dd3a62a02dd6bfe303f046cd061c.data.gz",
+      "bytes": 99210104,
+      "sha256": "3b860160df39af515967a1d8f6681391f107eeac6fcc72e4ff80d6f31f6c89c6"
+    },
+    {
+      "file": "Build/82bd9e27ae3e919a42bf1695a0c20c30.loader.js",
+      "bytes": 26454,
+      "sha256": "cf8954e15b483fac620e13200be8e2741f21dc691b85df6728a505e48c8a3de4"
+    },
+    {
+      "file": "Licenses/Brush/OFL.txt",
+      "bytes": 4386,
+      "sha256": "ef7c85c72ae94381c8bc4832ae4e6fbabdeafa2bb8a31313cd75dce95a690256"
+    },
+    {
+      "file": "Licenses/Gothic/OFL.txt",
+      "bytes": 4388,
+      "sha256": "cec239a4ff08f8b4c5691bd45bec938bf2cc6f1c254b9a49a85caf0f92f1ef6c"
+    },
+    {
+      "file": "Licenses/Mincho/OFL.txt",
+      "bytes": 4399,
+      "sha256": "41fba056279be5f45ff9a99e44b7b53897b42732f5806d8e666e0ab49ac6bd38"
+    },
+    {
+      "file": "Licenses/RoundedGothic/OFL.txt",
+      "bytes": 4402,
+      "sha256": "2a20cf7ce1909d8ee1e949095d340f7d7656705f7c810a2d6faf56800ad0cb3d"
+    },
+    {
+      "file": "Licenses/Unicode/LICENSE.txt",
+      "bytes": 2034,
+      "sha256": "8437ba5f4e4c8ae0268c3df5cf106006f2d045ff3452eedd1f27e8eb26c5f327"
+    },
+    {
+      "file": "Licenses/WorldCupHeading/OFL.txt",
+      "bytes": 4301,
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+    },
+    {
+      "file": "build-info.json",
+      "bytes": 102,
+      "sha256": "52efb8495a3e40791f11103a229cb57c88821e8842e9a3e9646d94a019add014"
+    },
+    {
+      "file": "index.html",
+      "bytes": 5533,
+      "sha256": "74cb683d68e78852115fe9f17c7f4e33eeac57c8c2641a0a794ea7b7cf48589e"
+    }
+  ]
+}

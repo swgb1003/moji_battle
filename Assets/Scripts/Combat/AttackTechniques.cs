@@ -21,13 +21,58 @@ namespace MojiBattle
     /// </summary>
     public static class AttackTechniques
     {
+        public static bool IsKick(AttackStyle s) => s == AttackStyle.FrontKick || s == AttackStyle.RecoverKick;
+        public static bool IsRanged(AttackStyle s) => s == AttackStyle.GroundWave || s == AttackStyle.StrokeShot;
+        public static bool CanGroundWave(Fighter f) => CanWhirl(f);
+        public static bool CanStrokeShot(Fighter f) => CanDash(f);
         /// <summary>字形を縦軸まわりに回す（奥行き方向に振る）技。正面の盾を回り込み、反応して構えたガードでしか止まらない。</summary>
-        public static bool IsYaw(AttackStyle s) => s == AttackStyle.Sweep || s == AttackStyle.LowSweep || s == AttackStyle.Spin;
+        public static bool IsYaw(AttackStyle s) => s == AttackStyle.Sweep || s == AttackStyle.LowSweep || s == AttackStyle.Spin || s == AttackStyle.Whirl;
+
+        public static bool CanDash(Fighter f) => f.IsGrounded && !f.Runtime.weaponDetached
+            && (f.Mods.customized ? f.Mods.size <= WeaponSize.M : f.WeightClass != WeightClass.Heavy);
+        public static bool CanWhirl(Fighter f) => f.IsGrounded && !f.Runtime.weaponDetached
+            && (f.Mods.customized ? f.Mods.size >= WeaponSize.L : f.WeightClass == WeightClass.Heavy);
+
+        public static string Callout(FighterMotionKind kind)
+        {
+            switch (kind)
+            {
+                case FighterMotionKind.AerialChase: return "空中追撃！";
+                case FighterMotionKind.AerialSlash: return "空中一閃！";
+                case FighterMotionKind.AerialSmash: return "叩き落とせ！";
+                case FighterMotionKind.BindCounter: return "崩し反撃！";
+                case FighterMotionKind.Dash: return "踏込斬り！";
+                case FighterMotionKind.GroundWave: return "衝撃波！";
+                case FighterMotionKind.StrokeShot: return "一画飛ばし！";
+                case FighterMotionKind.Riposte: return "反撃！";
+                case FighterMotionKind.Whirl: return "ぶん回し！";
+                case FighterMotionKind.Duck: return "くぐり！";
+                case FighterMotionKind.DuckCounter: return "斬り返し！";
+                case FighterMotionKind.Feint: return "フェイント！";
+                case FighterMotionKind.Bind: return "鍔迫り合い！";
+                case FighterMotionKind.BindPush: return "押し返し！";
+                case FighterMotionKind.BindEscape: return "離脱！";
+                case FighterMotionKind.FrontKick: return "前蹴り！";
+                case FighterMotionKind.WallJump: return "壁蹴り！";
+                case FighterMotionKind.PickupSlash: return "拾い斬り！";
+                case FighterMotionKind.RecoverKick: return "起上り蹴り！";
+                case FighterMotionKind.RecoverRoll: return "後転復帰！";
+                case FighterMotionKind.HookPull: return "引き崩し！";
+                case FighterMotionKind.HookReversed: return "引っ張り負け！";
+                default: return "";
+            }
+        }
 
         public static string Label(AttackStyle s)
         {
             switch (s)
             {
+                case AttackStyle.FrontKick: return "前蹴り";
+                case AttackStyle.GroundWave: return "衝撃波";
+                case AttackStyle.StrokeShot: return "一画飛ばし";
+                case AttackStyle.RecoverKick: return "起き上がり蹴り";
+                case AttackStyle.PickupSlash: return "拾い斬り";
+                case AttackStyle.HookPull: return "引き崩し";
                 case AttackStyle.Thrust: return "刺す";
                 case AttackStyle.Sweep: return "横薙ぎ";
                 case AttackStyle.LowSweep: return "足払い";
@@ -37,6 +82,10 @@ namespace MojiBattle
                 case AttackStyle.Rising: return "斬り上げ";
                 case AttackStyle.Throw: return "投げ";
                 case AttackStyle.Smash: return "叩き落とし";
+                case AttackStyle.Leap: return "跳び斬り";
+                case AttackStyle.DashSlash: return "踏み込み斬り";
+                case AttackStyle.Riposte: return "受け流し反撃";
+                case AttackStyle.Whirl: return "全身ぶん回し";
                 default: return "振り下ろし";
             }
         }
@@ -46,6 +95,8 @@ namespace MojiBattle
             switch (s)
             {
                 case AttackStyle.Thrust: return b.stab;
+                case AttackStyle.GroundWave: return b.groundWave;
+                case AttackStyle.StrokeShot: return b.strokeShot;
                 case AttackStyle.Sweep: return b.sweep;
                 case AttackStyle.LowSweep: return b.lowSweep;
                 case AttackStyle.Bash: return b.bash;
@@ -53,6 +104,10 @@ namespace MojiBattle
                 case AttackStyle.Spin: return b.spin;
                 case AttackStyle.Throw: return b.throwAttack;
                 case AttackStyle.Smash: return b.smash;
+                case AttackStyle.Leap: return b.leap;
+                case AttackStyle.DashSlash: return b.dashSlash;
+                case AttackStyle.Riposte: return b.riposte;
+                case AttackStyle.Whirl: return b.whirl;
                 default: return null;
             }
         }
@@ -109,16 +164,36 @@ namespace MojiBattle
                 if (mods.style == BattleStyle.HitAndAway) wLow *= 1.3f;
             }
 
-            float total = wSweep + wLow + wBash + wLaunch + wSpin;
+            // 跳び斬り: 跳べる軽量・中量級が、少し離れた間合いから。下段に構える相手には頭上が空いている
+            float wLeap = f.IsGrounded && !ort.IsDown && f.WeightClass != WeightClass.Heavy
+                          && d >= f.AttackRange * b.leapMinRangeScale && d <= f.LeapTravelRange ? b.leap.weight : 0f;
+            if (wLeap > 0f && oppGuarding && !float.IsNaN(ort.guardPsiTarget) && ort.guardPsiTarget < 30f) wLeap += 0.1f;
+
+            float wDash = CanDash(f) && f.Context.SimTime >= f.Runtime.dashReadyAt && !ort.IsDown
+                && d >= Mathf.Max(f.AttackRange * 0.85f, 0.8f) && d <= f.AttackRange + b.dashMaxTravel ? b.dashSlash.weight : 0f;
+            float wWhirl = CanWhirl(f) && f.Context.SimTime >= f.Runtime.whirlReadyAt
+                && d <= f.AttackRange * 1.1f ? b.whirl.weight : 0f;
+            if (wWhirl > 0f && oppGuarding) wWhirl += .08f;
+            if (mods.customized && mods.grip == GripType.TwoHanded) wWhirl *= 1.3f;
+            if (mods.customized && mods.style == BattleStyle.HitAndAway) wDash *= 1.4f;
+            float total = wSweep + wLow + wBash + wLaunch + wSpin + wLeap + wDash + wWhirl;
+            float wHook = b.expandedActions && f.Actions != null && f.Actions.HasHook && !ort.IsDown
+                && !ort.weaponDetached && f.Context.SimTime >= f.Runtime.hookReadyAt && d <= f.AttackRange
+                && oppGuarding ? b.hookChance : 0f;
+            total += wHook;
             if (total <= 0f) return null;
             // 置き換える確率の上限（基本の振りを主体に保つ）。足し合わせた重みがそのまま確率、超えたら比で割り振る
             float scale = total > b.specialAttackCap ? b.specialAttackCap / total : 1f;
             float acc = 0f;
+            if (roll < (acc += wHook * scale)) return AttackStyle.HookPull;
             if (roll < (acc += wSweep * scale)) return AttackStyle.Sweep;
             if (roll < (acc += wLow * scale)) return AttackStyle.LowSweep;
             if (roll < (acc += wBash * scale)) return AttackStyle.Bash;
             if (roll < (acc += wLaunch * scale)) return AttackStyle.Launch;
             if (roll < (acc += wSpin * scale)) return AttackStyle.Spin;
+            if (roll < (acc += wLeap * scale)) return AttackStyle.Leap;
+            if (roll < (acc += wDash * scale)) return AttackStyle.DashSlash;
+            if (roll < (acc += wWhirl * scale)) return AttackStyle.Whirl;
             return null;
         }
     }

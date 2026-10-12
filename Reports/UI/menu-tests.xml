@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="9" result="Passed" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-07 06:05:09Z" end-time="2026-10-07 06:06:10Z" duration="61.2462688">
+  <test-suite type="TestSuite" id="1098" name="MOJI Fighter X" fullname="MOJI Fighter X" runstate="Runnable" testcasecount="75" result="Passed" start-time="2026-10-07 06:05:09Z" end-time="2026-10-07 06:06:10Z" duration="61.246269" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1094" name="MojiBattle.Tests.PlayMode.dll" fullname="C:/Users/swgb1/Documents/ChatGPT/文字武器バトル/Library/ScriptAssemblies/MojiBattle.Tests.PlayMode.dll" runstate="Runnable" testcasecount="75" result="Passed" start-time="2026-10-07 06:05:09Z" end-time="2026-10-07 06:06:10Z" duration="61.224461" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="25552" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1095" name="MojiBattle" fullname="MojiBattle" runstate="Runnable" testcasecount="75" result="Passed" start-time="2026-10-07 06:05:09Z" end-time="2026-10-07 06:06:10Z" duration="61.221086" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1096" name="Tests" fullname="MojiBattle.Tests" runstate="Runnable" testcasecount="75" result="Passed" start-time="2026-10-07 06:05:09Z" end-time="2026-10-07 06:06:10Z" duration="61.218569" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1029" name="CustomizeFlowTests" fullname="MojiBattle.Tests.CustomizeFlowTests" classname="MojiBattle.Tests.CustomizeFlowTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-10-07 06:05:09Z" end-time="2026-10-07 06:05:12Z" duration="3.635293" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1030" name="Title_Customize_Battle_Rematch_Back_KeepsBuild" fullname="MojiBattle.Tests.CustomizeFlowTests.Title_Customize_Battle_Rematch_Back_KeepsBuild" methodname="Title_Customize_Battle_Rematch_Back_KeepsBuild" classname="MojiBattle.Tests.CustomizeFlowTests" runstate="Runnable" seed="2099358752" result="Passed" start-time="2026-10-07 06:05:09Z" end-time="2026-10-07 06:05:12Z" duration="3.615363" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1065" name="MenuUiTests" fullname="MojiBattle.Tests.MenuUiTests" classname="MojiBattle.Tests.MenuUiTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-07 06:05:12Z" end-time="2026-10-07 06:05:28Z" duration="15.570634" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1067" name="ButtonMotion_WorksWhilePaused_AndReducedMotionSettlesImmediately" fullname="MojiBattle.Tests.MenuUiTests.ButtonMotion_WorksWhilePaused_AndReducedMotionSettlesImmediately" methodname="ButtonMotion_WorksWhilePaused_AndReducedMotionSettlesImmediately" classname="MojiBattle.Tests.MenuUiTests" runstate="Runnable" seed="2053642057" result="Passed" start-time="2026-10-07 06:05:12Z" end-time="2026-10-07 06:05:14Z" duration="1.462448" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1066" name="Menus_Render_AndControlsPreserveBothBuilds" fullname="MojiBattle.Tests.MenuUiTests.Menus_Render_AndControlsPreserveBothBuilds" methodname="Menus_Render_AndControlsPreserveBothBuilds" classname="MojiBattle.Tests.MenuUiTests" runstate="Runnable" seed="1931185492" result="Passed" start-time="2026-10-07 06:05:14Z" end-time="2026-10-07 06:05:23Z" duration="8.941297" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1068" name="ResultActions_RematchThenReturnKeepsLoadout" fullname="MojiBattle.Tests.MenuUiTests.ResultActions_RematchThenReturnKeepsLoadout" methodname="ResultActions_RematchThenReturnKeepsLoadout" classname="MojiBattle.Tests.MenuUiTests" runstate="Runnable" seed="785833509" result="Passed" start-time="2026-10-07 06:05:23Z" end-time="2026-10-07 06:05:28Z" duration="5.162810" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MojiBattle] seed=1777955921 KO winner=0 t=0.0s HP 92/0
+[MojiBattle] seed=1803647291 KO winner=0 t=0.0s HP 92/0
+]]></output>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1086" name="TournamentFlowTests" fullname="MojiBattle.Tests.TournamentFlowTests" classname="MojiBattle.Tests.TournamentFlowTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-07 06:05:28Z" end-time="2026-10-07 06:06:10Z" duration="41.996256" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1091" name="ComputerSimulation_UsesRealMatchRules_WithoutChangingSpectatorTime" fullname="MojiBattle.Tests.TournamentFlowTests.ComputerSimulation_UsesRealMatchRules_WithoutChangingSpectatorTime" methodname="ComputerSimulation_UsesRealMatchRules_WithoutChangingSpectatorTime" classname="MojiBattle.Tests.TournamentFlowTests" runstate="Runnable" seed="665313694" result="Passed" start-time="2026-10-07 06:05:28Z" end-time="2026-10-07 06:05:28Z" duration="0.525661" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1090" name="DisabledFighterView_HidesExistingCallout_AndIgnoresCombatEvents" fullname="MojiBattle.Tests.TournamentFlowTests.DisabledFighterView_HidesExistingCallout_AndIgnoresCombatEvents" methodname="DisabledFighterView_HidesExistingCallout_AndIgnoresCombatEvents" classname="MojiBattle.Tests.TournamentFlowTests" runstate="Runnable" seed="1681465742" result="Passed" start-time="2026-10-07 06:05:28Z" end-time="2026-10-07 06:05:29Z" duration="0.041949" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1087" name="Title_ModeSelect_RegularBattleStillAllowsBothCustomizations" fullname="MojiBattle.Tests.TournamentFlowTests.Title_ModeSelect_RegularBattleStillAllowsBothCustomizations" methodname="Title_ModeSelect_RegularBattleStillAllowsBothCustomizations" classname="MojiBattle.Tests.TournamentFlowTests" runstate="Runnable" seed="1942799537" result="Passed" start-time="2026-10-07 06:05:29Z" end-time="2026-10-07 06:05:29Z" duration="0.206744" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1089" name="Tournament_DrawRematchesSameOpponent_ThenDefeatEndsRun" fullname="MojiBattle.Tests.TournamentFlowTests.Tournament_DrawRematchesSameOpponent_ThenDefeatEndsRun" methodname="Tournament_DrawRematchesSameOpponent_ThenDefeatEndsRun" classname="MojiBattle.Tests.TournamentFlowTests" runstate="Runnable" seed="624467414" result="Passed" start-time="2026-10-07 06:05:29Z" end-time="2026-10-07 06:05:51Z" duration="22.720364" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MojiBattle] seed=1442553791 DOUBLE_KO winner=-1 t=0.0s HP 0/0
+[MojiBattle] seed=141802603 KO winner=1 t=0.0s HP 0/72
+]]></output>
+            </test-case>
+            <test-case id="1088" name="Tournament_ThreeWins_Champion_LocksBuild_AndShowsEveryBracket" fullname="MojiBattle.Tests.TournamentFlowTests.Tournament_ThreeWins_Champion_LocksBuild_AndShowsEveryBracket" methodname="Tournament_ThreeWins_Champion_LocksBuild_AndShowsEveryBracket" classname="MojiBattle.Tests.TournamentFlowTests" runstate="Runnable" seed="1788005578" result="Passed" start-time="2026-10-07 06:05:51Z" end-time="2026-10-07 06:06:10Z" duration="18.457794" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MojiBattle] seed=789792435 KO winner=0 t=0.0s HP 110/0
+[MojiBattle] seed=1739567899 KO winner=0 t=0.0s HP 110/0
+[MojiBattle] seed=1420833799 KO winner=0 t=0.0s HP 110/0
+Saving results to: C:/Users/swgb1/Documents/ChatGPT/文字武器バトル/Reports/UI/menu-tests.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

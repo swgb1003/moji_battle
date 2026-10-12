@@ -1,0 +1,61 @@
+﻿{
+    "baseCommit":  "e2b60e25a4a4c7b34759b032832b2829f079bfc5",
+    "sourceFilesMatched":  936,
+    "files":  [
+                  {
+                      "sha256":  "747ca6b7fd4d8b01a3cab9283a346c2ec2b99edb55fc4c1777504f8345e426a4",
+                      "file":  "Build/35bbaf868b27097eedcb6af760b5de08.loader.js",
+                      "bytes":  26454
+                  },
+                  {
+                      "sha256":  "7b3161ad51e2d218d5d55345ec541a222392865b499f18e760fa35f5fbeada9f",
+                      "file":  "Build/3cf358ec3f35787b9974fcc1523eb3ac.data.gz",
+                      "bytes":  99205500
+                  },
+                  {
+                      "sha256":  "7dbc8fb703c302dc5f3e204468f738d6bf461ad471930a9b89e91f9333f8f587",
+                      "file":  "Build/7dbc8fb703c302dc5f3e204468f738d6.framework.js.gz",
+                      "bytes":  84121
+                  },
+                  {
+                      "sha256":  "1e425f9d4a059893dc09eb871ff21457b2edcc6d1964a67c934cc15164199a0d",
+                      "file":  "Build/a96850f576d3e4b1743d6de78fee93f0.wasm.gz",
+                      "bytes":  6992918
+                  },
+                  {
+                      "sha256":  "c4afbae6916d564df36c66638dc89595fde9f9aca031d872a8be84789b5db239",
+                      "file":  "index.html",
+                      "bytes":  5533
+                  },
+                  {
+                      "sha256":  "2b62ee349bace16c6f9465901f94670a843158cd6355ea8580481b7bf8aaa560",
+                      "file":  "build-info.json",
+                      "bytes":  102
+                  },
+                  {
+                      "sha256":  "2365d289bfa7875cff7bfafcf6879a91118fd72bf737b887a3dfc038d85a98a3",
+                      "file":  "reviews/fighter-volume/after.mp4",
+                      "bytes":  883938
+                  },
+                  {
+                      "sha256":  "4b03778c0ae7676f601ccef5a714b8bf1133ce8f7473ce6c021df4e88a365c0f",
+                      "file":  "reviews/fighter-volume/before.mp4",
+                      "bytes":  722855
+                  },
+                  {
+                      "sha256":  "426ac4e62f74ae58d62e63766d49d4acb6a18a64eb0ca3d283ab1ab4a3001425",
+                      "file":  "reviews/fighter-volume/comparison.mp4",
+                      "bytes":  1488596
+                  },
+                  {
+                      "sha256":  "9efcf6b8d92b6491de7222857f5bca9c91020a4c405c81aecd7c2b4cf2846750",
+                      "file":  "reviews/fighter-volume/full_battle.png",
+                      "bytes":  2464812
+                  },
+                  {
+                      "sha256":  "69dd02a7e29c1d624ac6145d7198f95e29a9e94f791ae46063a95b8b9c95b248",
+                      "file":  "reviews/fighter-volume/index.html",
+                      "bytes":  904
+                  }
+              ]
+}
