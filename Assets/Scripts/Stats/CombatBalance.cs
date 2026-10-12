@@ -226,6 +226,8 @@ namespace MojiBattle
         public float sweepChanceVsGuard = 0.5f, sweepChanceBigWeaponBonus = 0.12f;
         [Tooltip("横振りの振り終わりの奥行き角（前へ振り抜く）")]
         public float sweepFollowThroughYaw = -35f;
+        [Tooltip("横薙ぎの構え: 握り→重心の角度（0 = 前へ水平。字形を横に寝かせて払う）")]
+        public float sweepPsi = 0f;
         [Tooltip("横振りが当たった時の速さ = min(奥行きの角速度, 上限) × 握りからの距離 × この倍率。体の周りを回す振りは平面の振りより遅い")]
         public float sweepSpeedScale = 0.5f;
         [Tooltip("横振りの奥行きの角速度の上限（度/秒）。軽い武器の短い振りで速さが現実離れしないように")]

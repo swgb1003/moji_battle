@@ -416,9 +416,11 @@ namespace MojiBattle
             if (AttackTechniques.IsYaw(rt.attackStyle) || rt.attackStyle == AttackStyle.Bash
                 || AttackTechniques.IsKick(rt.attackStyle) || rt.attackStyle == AttackStyle.HookPull)
             {
-                // 横薙ぎ・足払い・回転斬り: 字形を立てたまま（ψ = 字形の基準角）、奥行き方向に回す
+                // 足払い・回転斬り: 字形を立てたまま（ψ = 字形の基準角）、奥行き方向に回す
+                // 横薙ぎ: 字形を横に寝かせて（ψ = 前へ水平）、体の後ろから前へ払う
                 // 盾当て: 字形を前に立てて構えたまま体当たり
-                rt.swingFromPsi = rt.swingToPsi = rt.attackStyle == AttackStyle.Bash ? b.guardPsi : Weapon.alpha0Deg;
+                rt.swingFromPsi = rt.swingToPsi = rt.attackStyle == AttackStyle.Bash ? b.guardPsi
+                    : rt.attackStyle == AttackStyle.Sweep ? b.sweepPsi : Weapon.alpha0Deg;
                 if (rt.attackStyle == AttackStyle.HookPull)
                 {
                     // Present the cavity toward the opposing blade, including low guards.

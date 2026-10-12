@@ -97,6 +97,22 @@ namespace MojiBattle
             if (techniquePlate != null) techniquePlate.gameObject.SetActive(false);
         }
 
+        FighterState lastSweepState;
+        CombatInkEffects ink;
+        /// <summary>横薙ぎの払い始めに、胸の高さへ横一文字の墨の斬撃を出す。</summary>
+        void SweepSlash()
+        {
+            var rt = f.Runtime;
+            var state = rt.attackStyle == AttackStyle.Sweep ? rt.state : FighterState.Approach;
+            if (state == FighterState.AttackActive && lastSweepState != FighterState.AttackActive && !rt.IsDown)
+            {
+                if (ink == null) ink = GetComponentInParent<CombatInkEffects>();
+                Vector2 at = (Vector2)f.WeaponSprite.transform.position + new Vector2(f.Facing * f.Weapon.length * .55f, 0f);
+                ink?.Slash(at, new Vector2(f.Facing, 0f), FighterFactory.TeamColor(f.Id), 1.4f);
+            }
+            lastSweepState = state;
+        }
+
         void ShowTechnique(string text)
         {
             if (PrintedCallouts) return;
@@ -128,6 +144,7 @@ namespace MojiBattle
         void LateUpdate()
         {
             if (f == null || f.Body == null) return;
+            SweepSlash();
             var rt = f.Runtime;
             bool down = rt.IsDown;
             // Lazy construction avoids adding meshes or material work to hidden cup fixtures.
