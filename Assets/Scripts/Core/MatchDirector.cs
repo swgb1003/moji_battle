@@ -27,6 +27,11 @@ namespace MojiBattle
         public bool FastSimulationQueries { get; set; }
         public bool CapturePresentationPose { get; set; } = true;
         public bool RemotePlayback { get; set; }
+        /// <summary>KO 後のリプレイ（対戦画面のみ。無ければ KO 演出の後すぐ結果へ）</summary>
+        public KoReplay Replay { get; set; }
+        bool replaying, awaitingReplay;
+        /// <summary>KO の後、とどめのリプレイを待っている・再生している（画面中央の表示を退ける）</summary>
+        public bool ReplayPhase => replaying || awaitingReplay;
         public void ApplyRemoteClock(FriendBattleFrame frame)
         {
             if (!RemotePlayback) return;
@@ -105,7 +110,7 @@ namespace MojiBattle
         /// <summary>Also used by the tournament's COM matches, with this component disabled.</summary>
         public void SimulateStep()
         {
-            if (Context == null || RemotePlayback) return;
+            if (Context == null || RemotePlayback || replaying) return;
             float dt = Time.fixedDeltaTime;
             var ctx = Context;
             StepCount++;
@@ -167,6 +172,7 @@ namespace MojiBattle
             Fighters[0].Offhand?.Step(dt);
             Fighters[1].Offhand?.Step(dt);
             if(CapturePresentationPose){Fighters[0].CapturePose();Fighters[1].CapturePose();}
+            Replay?.Record();
             DetectOverlapHits();
             if (!Ended && CollectStepTelemetry)
             {
@@ -241,11 +247,27 @@ namespace MojiBattle
             if (RemotePlayback) return;
             if (KoInProgress && !Ended && !TimeController.Paused && !TimeController.FreezeActive)
             {
+                if (replaying)
+                {
+                    // とどめのリプレイ中は物理を止め、終わったら結果へ
+                    if (Replay.Tick(Time.unscaledDeltaTime)) { replaying = false; Finish(pendingWinner, pendingReason); }
+                    return;
+                }
+                if (awaitingReplay)
+                {
+                    // 吹き飛ぶところまで記録してからリプレイへ
+                    if (!Replay.ReadyToPlay) return;
+                    awaitingReplay = false;
+                    if (Replay.TryBegin()) replaying = true;
+                    else Finish(pendingWinner, pendingReason);
+                    return;
+                }
                 koRemaining -= Time.unscaledDeltaTime;
                 if (koRemaining <= 0f)
                 {
                     TimeController.SetKoSlow(false, 1f);
-                    Finish(pendingWinner, pendingReason);
+                    if (pendingWinner >= 0 && Replay != null && Replay.WillPlay) awaitingReplay = true;
+                    else Finish(pendingWinner, pendingReason);
                 }
             }
         }
@@ -822,6 +844,7 @@ namespace MojiBattle
                 if (f.Runtime.hp > 0f) continue;
                 if (f.Runtime.state != FighterState.KO) f.Knockdown.EnterKO(Context.SimTime);
                 point = f.ChestWorld;
+                LaunchFinished(f);
             }
             var finish = outcome >= 0 ? finishSources[1 - outcome] : default;
             finish.winner = outcome; finish.point = point; finish.time = Context.SimTime;
@@ -834,6 +857,21 @@ namespace MojiBattle
                 TimeController.SetKoSlow(true, b.koTimeScale);
             }
             else Finish(pendingWinner, pendingReason);
+        }
+
+        /// <summary>
+        /// とどめを刺された側は、技に関係なく必ず勝者から離れる向きへ吹き飛ぶ（叩き落としでも地面で跳ね上がって飛ぶ）。
+        /// 速度を直接決め、武器も同じ速度で一緒に飛ばす（握りが伸びない）。
+        /// </summary>
+        void LaunchFinished(Fighter f)
+        {
+            var b = Context.Balance;
+            var other = f.Opponent;
+            float away = other == null || Mathf.Abs(f.X - other.X) < .01f ? -f.Facing : Mathf.Sign(f.X - other.X);
+            var v = new Vector2(away * b.koLaunchSpeed, b.koLaunchLift);
+            f.AddVelocity(v - f.Body.linearVelocity);
+            f.Body.angularVelocity = -away * b.koLaunchSpin;
+            f.Runtime.koLaunched = true;
         }
 
         void RecordFinishHit(HitEvent e)

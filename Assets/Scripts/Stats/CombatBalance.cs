@@ -354,6 +354,8 @@ namespace MojiBattle
         public float maxKnockdownTime = 4.0f;
         public float recoverDuration = 0.35f;
         public float koTimeScale = 0.25f, koPresentationSeconds = 0.7f;
+        [Tooltip("とどめの吹き飛び: 勝者から離れる向きの横の速さ・上向きの速さ・回転（度/秒）")]
+        public float koLaunchSpeed = 7.5f, koLaunchLift = 5.5f, koLaunchSpin = 540f;
 
         [Header("4 試合")]
         public float matchDuration = 60f;

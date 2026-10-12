@@ -30,7 +30,8 @@ namespace MojiBattle
             frame.chain = s.chainActive; frame.braced = s.braced;
             return frame;
         }
-        static FriendActorFrame CaptureBody(Fighter f) => new FriendActorFrame
+        /// <summary>体・武器の姿勢と状態だけ（KO のリプレイの記録にも使う）。</summary>
+        public static FriendActorFrame CaptureBody(Fighter f) => new FriendActorFrame
         {
             body = f.Body.position, weapon = f.WeaponBody.position, bodyAngle = f.Body.rotation, weaponAngle = f.WeaponBody.rotation,
             velocity = f.Body.linearVelocity, hp = f.Runtime.hp, state = f.Runtime.state, style = f.Runtime.attackStyle,
@@ -41,7 +42,7 @@ namespace MojiBattle
             active = f.Runtime.activeDuration, recovery = f.Runtime.recoveryDuration,
             aerialStage = f.Runtime.aerialStage, attackId = f.Runtime.currentAttackId
         };
-        public void Apply(Fighter f, FriendActorFrame before, float alpha)
+        public void Apply(Fighter f, FriendActorFrame before, float alpha, bool interventions = true)
         {
             var r = f.Runtime;
             r.hp = hp; r.state = state; r.attackStyle = style; r.stateTime = stateTime; r.sweepYaw = yaw;
@@ -58,7 +59,7 @@ namespace MojiBattle
             f.PrevBodyRot = f.CurrBodyRot = a; f.PrevWeaponRot = f.CurrWeaponRot = wa;
             f.Offhand?.Follow(Time.deltaTime);
             var iv = f.Context.Interventions;
-            if (iv == null) return;
+            if (iv == null || !interventions) return;
             var s = iv.Side(f.Id); float now = f.Context.SimTime;
             s.gauge = gauge; s.specialRequestUntil = special ? now + 1 : -1;
             s.cheerUntil = cheer >= 0 ? now + cheer : -1; s.cheerReadyAt = now + cheerWait;

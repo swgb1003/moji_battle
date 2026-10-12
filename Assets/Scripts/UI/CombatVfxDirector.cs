@@ -119,6 +119,13 @@ namespace MojiBattle
             rig?.ZoomPunch(.14f, .65f);
         }
 
+        /// <summary>KO のリプレイで、とどめが決まる瞬間にもう一度決め手の演出を出す（音・記録のイベントは出さない）。</summary>
+        public void ReplayFinish()
+        {
+            finishAge = 0; finishFrozen = true; finishBurst = false;
+            rig?.ZoomPunch(.18f, .8f);
+        }
+
         void TickFinish(float dt)
         {
             if (finishAge < 0 || TimeController.Paused) return;

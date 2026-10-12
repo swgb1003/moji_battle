@@ -111,6 +111,7 @@ namespace MojiBattle
                 var vfx = root.AddComponent<CombatVfxDirector>();
                 vfx.Bind(director, rig);
                 root.AddComponent<CombatInkEffects>().Bind(director);
+                root.AddComponent<KoReplay>().Bind(director);
                 root.AddComponent<RangedProjectileView>().Bind(director);
                 root.AddComponent<CombatAudioDirector>().Bind(director, tournamentFinal);
                 root.AddComponent<ColliderDebugView>().Bind(director);

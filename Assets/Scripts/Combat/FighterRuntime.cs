@@ -59,6 +59,8 @@ namespace MojiBattle
         // 投げ
         /// <summary>武器が手から離れている（投げてから拾うまで）</summary>
         public bool weaponDetached;
+        /// <summary>とどめで吹き飛ばされた（KO の瞬間に必ず立つ）</summary>
+        public bool koLaunched;
         /// <summary>投げた武器が飛んでいる（当たり判定あり）。当たるか落ちたら終わり</summary>
         public bool throwLive;
         public float thrownAt = -999f;

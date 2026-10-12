@@ -338,7 +338,7 @@ namespace MojiBattle
                 if (GameSettings.ShowInstructions) caption = involved ? "オート戦闘　K 必殺 ／ L 声援・踏ん張り" : "完全オート戦闘";
             }
             else if (director.Clock < .8f && !director.Ended && director.StepCount > 5) title = "FIGHT!";
-            if (director.KoInProgress && !director.Ended) title = "K.O.";
+            if (director.KoInProgress && !director.Ended && !director.ReplayPhase) title = "K.O.";
             if (director.Overtime && director.OvertimeElapsed < 1.5f && !director.Ended) { title = "延長戦"; caption = "先に当てた方の勝ち"; }
             if (director.Ended)
             {
