@@ -31,9 +31,8 @@ namespace MojiBattle
             surface?.SetElevation(focus * 5);
             var reveal = GetComponent<RetroReveal>();
             if (reveal != null && reveal.enabled) return;
+            // Lift straight up only: a slight tilt or scale makes the thin ink rules alias into jagged steps.
             rect.anchoredPosition = home + Vector2.up * (reduced ? 0 : focus * 8);
-            rect.localRotation = rotation * Quaternion.Euler(0, 0, reduced ? 0 : -.35f * focus);
-            rect.localScale = scale * (1 + (reduced ? 0 : .007f * focus));
         }
         public void OnPointerEnter(PointerEventData e) => hover = true;
         public void OnPointerExit(PointerEventData e) => hover = false;
