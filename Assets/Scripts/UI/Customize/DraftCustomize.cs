@@ -26,7 +26,7 @@ namespace MojiBattle
             // The actual weapon glyphs, using the selected font, occupy the large art area.
             vsLeftGlyph=bg.Find("GlyphFighter/GlyphWeapon").GetComponent<Text>();
             var fighters=bg.GetComponentsInChildren<RetroFighterArt>();
-            foreach(var art in fighters)if(art.mirrored)vsRightGlyph=art.transform.Find("GlyphWeapon").GetComponent<Text>();
+            foreach(var art in fighters)if(art.mirrored)vsRightGlyph=art.transform.parent.Find("GlyphWeapon").GetComponent<Text>();
             DraftUi.Title(bg,"DraftVersus","VS",715,310,490,300,240,RetroUi.Ink);
             DraftUi.Pips(bg,350,713,DraftRuntimeStore.Current.playerWins,RetroUi.Red);
             DraftUi.Pips(bg,1480,713,DraftRuntimeStore.Current.comWins,RetroUi.Blue);

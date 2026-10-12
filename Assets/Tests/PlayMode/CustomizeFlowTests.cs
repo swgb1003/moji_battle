@@ -80,7 +80,7 @@ namespace MojiBattle.Tests
             Assert.AreEqual("火", preview.Build.character);
             // P2: 鬱・逆手・カウンター
             c.SelectSide(1);
-            Assert.IsTrue(c.SetCharacter("剣"), c.CharacterError);
+            Assert.IsTrue(c.SetCharacter("槍"), c.CharacterError);
             // 握る場所: プレビューの字形をクリックした位置 → 最も近い画線上の点を握る
             yield return null;
             var ink = preview.Build != null ? GlyphInk(preview) : default;
@@ -139,7 +139,7 @@ namespace MojiBattle.Tests
             Assert.AreEqual(GripType.TwoHanded, b.Left.Mods.grip);
             Assert.AreEqual(BattleStyle.HitAndAway, b.Left.Style.Style);
             Assert.AreEqual(0.1f, b.Left.Mods.gripPosition, 0.001f);
-            Assert.AreEqual("剣", b.Right.Loadout.grapheme);
+            Assert.AreEqual("槍", b.Right.Loadout.grapheme);
             Assert.AreEqual(pickedGripPx, b.Right.Weapon.gripPx, "プレビューで選んだ握り点と戦闘の握り点が違う");
             StringAssert.Contains("横85%", b.Right.Mods.gripLabel);
             Assert.IsTrue(b.Right.Glyph.runtimeBaked, "入力した文字が実行時に字形化されていない");

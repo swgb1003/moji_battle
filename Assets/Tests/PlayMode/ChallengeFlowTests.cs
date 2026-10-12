@@ -82,7 +82,8 @@ namespace MojiBattle.Tests
             Assert.Greater(Vector2.Distance(first,frame.anchoredPosition),10);
             Assert.Greater(Vector2.Distance(target,frame.anchoredPosition),10,"The frame travels to the other card.");
             yield return new WaitForSecondsRealtime(.5f);Capture("13_hover_lower");
-            Assert.Less(Vector2.Distance(target,frame.anchoredPosition),1);
+            // The focused card lifts toward the viewer; the frame follows its settled position.
+            Assert.Less(Vector2.Distance(cards[4].Position+new Vector2(-4,4),frame.anchoredPosition),1);
             Assert.Less(Button("ChallengeStart0").GetComponent<Image>().color.a,.01f);
             Assert.Greater(Button("ChallengeStart4").GetComponent<Image>().color.a,.99f);
             MovePointer(null);

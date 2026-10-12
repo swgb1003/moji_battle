@@ -302,7 +302,7 @@ namespace MojiBattle.Tests
         public IEnumerator TypedCharacters_FightToTheEnd()
         {
             SimHarness.Begin(false);
-            var pairs = new[] { ("龍", "剣"), ("あ", "W"), ("★", "鬼") };
+            var pairs = new[] { ("鷹", "槍"), ("あ", "W"), ("★", "鬼") };
             int seed = 9100;
             foreach (var (l, r) in pairs)
             {
