@@ -17,6 +17,11 @@ namespace MojiBattle
         public static float BodyDamage(int attack, int defense, float vN, HitQuality q, BodyPart part, CombatBalance b) =>
             Final(Raw(attack, vN, q, part, b), defense, b);
 
+        /// <summary>武器の重さの威力（重い武器ほど一撃が重い）。</summary>
+        public static float MassFactor(float weaponMass, CombatBalance b) =>
+            b.weaponMassDamageExponent <= 0f ? 1f
+            : Mathf.Clamp(Mathf.Pow(Mathf.Max(.01f, weaponMass) / b.weaponMassDamageReference, b.weaponMassDamageExponent), b.weaponMassDamageMin, b.weaponMassDamageMax);
+
         /// <summary>1 発の本体ダメージを相手の最大 HP の一定割合までに抑える。</summary>
         public static float CapHit(float damage, float defenderMaxHp, CombatBalance b) =>
             Mathf.Min(damage, defenderMaxHp * b.maxHitHpFraction);

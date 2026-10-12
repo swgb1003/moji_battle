@@ -944,9 +944,13 @@ namespace MojiBattle
             bool oppAttackable = ort.state != FighterState.KO && (!ort.IsDown || Balance.allowAttackOnDowned);
             // 連撃の継続距離は武器の最遠点基準（AI の射程は控えめなので、それより広く取る）
             float comboReach = Balance.shoulderLocal.x + Weapon.length + 0.3f;
+            // 軽量級は一撃目で押し下げた相手へ踏み込んで連撃をつなぐ
+            bool chase = WeightClass == WeightClass.Light && DistanceToOpponent > comboReach;
+            if (chase) comboReach += Balance.lightComboChase;
             if (rt.comboRemaining > 0 && DistanceToOpponent <= comboReach && oppAttackable && !Context.MatchOver)
             {
                 rt.comboRemaining--;
+                if (chase) Motor.ApplyDash(Balance.lightComboChaseSpeed);
                 StartAttack(time);
                 return;
             }
@@ -1093,6 +1097,8 @@ namespace MojiBattle
                 rt.liftedAt = time; // 持ち上げられている間は更新し続け、離れた時点から猶予を数える
             }
             if (rt.liftActive) rt.liftPeakY = Mathf.Max(rt.liftPeakY, Body.position.y);
+            // 突き上げの勢いで昇っている間は持ち上げの続き。叩きつけの猶予は頂点（落ち始め）から数える
+            if (rt.liftActive && !lifted && Body.linearVelocity.y > 0.5f) rt.liftedAt = time;
             bool onGround = Body.position.y < 0.3f && Mathf.Abs(Body.linearVelocity.y) < 0.5f;
             rt.groundedSince = onGround ? rt.groundedSince + dt : 0f;
             if (rt.liftActive && !lifted && (rt.groundedSince >= 0.3f || time - rt.liftedAt > b.slamWindow)) rt.liftActive = false;

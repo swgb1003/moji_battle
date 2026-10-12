@@ -24,6 +24,8 @@ namespace MojiBattle
         public int guardEvents, evadeEvents, attackStarts;
         /// <summary>ガード姿勢に入った回数 / 攻撃シーケンス数（連撃は1つと数える）</summary>
         public int guardEntries, attackSequences;
+        /// <summary>近接の攻撃判断と攻撃数（一画飛ばし・衝撃波は単発の遠距離技なので連撃の長さに数えない）</summary>
+        public int meleeSequences, meleeStarts;
         /// <summary>振り（突き以外）で武器が予定の振り幅の 4 割未満しか動かなかった回数（武器が挟まって振れない固着）</summary>
         public int jammedSwings, swings;
         /// <summary>有効時間開始時の距離 / 自分の射程 の合計（攻撃が届く距離で振っているか）</summary>
@@ -182,6 +184,11 @@ namespace MojiBattle
                 if (t.swingPsiMax - t.swingPsiMin < planned * 0.4f) t.jammedSwings++;
             }
             if (e.to == FighterState.AttackWindup && e.from != FighterState.AttackRecovery) t.attackSequences++;
+            if (e.to == FighterState.AttackWindup && !AttackTechniques.IsRanged(director.Fighters[e.fighter].Runtime.attackStyle))
+            {
+                t.meleeStarts++;
+                if (e.from != FighterState.AttackRecovery) t.meleeSequences++;
+            }
             if (e.to == FighterState.AttackWindup)
             {
                 float idle = director.Clock - lastAttackClock;

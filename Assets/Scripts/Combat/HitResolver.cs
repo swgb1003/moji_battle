@@ -114,7 +114,7 @@ namespace MojiBattle
             }
             var before = rd.state;
             float damage = DamageMath.CapHit(DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense,
-                speed, HitQuality.Normal, part, b) * a.Mods.damage * tuning.damage
+                speed, HitQuality.Normal, part, b) * a.Mods.damage * tuning.damage * GlyphMass(a, a.WeaponBody.mass, b)
                 * (ctx.Interventions?.DamageScale(a, p.AttackId, time) ?? 1f), rd.maxHp, b);
             damage = Mathf.Min(damage, rd.maxHp * (wave ? .22f : .15f) * (ctx.Interventions?.DamageScale(a, p.AttackId, time) ?? 1f));
             if (ctx.Interventions != null) damage = ctx.Interventions.ApplySpecialLimits(a, p.AttackId, d, damage);
@@ -247,6 +247,7 @@ namespace MojiBattle
                     }
                     // サイズの威力は質量を通じてだけ（Mods.damage = 質量倍率^指数）
                     cand.damage = DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense, vN, qualities[i], c.part, b) * a.Mods.damage * styleDamage
+                                  * (kick ? 1f : GlyphMass(a, a.WeaponBody.mass, b))
                                   * (ctx.Interventions?.DamageScale(a, time) ?? 1f);
                 }
                 candidates.Add(cand);
@@ -430,7 +431,8 @@ namespace MojiBattle
             // 両手持ちはノックバック耐性で衝撃を割る
             var tech = AttackTechniques.Tuning(rtA.attackStyle, b);
             float impulse = DamageMath.Impulse(c.vN, ImpactMass(a), d.Body.mass, b) / d.Mods.knockbackResistance
-                            * (tech != null ? tech.impulse : 1f);
+                            * (tech != null ? tech.impulse : 1f)
+                            * (hit.bodyAttack ? 1f : GlyphMass(a, a.WeaponBody.mass, b)); // 重い字形ほど一撃で大きく揺さぶる
             // 足払いは脚を払う（どこに当たっても転倒の判定は脚扱い）
             bool leg = hit.part == BodyPart.Leg || rtA.attackStyle == AttackStyle.LowSweep;
             rtD.knockdownAccum += impulse * b.knockdownAccumPerImpulse + (leg ? b.legKnockdownBonus : 0f);
@@ -489,6 +491,13 @@ namespace MojiBattle
             });
         }
 
+        /// <summary>
+        /// 字形の重さの威力（カスタマイズなしの選手のみ）。カスタマイズした選手は、選んだサイズの重さが
+        /// 与ダメージ倍率（Mods.damage）と慣性に入っているので掛けない（二重にしない）。
+        /// </summary>
+        static float GlyphMass(Fighter a, float weaponMass, CombatBalance b) =>
+            a.Mods.customized ? 1f : DamageMath.MassFactor(weaponMass, b);
+
         float DualSecondHit => (ctx.Customize != null ? ctx.Customize : CustomizeBalance.Default).dualSecondHitDamage;
 
         public bool OffhandResolved(int attackId, int defenderId) => OffhandLedger.IsResolved(attackId, defenderId);
@@ -519,7 +528,8 @@ namespace MojiBattle
             }
             var tech = AttackTechniques.Tuning(style, b);
             float dmg = DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense, speed, HitQuality.Normal, part, b)
-                        * a.Mods.damage * (tech != null ? tech.damage : 1f) * (ctx.Interventions?.DamageScale(a, time) ?? 1f);
+                        * a.Mods.damage * (tech != null ? tech.damage : 1f) * (ctx.Interventions?.DamageScale(a, time) ?? 1f)
+                        * GlyphMass(a, a.Offhand.Mass, b);
             dmg = DamageMath.CapHit(dmg, rtD.maxHp, b);
             if (Ledger.IsResolved(rtA.currentAttackId, d.Id)) dmg *= DualSecondHit;
             if (ctx.Interventions != null) dmg = ctx.Interventions.ApplySpecialLimits(a, rtA.currentAttackId, d, dmg);

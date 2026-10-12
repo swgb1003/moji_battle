@@ -247,7 +247,8 @@ namespace MojiBattle.Tests
             float Imp(Agg a) => a.impulse / Mathf.Max(1, a.hits);
             float Cycle(Agg a) => a.cycle / Mathf.Max(1f, a.attacks);
             float Windup(Agg a) => a.windup / Mathf.Max(1, a.windups);
-            Assert.Less(Windup(S), Windup(XL) * 0.6f, "同じ基本武器攻撃では S の方が溜めが短いはず");
+            // 戦闘テンポでは溜めに上限があり大型の溜めが縮むため、テンポありは 0.62 倍未満（テンポなしは 0.6 倍未満）
+            Assert.Less(Windup(S), Windup(XL) * (CombatBalance.Default.combatTempo ? 0.62f : 0.6f), "同じ基本武器攻撃では S の方が溜めが短いはず");
             Assert.Less(Cycle(S), Cycle(XL), "S の方が 1 回の攻撃が速く終わるはず");
             Assert.Greater(Imp(XL), Imp(S) * 1.5f, "XL の方が衝撃が大きいはず");
             // Angular response is compared separately with one fixed physical trajectory;

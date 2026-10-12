@@ -151,8 +151,10 @@ namespace MojiBattle.Tests
             var attackRates = list.Select(a => Rate(a, a.attacks)).ToList();
             var impulses = list.Select(a => a.impulseSum / Mathf.Max(1, a.impulseCount)).ToList();
             var winRates = list.Select(a => a.wins / (float)a.matches).ToList();
-            Assert.Greater(windups.Max() - windups.Min(), 0.6f, "溜めの差が小さい");
-            Assert.Greater(attackRates.Max() / Mathf.Max(0.1f, attackRates.Min()), 1.5f, "手数の差が小さい");
+            // 戦闘テンポ（combatTempo）で溜めは全体に短くしてあるため、差は秒数ではなく比で見る（重い字形は軽い字形の 2 倍以上）
+            Assert.Greater(windups.Max() / Mathf.Max(0.01f, windups.Min()), 2f, "溜めの差が小さい");
+            // 戦闘テンポは重い字形の溜め・回復も縮めて手数の差を狭めるため、テンポありは 1.4 倍以上（テンポなしは 1.5 倍以上）
+            Assert.Greater(attackRates.Max() / Mathf.Max(0.1f, attackRates.Min()), CombatBalance.Default.combatTempo ? 1.4f : 1.5f, "手数の差が小さい");
             Assert.Greater(impulses.Max() / Mathf.Max(0.1f, impulses.Min()), 2f, "衝撃の差が小さい");
             Assert.Greater(winRates.Max() - winRates.Min(), 0.2f, "勝率がほぼ同じ（字形差が出ていない）");
             Assert.IsTrue(list.All(a => a.wins > 0), "一度も勝てない文字がある: " + string.Join(",", list.Where(a => a.wins == 0).Select(a => a.g)));

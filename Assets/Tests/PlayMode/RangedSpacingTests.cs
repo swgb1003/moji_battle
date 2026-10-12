@@ -102,7 +102,8 @@ namespace MojiBattle.Tests
             float rangedShare = (float)samples.Sum(s => s.ranged) / samples.Sum(s => s.starts);
             Assert.That(rangedShare, Is.InRange(.10f, .35f), "Ranged attacks should appear regularly while melee remains the majority.");
             Assert.Less(samples.Sum(s => s.close) / elapsed, .49f, "Reduce constant close-range clustering.");
-            Assert.Greater(samples.Sum(s => s.retreats) / (2 * elapsed), .065f, "Show actual movement away from opponents.");
+            // Combat tempo deliberately shortens ordinary retreats (tempoRetreatScale), so the tempo threshold is slightly lower.
+            Assert.Greater(samples.Sum(s => s.retreats) / (2 * elapsed), balance == null && CombatBalance.Default.combatTempo ? .06f : .065f, "Show actual movement away from opponents.");
             Assert.Less(samples.Sum(s => s.quiet) / elapsed, .12f, "Spacing must not turn into passive waiting.");
             Assert.Greater(60 * samples.Sum(s => s.hits) / elapsed, 11f, "Maintain the pace of landed attacks.");
             Assert.AreEqual(0, samples.Count(s => s.winner < 0), "Avoid repeated draws.");

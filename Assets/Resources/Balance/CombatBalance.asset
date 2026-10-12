@@ -391,7 +391,7 @@ MonoBehaviour:
   rangedSpacingSeconds: 2.4
   rangedSpacingCooldown: 4
   rangedSpacingMargin: 0.65
-  rangedSpacingBackstepChance: 0.65
+  rangedSpacingBackstepChance: 0.3
   groundWave:
     weight: 0.1
     windup: 1

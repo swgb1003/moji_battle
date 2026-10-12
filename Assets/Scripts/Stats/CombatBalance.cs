@@ -166,6 +166,10 @@ namespace MojiBattle
         public float damageScale = 0.47f;
         public float defenseK = 0.45f;
         public float speedDivisor = 6f, speedFactorMin = 0.4f, speedFactorMax = 1.8f;
+        [Tooltip("軽量級の連撃: 一撃目で相手が下がっても、この距離までは踏み込んで次を出す（速さは踏み込みの速さ）")]
+        public float lightComboChase = 0.7f, lightComboChaseSpeed = 3.2f;
+        [Tooltip("武器の重さの威力: (武器の質量 / 基準質量)^指数 を本体ダメージに掛ける（0 で無効）。重い武器は振りが遅いぶん一撃を重く")]
+        public float weaponMassDamageExponent = .6f, weaponMassDamageReference = 3f, weaponMassDamageMin = .55f, weaponMassDamageMax = 1.6f;
         public float minHitRelativeSpeed = 1.5f;
         [Tooltip("振り終わり直後（硬直の始め）のこの秒数は、勢いの残った振り抜きの接触も当たりにする")]
         public float followThroughHitSeconds = 0.12f;

@@ -131,7 +131,8 @@ namespace MojiBattle
             if (styleRetreat.HasValue ? styleRetreat.Value > 0f : Rng.Chance(self.Tendency.retreatAfterAttack))
             {
                 float retreat = styleRetreat ?? Rng.Range(0.4f, 0.8f);
-                retreatUntil = time + retreat * (B.combatTempo ? B.tempoRetreatScale : 1f);
+                // ヒット＆アウェイの離脱は戦い方そのものなので、戦闘テンポでも縮めない
+                retreatUntil = time + retreat * (B.combatTempo && !styleRetreat.HasValue ? B.tempoRetreatScale : 1f);
                 RetreatsAfterAttack++;
                 // 軽量級は攻撃後にバックステップで離脱しやすい
                 if (self.WeightClass == WeightClass.Light && !Rt.weaponDetached && time >= Rt.evadeReadyAt && self.BackSpace > B.minBackstepSpace && Rng.Chance(0.5f))

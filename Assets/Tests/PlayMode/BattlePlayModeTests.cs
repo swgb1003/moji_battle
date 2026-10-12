@@ -129,7 +129,8 @@ namespace MojiBattle.Tests
                     rep.avgDamageDealt[i] += f.hitDamages.Sum() / seeds;
                     rep.avgMaxCombo[i] += f.maxComboHits / (float)seeds;
                     rep.guardEntriesPerAttack[i] += f.guardEntries / (float)Mathf.Max(1, f.attackSequences) / seeds;
-                    rep.attacksPerSequence[i] += f.attackStarts / (float)Mathf.Max(1, f.attackSequences) / seeds;
+                    // 連撃の長さは近接の攻撃で見る（一画飛ばし・衝撃波は単発の遠距離技）
+                    rep.attacksPerSequence[i] += f.meleeStarts / (float)Mathf.Max(1, f.meleeSequences) / seeds;
                     rep.jammedSwingRate[i] += f.jammedSwings / (float)Mathf.Max(1, f.swings) / seeds;
                     float total = f.stateSeconds.Sum();
                     rep.guardTimeFraction[i] += f.stateSeconds[(int)FighterState.Guard] / total / seeds;
@@ -193,12 +194,16 @@ namespace MojiBattle.Tests
             // 軽量: 連撃・離脱 — 1回の攻撃判断で複数回打つ
             Assert.Greater(rep.attacksPerSequence[L], 1.4f, "一は連撃する");
             Assert.Less(rep.attacksPerSequence[R], 1.2f, "鬱は単発");
-            Assert.Greater(rep.avgWindup[R], rep.avgWindup[L] * 2.5f, "鬱の溜めが長い");
+            // 戦闘テンポでは溜めに上限があり差が縮むため、テンポありは 2 倍以上（テンポなしは 2.5 倍以上）
+            Assert.Greater(rep.avgWindup[R], rep.avgWindup[L] * (CombatBalance.Default.combatTempo ? 2f : 2.5f), "鬱の溜めが長い");
             Assert.Greater(rep.avgHitImpulse[R], rep.avgHitImpulse[L] * 2f, "鬱の衝撃が強い");
-            // 転倒から 1〜2 秒で復帰（静止確認から）
+            // 転倒から設定どおりの時間で復帰（静止確認から）。戦闘テンポでは早く起き上がる（既定 0.4〜0.8 秒、テンポなしは 1〜2 秒）
             Assert.Greater(rep.recoverCount, 0, "転倒が一度も起きない");
-            Assert.GreaterOrEqual(rep.recoverSettleMin, 0.99f);
-            Assert.LessOrEqual(rep.recoverSettleMax, 2.01f);
+            var bal = CombatBalance.Default;
+            float getUpMin = bal.combatTempo ? bal.tempoRecoverDelayMin : bal.recoverDelayMin;
+            float getUpMax = bal.combatTempo ? bal.tempoRecoverDelayMax : bal.recoverDelayMax;
+            Assert.GreaterOrEqual(rep.recoverSettleMin, getUpMin - .01f);
+            Assert.LessOrEqual(rep.recoverSettleMax, getUpMax + .01f);
             Assert.Greater(rep.koFinishes, 0, "KO決着がない");
         }
 
@@ -676,6 +681,13 @@ namespace MojiBattle.Tests
                     victim.AddVelocity(new Vector2(0f, 9f) - victim.Body.linearVelocity);
                     lifter.WeaponBody.linearVelocity = new Vector2(0f, 9f);
                     for (int i = 0; i < 3; i++) yield return null;
+                    // 突き上げた後は通常どおり（打ち合っていない武器どうしはぶつからない）。
+                    // 開けたままだと、被害者の武器が相手の構えた武器に引っかかって支えられ、落ちてこない
+                    CombatBalance.Default.weaponsCollideOnlyWhenEngaged = true;
+                    battle.Context.ApplyWeaponGate();
+                    // 突き上げた側は武器ごと離れる（足元へ移した武器が床に残ると、被害者がその上に落ちて床に当たらない）
+                    lifter.Body.position = new Vector2(5f, 0.02f);
+                    lifter.WeaponMotor.ResetPose();
                 }
                 else
                 {

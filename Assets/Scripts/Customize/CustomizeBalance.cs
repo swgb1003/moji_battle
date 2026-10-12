@@ -150,7 +150,7 @@ namespace MojiBattle
             comboBonus = 0, reactionBonus = 0.15f, counterBias = 0.1f, waitsNearCenter = 1,
         };
         [Tooltip("ヒット＆アウェイの離脱時間（軽量 → 重量で補間。重量級ほど短く）")]
-        public float hitAndAwayRetreatLight = 1.2f, hitAndAwayRetreatHeavy = 0.5f;
+        public float hitAndAwayRetreatLight = 3f, hitAndAwayRetreatHeavy = 1.5f;
         [Tooltip("カウンター: 相手の攻撃終了からこの秒数は攻撃を最優先")]
         public float counterWindow = 0.6f;
         [Tooltip("カウンター: 待ちの間、相手の射程のこの倍率の外で構える")]

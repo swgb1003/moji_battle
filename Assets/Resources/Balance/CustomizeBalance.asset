@@ -134,8 +134,8 @@ MonoBehaviour:
     reactionBonus: 0.15
     counterBias: 0.1
     waitsNearCenter: 1
-  hitAndAwayRetreatLight: 1.2
-  hitAndAwayRetreatHeavy: 0.5
+  hitAndAwayRetreatLight: 3
+  hitAndAwayRetreatHeavy: 1.5
   counterWindow: 0.6
   counterWaitRangeScale: 1.15
   defensiveMaxGuardSeconds: 2.5
