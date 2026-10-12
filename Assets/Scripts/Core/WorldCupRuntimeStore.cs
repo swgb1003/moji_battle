@@ -20,7 +20,7 @@ namespace MojiBattle
                 {
                     var b=FighterBuildData.Default(c);b.fontType=f;b.weaponSize=WeaponSize.M;
                     b.gripType=(GripType)rng.Next(4);b.battleStyle=(BattleStyle)rng.Next(4);b.weaponFlip=(WeaponFlip)rng.Next(4);
-                    b.gripPosition=.12f+(float)rng.NextDouble()*.76f;builds.Add(b);break;
+                    b.gripPosition=.12f+(float)rng.NextDouble()*.76f;builds.Add(b.MaybeDualWield(builds.Count));break;
                 }
             }
             if(builds.Count!=48)throw new InvalidOperationException("参加できる文字が足りません。");

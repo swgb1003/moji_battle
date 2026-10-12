@@ -153,7 +153,7 @@ namespace MojiBattle
                 var match = session.Matches[stage == 0 ? slot / 2 : stage == 1 ? 4 + slot / 2 : 6];
                 if (match.Complete) outcome = match.WinnerId == entrant ? "勝 / " : "敗 / ";
             }
-            return outcome + CustomizeLabels.Grip(build.gripType) + " / " + CustomizeLabels.StyleShort(build.battleStyle);
+            return outcome + CustomizeLabels.Grip(build) + " / " + CustomizeLabels.StyleShort(build.battleStyle);
         }
         static float Center(int stage, int slot) => 424 + 62 * ((1 << stage) * slot + ((1 << stage) - 1) * .5f);
         void Update() { if (Input.GetKeyDown(KeyCode.Escape)) GameFlow.ToModeSelect(); }

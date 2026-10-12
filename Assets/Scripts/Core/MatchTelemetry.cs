@@ -122,7 +122,8 @@ namespace MojiBattle
 
         void OnHit(HitEvent e)
         {
-            long key = ((long)e.attackId << 8) | (uint)e.defender;
+            // 二刀流の副武器は主武器とは別の当たりとして数える
+            long key = ((long)e.attackId << 9) | ((e.offhand ? 1u : 0u) << 8) | (uint)e.defender;
             bodyHitsPerSwing.TryGetValue(key, out int n);
             bodyHitsPerSwing[key] = n + 1;
             if (n >= 1) duplicateBodyHits++;

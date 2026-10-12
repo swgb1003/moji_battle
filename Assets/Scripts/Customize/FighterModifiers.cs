@@ -24,8 +24,12 @@ namespace MojiBattle
         public float attackTorque, guardStability, knockbackResistance, reach, guardRange, postEvadeAttackSpeed, guardBiasBonus;
         /// <summary>同じトルクで出せる角加速度の倍率（基準構成との慣性比から。端持ち・大型ほど小さい）</summary>
         public float handlingAccel;
-        /// <summary>与ダメージ倍率（質量を通じたサイズの威力）</summary>
+        /// <summary>与ダメージ倍率（質量を通じたサイズの威力 × 持ち方の 1 本あたりの威力）</summary>
         public float damage;
+        /// <summary>連撃数の上限への加算（持ち方）</summary>
+        public int comboBonus;
+        /// <summary>二刀流（副武器を持つ）</summary>
+        public bool dualWield;
         /// <summary>待機姿勢 ψ（NaN なら重量クラスの既定）</summary>
         public float readyPsi;
         /// <summary>握り→重心の距離（ワールド単位）</summary>
@@ -74,7 +78,9 @@ namespace MojiBattle
             m.postEvadeAttackSpeed = grip.postEvadeAttackSpeed;
             m.guardBiasBonus = grip.guardBiasBonus;
             m.readyPsi = grip.overrideReadyPsi ? grip.readyPsi : float.NaN;
-            m.damage = Mathf.Pow(size.massMultiplier, cb.massDamageExponent);
+            m.damage = Mathf.Pow(size.massMultiplier, cb.massDamageExponent) * grip.damage;
+            m.comboBonus = grip.comboBonus;
+            m.dualWield = build.IsDualWield;
 
             var f = glyph.features;
             float maxSidePx = Mathf.Max(f.inkBounds.width, f.inkBounds.height);

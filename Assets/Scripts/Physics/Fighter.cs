@@ -69,6 +69,8 @@ namespace MojiBattle
         public HingeJoint2D Hinge;
         public Transform WeaponGeometryRoot;
         public SpriteRenderer WeaponSprite;
+        /// <summary>二刀流の副武器（無ければ null）。</summary>
+        public OffhandWeapon Offhand;
         public Collider2D[] BodyColliders, WeaponColliders;
         /// <summary>武器 Collider の基準（右向き・横振りの奥行き 0 の時の 中心x, 中心y, 幅, 高さ）</summary>
         public Vector4[] WeaponColliderBase;
@@ -1131,6 +1133,7 @@ namespace MojiBattle
             PrevWeaponPos = CurrWeaponPos; PrevWeaponRot = CurrWeaponRot;
             CurrBodyPos = Body.position; CurrBodyRot = Body.rotation;
             CurrWeaponPos = WeaponBody.position; CurrWeaponRot = WeaponBody.rotation;
+            Offhand?.CapturePose();
             // 大きな瞬間移動（起き上がり・向き反転）は補間しない
             if ((CurrBodyPos - PrevBodyPos).sqrMagnitude > 4f) { PrevBodyPos = CurrBodyPos; PrevBodyRot = CurrBodyRot; PrevWeaponPos = CurrWeaponPos; PrevWeaponRot = CurrWeaponRot; }
         }

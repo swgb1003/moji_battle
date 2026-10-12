@@ -16,7 +16,7 @@ namespace MojiBattle
         public static Color TeamColor(int id) => id == 0 ? LeftColor : RightColor;
 
         public static Fighter Create(int id, FighterLoadout loadout, GlyphDefinitionRuntime glyph, MatchContext ctx,
-            MatchRandom rng, Transform parent)
+            MatchRandom rng, Transform parent, GlyphDefinitionRuntime offhandGlyph = null)
         {
             var b = ctx.Balance;
             if (bodyMaterial == null) bodyMaterial = new PhysicsMaterial2D("FighterBody") { friction = 0.4f, bounciness = 0f };
@@ -158,6 +158,14 @@ namespace MojiBattle
             hinge.useMotor = false;
             fighter.Hinge = hinge;
             fighter.Actions = new FighterActions(fighter);
+
+            if (build != null && build.IsDualWield)
+            {
+                var offGlyph = offhandGlyph ?? glyph;
+                var offBase = StatCalculator.Compute(offGlyph, b);
+                var offGeo = ResolveWeapon(build, offGlyph, offBase, b, cb, out float offMass);
+                fighter.Offhand = new OffhandWeapon(fighter, offGlyph, offGeo, offMass, container, TeamColor(id));
+            }
 
             fighter.CapturePose();
             fighter.CapturePose();

@@ -56,6 +56,7 @@ namespace MojiBattle
             f.Body.linearVelocity = velocity;
             f.PrevBodyPos = f.CurrBodyPos = p; f.PrevWeaponPos = f.CurrWeaponPos = w;
             f.PrevBodyRot = f.CurrBodyRot = a; f.PrevWeaponRot = f.CurrWeaponRot = wa;
+            f.Offhand?.Follow(Time.deltaTime);
             var iv = f.Context.Interventions;
             if (iv == null) return;
             var s = iv.Side(f.Id); float now = f.Context.SimTime;

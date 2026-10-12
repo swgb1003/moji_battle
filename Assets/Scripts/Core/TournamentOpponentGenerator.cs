@@ -35,7 +35,8 @@ namespace MojiBattle
                 result.Add(new FighterBuildData { character = character, fontType = font, weaponSize = WeaponSize.S,
                     gripType = (GripType)rng.RangeInclusive(0, 3), battleStyle = (BattleStyle)rng.RangeInclusive(0, 3),
                     weaponFlip = (WeaponFlip)rng.RangeInclusive(0, 3), gripPosition = rng.Range(.08f, .92f),
-                    customGrip = rng.Chance(.5f), gripPoint = new Vector2(rng.Range(.08f, .92f), rng.Range(.08f, .92f)) });
+                    customGrip = rng.Chance(.5f), gripPoint = new Vector2(rng.Range(.08f, .92f), rng.Range(.08f, .92f)) }
+                    .MaybeDualWield(result.Count));
             }
             return result;
         }

@@ -163,6 +163,9 @@ namespace MojiBattle
             ctx.Ranged.Tick(dt);
             // 回転する長い武器は連続衝突判定でも薄い壁を越えることがある。
             ResolveOutsideSideWalls();
+            // 二刀流の副武器は物理の後に、確定した本体・主武器の姿勢から置き直す
+            Fighters[0].Offhand?.Step(dt);
+            Fighters[1].Offhand?.Step(dt);
             if(CapturePresentationPose){Fighters[0].CapturePose();Fighters[1].CapturePose();}
             DetectOverlapHits();
             if (!Ended && CollectStepTelemetry)

@@ -161,7 +161,7 @@ namespace MojiBattle
                     headings[i].text = "P" + (i + 1) + (local ? " / YOU" : " / FRIEND");
                     glyphs[i].text = p.joined ? p.build.character : "?";
                     if (p.joined) glyphs[i].font = GlyphFontLibrary.Default.Get(p.build.fontType).font;
-                    summaries[i].text = p.joined ? GlyphCatalog.FontDisplayName(p.build.fontType) + " / " + p.build.weaponSize + "\n" + CustomizeLabels.Grip(p.build.gripType) + " / " + CustomizeLabels.StyleShort(p.build.battleStyle) : "友人の参加を\n待っています";
+                    summaries[i].text = p.joined ? GlyphCatalog.FontDisplayName(p.build.fontType) + " / " + p.build.weaponSize + "\n" + CustomizeLabels.Grip(p.build) + " / " + CustomizeLabels.StyleShort(p.build.battleStyle) : "友人の参加を\n待っています";
                     readyText[i].text = !p.joined ? "未参加" : p.ready ? "準備完了" : "準備中";
                     readySquares[i].color = p.ready ? RetroUi.Team(i) : RetroUi.Wash;
                 }

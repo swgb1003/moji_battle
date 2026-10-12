@@ -131,7 +131,7 @@ namespace MojiBattle
             T(p,"VS","VS",w*.41f,fy+fh*.38f,w*.17f,66,43,null,TextAnchor.MiddleCenter);
             D.InkFill(p,"LeftName",w*.11f,h-137,w*.24f,48,m.LeftId==0?D.Red:D.Navy);T(p,"LeftGlyph",Glyph(m.LeftId),w*.11f,h-137,w*.24f,48,36,D.Paper,TextAnchor.MiddleCenter);
             D.InkFill(p,"RightName",w*.64f,h-137,w*.24f,48,m.RightId==0?D.Red:D.Navy);T(p,"RightGlyph",Glyph(m.RightId),w*.64f,h-137,w*.24f,48,36,D.Paper,TextAnchor.MiddleCenter);
-            D.Frame(p,12,h-72,w-24,59,D.Ink,1);T(p,"NextBuild","M / "+GlyphCatalog.FontDisplayName(Session.Entrants[m.RightId].Build.fontType)+" / "+CustomizeLabels.Grip(Session.Entrants[m.RightId].Build.gripType),20,h-68,w-40,50,25,null,TextAnchor.MiddleCenter);
+            D.Frame(p,12,h-72,w-24,59,D.Ink,1);T(p,"NextBuild","M / "+GlyphCatalog.FontDisplayName(Session.Entrants[m.RightId].Build.fontType)+" / "+CustomizeLabels.Grip(Session.Entrants[m.RightId].Build),20,h-68,w-40,50,25,null,TextAnchor.MiddleCenter);
         }
         void GroupResult()
         {
@@ -231,8 +231,8 @@ namespace MojiBattle
         {
             var b=Session.Entrants[id].Build;var p=D.Panel(root,"VersusBuild"+id,x,y,w,h);D.InkFill(p,"NameBand",4,4,w-8,compact?40:62,id==0?D.Red:D.Navy);
             T(p,"EntrantName",(id==0?"YOU / ":"COM / ")+b.character,10,0,w-20,compact?48:69,compact?29:38,D.Paper,TextAnchor.MiddleCenter);
-            if(compact){string[] heads={"サイズ","フォント","持ち方"},values={"M",GlyphCatalog.FontDisplayName(b.fontType),CustomizeLabels.Grip(b.gripType)};for(int i=0;i<3;i++){T(p,"BuildLabel",heads[i],i*w/3+6,48,w/3-12,25,16,null,TextAnchor.MiddleCenter);T(p,"Build",values[i],i*w/3+6,71,w/3-12,34,26,null,TextAnchor.MiddleCenter);}return;}
-            string[] labels={"サイズ・フォント・持ち方","戦い方の特徴","必殺技"},texts={"M・"+GlyphCatalog.FontDisplayName(b.fontType)+"・"+CustomizeLabels.Grip(b.gripType),CustomizeLabels.StyleShort(b.battleStyle),Special(b)};
+            if(compact){string[] heads={"サイズ","フォント","持ち方"},values={"M",GlyphCatalog.FontDisplayName(b.fontType),CustomizeLabels.Grip(b)};for(int i=0;i<3;i++){T(p,"BuildLabel",heads[i],i*w/3+6,48,w/3-12,25,16,null,TextAnchor.MiddleCenter);T(p,"Build",values[i],i*w/3+6,71,w/3-12,34,26,null,TextAnchor.MiddleCenter);}return;}
+            string[] labels={"サイズ・フォント・持ち方","戦い方の特徴","必殺技"},texts={"M・"+GlyphCatalog.FontDisplayName(b.fontType)+"・"+CustomizeLabels.Grip(b),CustomizeLabels.StyleShort(b.battleStyle),Special(b)};
             for(int i=0;i<3;i++){float ry=67+i*48;D.Block(p,"BuildRow",4,ry,w-8,1,D.Rule);if(i==2){D.InkFill(p,"SpecialLabel",4,ry,w*.42f-4,48,D.Ink);D.InkFill(p,"SpecialValue",w*.42f,ry,w*.58f-4,48,id==0?D.Red:D.Navy);}T(p,"BuildLabel",labels[i],12,ry,w*.42f-20,48,21,i==2?D.Paper:D.Ink);T(p,"Build",texts[i],w*.42f+7,ry,w*.58f-15,48,26,i==2?D.Paper:D.Ink,TextAnchor.MiddleCenter);D.Block(p,"BuildColumn",w*.42f,67,1,144,D.Ink);}
         }
         void StartButton(WorldCupMatch m,float x,float y,float width,float height,string label)
@@ -241,7 +241,7 @@ namespace MojiBattle
         {
             Header("BRONZE MATCH",()=>Open(WorldCupPage.Bracket));D.Title(root,"<color=#AE2319>3位</color>決定戦",119,98);
             T(root,"VersusCaption","準決勝の敗者同士が、最後の表彰台を争う。",282,300,1110,50,34,null,TextAnchor.MiddleCenter);
-            foreach(int side in new[]{0,1}){int id=side==0?m.LeftId:m.RightId;var b=Session.Entrants[id].Build;var p=D.Panel(root,"BronzeBuild"+side,side==0?65:1279,386,329,297);D.InkFill(p,"BronzeNameBand",9,9,311,103,D.Navy);T(p,"BronzeName",b.character,10,9,309,103,67,D.Paper,TextAnchor.MiddleCenter);T(p,"BronzeQualification","準決勝敗退",10,133,309,63,29,null,TextAnchor.MiddleCenter);T(p,"BronzeBuild","M・"+GlyphCatalog.FontDisplayName(b.fontType)+"・"+CustomizeLabels.Grip(b.gripType),10,217,309,62,26,null,TextAnchor.MiddleCenter);}
+            foreach(int side in new[]{0,1}){int id=side==0?m.LeftId:m.RightId;var b=Session.Entrants[id].Build;var p=D.Panel(root,"BronzeBuild"+side,side==0?65:1279,386,329,297);D.InkFill(p,"BronzeNameBand",9,9,311,103,D.Navy);T(p,"BronzeName",b.character,10,9,309,103,67,D.Paper,TextAnchor.MiddleCenter);T(p,"BronzeQualification","準決勝敗退",10,133,309,63,29,null,TextAnchor.MiddleCenter);T(p,"BronzeBuild","M・"+GlyphCatalog.FontDisplayName(b.fontType)+"・"+CustomizeLabels.Grip(b),10,217,309,62,26,null,TextAnchor.MiddleCenter);}
             Fighter(root,m.LeftId,426,377,345,311);Fighter(root,m.RightId,915,377,344,311,true);T(root,"Versus","VS",755,480,160,136,79,null,TextAnchor.MiddleCenter);
             T(root,"BronzeCondition","この試合の勝者が3位。",455,718,760,53,34,D.Red,TextAnchor.MiddleCenter);
             StartButton(m,417,790,522,83,"3位決定戦を始める →");Button("WorldCupVersusBack","トーナメント表へ",979,790,309,()=>Open(WorldCupPage.Bracket),null,83,30);

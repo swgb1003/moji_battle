@@ -42,6 +42,8 @@ namespace MojiBattle
         public AttackStyle style;
         /// <summary>刺すの先端がガードを貫いた削り（本体には触れていない）</summary>
         public bool pierce;
+        /// <summary>二刀流の副武器の当たり（主武器とは別に 1 スイング 1 回まで）</summary>
+        public bool offhand;
         /// <summary>連携（打ち上げ → 叩き落とし）の締めが当たった</summary>
         public bool combo;
     }

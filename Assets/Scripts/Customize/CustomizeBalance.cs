@@ -24,6 +24,8 @@ namespace MojiBattle
         [Tooltip("ガード判定の正面角の倍率")] public float guardRange = 1f;
         [Tooltip("回避の直後に始めた攻撃の速さ倍率")] public float postEvadeAttackSpeed = 1f;
         [Tooltip("AI がガードを選ぶ重みへの加算")] public float guardBiasBonus;
+        [Tooltip("武器 1 本あたりの与ダメージ倍率")] public float damage = 1f;
+        [Tooltip("連撃数の上限への加算")] public int comboBonus;
         [Tooltip("待機姿勢 ψ を上書きする（false なら重量クラスの既定の構え）")] public bool overrideReadyPsi;
         public float readyPsi;
     }
@@ -82,6 +84,19 @@ namespace MojiBattle
             attackSpeed = 0.85f, attackTorque = 0.90f, guardStability = 1.40f, moveSpeed = 0.90f, guardRange = 1.25f, guardBiasBonus = 0.25f,
             overrideReadyPsi = true, readyPsi = 0f,
         };
+        [Tooltip("二刀流: 左右の字形で手数を稼ぐ。S・M サイズのみ。1 本あたりは軽く、ガードは崩されやすい")]
+        public GripTypeProfile dualWield = new GripTypeProfile
+        {
+            // 片手を基準に: 速さ ×1.10・振りの力 ×0.80・ガード ×0.85・移動 ×0.95・ガード角 ×1.15・1 本の威力 ×0.75
+            attackSpeed = 1.21f, attackTorque = 0.72f, guardStability = 0.72f, moveSpeed = 0.95f, guardRange = 1.15f,
+            damage = 0.75f, comboBonus = 1,
+        };
+        [Tooltip("二刀流: 同じ一撃で 2 本目の字形も当たった時のダメージ倍率")]
+        public float dualSecondHitDamage = 0.5f;
+        [Tooltip("二刀流: 副武器が主武器の動きに遅れて追う時間（秒）。遅れが左右交互の二段目になる")]
+        public float dualOffhandLag = 0.035f;
+        [Tooltip("二刀流: 待機中の副武器の角度（主武器の構えからの差、度）。低く構えて交差させる")]
+        public float dualOffhandIdleOffset = -35f;
         [Tooltip("回避の終了からこの秒数以内に始めた攻撃を「回避後攻撃」とみなす")]
         public float postEvadeWindow = 1.0f;
         [Tooltip("両手持ちの添え手: 握りから重心方向へこの距離（ワールド単位、重心までの距離が上限）")]
@@ -163,6 +178,7 @@ namespace MojiBattle
                 case GripType.TwoHanded: return twoHanded;
                 case GripType.Reverse: return reverse;
                 case GripType.Horizontal: return horizontal;
+                case GripType.DualWield: return dualWield;
                 default: return oneHanded;
             }
         }

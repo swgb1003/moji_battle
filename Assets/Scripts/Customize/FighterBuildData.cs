@@ -4,7 +4,8 @@ using UnityEngine;
 namespace MojiBattle
 {
     public enum WeaponSize { S, M, L, XL }
-    public enum GripType { OneHanded, TwoHanded, Reverse, Horizontal }
+    /// <summary>DualWield（二刀流）は末尾に追加。保存済みの値（0〜3）はそのまま読める。</summary>
+    public enum GripType { OneHanded, TwoHanded, Reverse, Horizontal, DualWield }
     public enum BattleStyle { Aggressive, HitAndAway, Counter, Defensive }
 
     /// <summary>
@@ -29,8 +30,32 @@ namespace MojiBattle
         public WeaponFlip weaponFlip = WeaponFlip.None;
         [Tooltip("装備中の必殺技（AI が技名から設計したもの）。名前が空なら文字に合わせた初期必殺技")]
         public SpecialMoveData special;
+        [Tooltip("二刀流の副武器（反対の手）の文字。空なら主武器と同じ文字")]
+        public string offhandCharacter = "";
+
+        /// <summary>二刀流を選べるサイズ（S・M のみ）。</summary>
+        public static bool DualWieldAllowed(WeaponSize s) => s == WeaponSize.S || s == WeaponSize.M;
+        public bool IsDualWield => gripType == GripType.DualWield && DualWieldAllowed(weaponSize);
+        /// <summary>副武器の文字（二刀流でなければ null）。</summary>
+        public string OffhandGlyph => !IsDualWield ? null : string.IsNullOrEmpty(offhandCharacter) ? character : offhandCharacter;
 
         public static FighterBuildData Default(string character) => new FighterBuildData { character = character };
+
+        /// <summary>COM の構成: S・M サイズなら一定の割合で二刀流にする（同じ文字を両手に）。
+        /// 大会表などの乱数列を変えないよう、文字と salt の決定的なハッシュで決める。</summary>
+        public FighterBuildData MaybeDualWield(int salt, float chance = .2f)
+        {
+            if (!DualWieldAllowed(weaponSize) || string.IsNullOrEmpty(character)) return this;
+            uint h = 2166136261u;
+            unchecked
+            {
+                foreach (char c in character) h = (h ^ c) * 16777619u;
+                h = (h ^ (uint)salt) * 16777619u;
+                h ^= h >> 13; h *= 0x5bd1e995u; h ^= h >> 15;
+            }
+            if ((h % 1000u) < chance * 1000f) { gripType = GripType.DualWield; offhandCharacter = ""; }
+            return this;
+        }
 
         public FighterBuildData Clone()
         {
@@ -45,7 +70,7 @@ namespace MojiBattle
         public FighterLoadout ToLoadout() => new FighterLoadout(character, fontType) { build = Clone() };
 
         public override string ToString() =>
-            $"{character} {CustomizeLabels.Size(weaponSize)} / {CustomizeLabels.Grip(gripType)} / {CustomizeLabels.GripPlace(this)} / {CustomizeLabels.Flip(weaponFlip)} / {CustomizeLabels.Style(battleStyle)}";
+            $"{character}{(IsDualWield ? "・" + OffhandGlyph : "")} {CustomizeLabels.Size(weaponSize)} / {CustomizeLabels.Grip(gripType)} / {CustomizeLabels.GripPlace(this)} / {CustomizeLabels.Flip(weaponFlip)} / {CustomizeLabels.Style(battleStyle)}";
     }
 
     /// <summary>UI 表示名。</summary>
@@ -58,6 +83,9 @@ namespace MojiBattle
             b.customGrip ? $"握り 横{Mathf.RoundToInt(b.gripPoint.x * 100f)}%・縦{Mathf.RoundToInt(b.gripPoint.y * 100f)}%"
                          : $"握り{Mathf.RoundToInt(b.gripPosition * 100f)}%";
 
+        /// <summary>構成の持ち方。二刀流はもう一本の文字も添える（例: 二刀流・刀）。</summary>
+        public static string Grip(FighterBuildData b) => b.IsDualWield ? "二刀流・" + b.OffhandGlyph : Grip(b.gripType);
+
         public static string Grip(GripType g)
         {
             switch (g)
@@ -65,6 +93,7 @@ namespace MojiBattle
                 case GripType.TwoHanded: return "両手";
                 case GripType.Reverse: return "逆手";
                 case GripType.Horizontal: return "横持ち";
+                case GripType.DualWield: return "二刀流";
                 default: return "片手";
             }
         }

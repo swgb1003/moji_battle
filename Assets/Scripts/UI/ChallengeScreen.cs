@@ -122,7 +122,7 @@ namespace MojiBattle
             RetroUi.Label(left,"OpponentPreviewName","相手 / "+d.OpponentGlyph,477,381,390,50,32,null,TextAnchor.MiddleCenter);
             RetroUi.Block(left,"OpponentDivider",18,442,874,2,RetroUi.Ink); Tag(left,"相手の構成",18,462,180);
             var opponent=d.Opponent;
-            string[] summary={opponent.weaponSize+"サイズ",CustomizeLabels.Grip(opponent.gripType),CustomizeLabels.StyleShort(opponent.battleStyle)};
+            string[] summary={opponent.weaponSize+"サイズ",CustomizeLabels.Grip(opponent),CustomizeLabels.StyleShort(opponent.battleStyle)};
             for(int i=0;i<3;i++)
             {
                 RetroUi.Label(left,"OpponentStat"+i,summary[i],24+i*290,516,270,42,31,null,TextAnchor.MiddleCenter);

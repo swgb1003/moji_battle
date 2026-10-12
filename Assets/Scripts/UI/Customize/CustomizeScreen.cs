@@ -26,7 +26,8 @@ namespace MojiBattle
         readonly Text[] statValues = new Text[StatCount];
         readonly Image[,] statBars = new Image[StatCount, 5];
         InputField charInput;
-        Text charError, gripValue, styleNote, gripNote, previewTitle;
+        Text charError, gripValue, styleNote, gripNote, previewTitle, offhandHint;
+        InputField offhandInput;
         UguiKit.ChoiceButton battle, guides, specialButton;
         SpecialMovePanel specialPanel;
         GameObject vsPanel;
@@ -165,6 +166,19 @@ namespace MojiBattle
                 var inputColors = charInput.colors; inputColors.disabledColor = Color.white; charInput.colors = inputColors;
                 settings.Find("CharHint").GetComponent<Text>().text = "ドラフトで選んだ文字（固定）";
             }
+            // 二刀流: 反対の手の文字（二刀流の時だけ表示）
+            offhandInput = UguiKit.InputBox(settings, "OffhandInput", 476, 112, 150, 96, 64, OnOffhandEntered);
+            offhandInput.GetComponent<Image>().color = RetroUi.Paper;
+            offhandInput.GetComponent<Outline>().effectDistance = new Vector2(1, -1);
+            offhandInput.textComponent.font = RetroUi.Font;
+            offhandInput.textComponent.fontStyle = FontStyle.Normal;
+            offhandInput.characterLimit = 1;
+            offhandInput.onValueChanged.AddListener(OnOffhandEntered);
+#if UNITY_WEBGL && !UNITY_EDITOR
+            WebCharacterInput.Attach(offhandInput, () => TextInputVisible && customizer.Current.IsDualWield && customizer.Editable,
+                () => customizer.Side, "二刀流のもう一本の文字", "文字", 0, .8f);
+#endif
+            offhandHint = RetroUi.Label(settings, "OffhandHint", "二刀流：もう一本の文字\n（空欄なら同じ文字）", 646, 112, 350, 64, 22, RetroUi.Muted);
             charError = RetroUi.Label(settings, "CharError", "", 476, 177, 508, 42, 20, RetroUi.Red);
             float y = 228;
             Section(settings, "字体", y);
@@ -186,7 +200,10 @@ namespace MojiBattle
             foreach (GripType g in System.Enum.GetValues(typeof(GripType)))
             {
                 var value = g;
-                gripButtons.Add((Option(settings, "Grip_" + g, CustomizeLabels.Grip(g), gripButtons.Count, y, () => customizer.SetGrip(value), NotedRowHeight), g));
+                int i = gripButtons.Count;
+                // 持ち方は 5 つ（二刀流を含む）。同じ行幅に並べる
+                gripButtons.Add((RetroUi.Button(settings, "Grip_" + g, CustomizeLabels.Grip(g), 252 + i * 150, y, 142, NotedRowHeight, 26,
+                    () => customizer.SetGrip(value), shadow: false), g));
             }
             gripNote = RetroUi.Label(settings, "GripNote", "", 252, y + 60, 750, 26, 18, RetroUi.Muted);
             y = 478; Section(settings, "戦い方", y);
@@ -237,7 +254,7 @@ namespace MojiBattle
             condition.resizeTextForBestFit=true; condition.resizeTextMinSize=23; condition.resizeTextMaxSize=31;
             RetroUi.Block(strip,"OpponentRule",1248,18,1,48,RetroUi.Rule);
             var opp=d.Opponent;
-            var opponent=RetroUi.Label(strip,"ChallengeOpponentText",$"相手：{opp.character} / {opp.weaponSize} / {CustomizeLabels.Grip(opp.gripType)} / {CustomizeLabels.StyleShort(opp.battleStyle)}",1268,12,476,60,25,RetroUi.Blue);
+            var opponent=RetroUi.Label(strip,"ChallengeOpponentText",$"相手：{opp.character} / {opp.weaponSize} / {CustomizeLabels.Grip(opp)} / {CustomizeLabels.StyleShort(opp.battleStyle)}",1268,12,476,60,25,RetroUi.Blue);
             opponent.resizeTextForBestFit=true; opponent.resizeTextMinSize=19; opponent.resizeTextMaxSize=25;
             left.anchoredPosition=new Vector2(76,-374); left.sizeDelta=new Vector2(716,654);
             settings.anchoredPosition=new Vector2(816,-374); settings.sizeDelta=new Vector2(1028,654);
@@ -303,7 +320,11 @@ namespace MojiBattle
         static void Move(Transform target,float x,float y)
         { if(target!=null){target.GetComponent<RectTransform>().anchoredPosition=new Vector2(x,-y);target.GetComponent<RetroButtonMotion>()?.Rebase();} }
         static void MoveOptions(List<UguiKit.ChoiceButton> choices,float y)
-        { for(int i=0;i<choices.Count;i++)Move(choices[i].button.transform,252+i*187,y); }
+        {
+            // 4 つは 187 間隔、5 つ（持ち方: 二刀流を含む）は 150 間隔で同じ行幅に収める
+            float step=choices.Count>4?150:187;
+            for(int i=0;i<choices.Count;i++)Move(choices[i].button.transform,252+i*step,y);
+        }
         static void ResizeFrame(Transform panel,float width,float height)
         {
             foreach(Transform child in panel)
@@ -398,7 +419,7 @@ namespace MojiBattle
         }
         public void OnSpecialPanelClosed() { preview.gameObject.SetActive(true); previewCamera.enabled = true; Refresh(); }
         public void HideVs() { vsPanel.SetActive(false); preview.gameObject.SetActive(true); previewCamera.enabled = true; }
-        static string Summary(FighterBuildData b) => $"{GlyphCatalog.FontDisplayName(b.fontType)} / {b.weaponSize}\n{CustomizeLabels.Grip(b.gripType)} / {CustomizeLabels.GripPlace(b)}\n{CustomizeLabels.Flip(b.weaponFlip)} / {CustomizeLabels.Style(b.battleStyle)}\n必殺「{SpecialLabel(b)}」";
+        static string Summary(FighterBuildData b) => $"{GlyphCatalog.FontDisplayName(b.fontType)} / {b.weaponSize}\n{CustomizeLabels.Grip(b)} / {CustomizeLabels.GripPlace(b)}\n{CustomizeLabels.Flip(b.weaponFlip)} / {CustomizeLabels.Style(b.battleStyle)}\n必殺「{SpecialLabel(b)}」";
         static string SpecialLabel(FighterBuildData b) => b.EquippedSpecial?.name ?? SpecialMovePlan.StandardName(b.character);
         void Refresh()
         {
@@ -413,6 +434,12 @@ namespace MojiBattle
                 motion.restBorder = motion.focusBorder = RetroUi.Team(i);
             }
             charInput.SetTextWithoutNotify(b.character);
+            bool dual = b.IsDualWield;
+            offhandInput.gameObject.SetActive(dual);
+            offhandHint.gameObject.SetActive(dual);
+            charError.transform.parent.Find("CharHint").gameObject.SetActive(!dual);
+            if (dual) offhandInput.SetTextWithoutNotify(string.IsNullOrEmpty(b.offhandCharacter) ? "" : b.offhandCharacter);
+            offhandInput.interactable = customizer.Editable;
             if(run) { charInput.interactable=customizer.Editable && string.IsNullOrEmpty(RunRuntimeStore.Current.lockedGlyph); battle.label.text="次戦準備へ →"; }
             foreach (var (btn, f) in fontButtons)
             {
@@ -422,13 +449,17 @@ namespace MojiBattle
                 RetroUi.Selected(btn, f == b.fontType, accent);
             }
             foreach (var (btn, s) in sizeButtons) RetroUi.Selected(btn, s == b.weaponSize, accent);
-            foreach (var (btn, g) in gripButtons) RetroUi.Selected(btn, g == b.gripType, accent);
+            foreach (var (btn, g) in gripButtons)
+            {
+                RetroUi.Selected(btn, g == b.gripType, accent);
+                if (g == GripType.DualWield) btn.button.interactable = customizer.Editable && FighterBuildData.DualWieldAllowed(b.weaponSize);
+            }
             foreach (var (btn, s) in styleButtons) RetroUi.Selected(btn, s == b.battleStyle, accent);
             foreach (var (btn, f) in flipButtons) RetroUi.Selected(btn, f == b.weaponFlip, accent);
             if (draft || run)
             {
                 foreach (var (btn, _) in sizeButtons) btn.button.interactable = customizer.Editable;
-                foreach (var (btn, _) in gripButtons) btn.button.interactable = customizer.Editable;
+                foreach (var (btn, g) in gripButtons) btn.button.interactable = customizer.Editable && (g != GripType.DualWield || FighterBuildData.DualWieldAllowed(b.weaponSize));
                 foreach (var (btn, _) in styleButtons) btn.button.interactable = customizer.Editable;
                 foreach (var (btn, _) in flipButtons) btn.button.interactable = customizer.Editable;
                 menuRoot.Find("PreviewPanel/GripReset").GetComponent<Button>().interactable = customizer.Editable;
@@ -440,7 +471,9 @@ namespace MojiBattle
             battle.button.interactable = string.IsNullOrEmpty(customizer.CharacterError) && (!draft || DraftRuntimeStore.CanBattle);
             specialButton.button.interactable = battle.button.interactable && customizer.Editable;
             specialButton.label.text = $"必殺技：{SpecialLabel(b)} →";
-            gripNote.text = GripNote(b.gripType); styleNote.text = StyleNote(b.battleStyle);
+            gripNote.text = customizer.GripNotice ?? (!FighterBuildData.DualWieldAllowed(b.weaponSize) && b.gripType != GripType.DualWield
+                ? GripNote(b.gripType) + "（二刀流は S・M のみ）" : GripNote(b.gripType));
+            styleNote.text = StyleNote(b.battleStyle);
             preview.Show(b, side);
             foreach (var child in preview.GetComponentsInChildren<Transform>(true)) child.gameObject.layer = PreviewLayer;
             FitPreviewCamera();
@@ -474,7 +507,15 @@ namespace MojiBattle
             }
             if (!customizer.SetCharacter(s)) charInput.SetTextWithoutNotify(s);
         }
-        static string GripNote(GripType g) => g == GripType.TwoHanded ? "強い振り・安定したガード。動きはゆっくり。"
+        void OnOffhandEntered(string s)
+        {
+            if (refreshing) return;
+            // 空欄は「主武器と同じ文字」
+            if (string.IsNullOrWhiteSpace(s)) { customizer.SetOffhandCharacter(""); return; }
+            if (!customizer.SetOffhandCharacter(s)) offhandInput.SetTextWithoutNotify(s);
+        }
+        static string GripNote(GripType g) => g == GripType.DualWield ? "左右の連撃で手数を稼ぐ。ガードは崩されやすい。"
+            : g == GripType.TwoHanded ? "強い振り・安定したガード。動きはゆっくり。"
             : g == GripType.Reverse ? "速い・近距離。回避からの切り返しが得意。"
             : g == GripType.Horizontal ? "文字を盾のように構える。広く安定したガード。" : "標準的な構え。やや速いが、ガードはやや不安定。";
         static string StyleNote(BattleStyle s) => s == BattleStyle.HitAndAway ? "接近 → 攻撃 → 離脱。間合いを活かす。"

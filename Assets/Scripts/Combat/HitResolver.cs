@@ -48,6 +48,8 @@ namespace MojiBattle
         readonly List<HitContact> scratch = new List<HitContact>(64);
         readonly List<ContactCandidate> candidates = new List<ContactCandidate>(64);
         public readonly AttackLedger Ledger = new AttackLedger();
+        /// <summary>二刀流の副武器の当たり（主武器とは別に、1 スイング 1 回）。</summary>
+        public readonly AttackLedger OffhandLedger = new AttackLedger();
         public int TotalContactsReported { get; private set; }
         /// <summary>診断用: [攻撃側] 攻撃窓外の接触ステップ / 解決済み / 本体接触ステップ / 武器接触ステップ / 速度不足で棄却</summary>
         public readonly int[,] Diag = new int[2, 5];
@@ -412,6 +414,8 @@ namespace MojiBattle
 
             var stateBefore = rtD.state;
             float dmg = DamageMath.CapHit(c.damage, rtD.maxHp, b);
+            // 二刀流: 同じ一撃で副武器が先に当たっていれば、2 本目の当たりとして威力を抑える
+            if (a.Mods.dualWield && OffhandLedger.IsResolved(rtA.currentAttackId, d.Id)) dmg *= DualSecondHit;
             if (rtA.aerialStage == 1 && rtA.attackStyle == AttackStyle.Rising) dmg *= b.aerialSlashDamage;
             if (ctx.Interventions != null) dmg = ctx.Interventions.ApplySpecialLimits(a, rtA.currentAttackId, d, dmg);
             rtD.ApplyDamage(dmg);
@@ -483,6 +487,62 @@ namespace MojiBattle
                 stagger = stagger && !armored, launch = launch, knockdown = knock || rtD.hp <= 0f, time = time,
                 defenderStateBefore = stateBefore, style = rtA.attackStyle, combo = rtA.attackStyle == AttackStyle.Smash,
             });
+        }
+
+        float DualSecondHit => (ctx.Customize != null ? ctx.Customize : CustomizeBalance.Default).dualSecondHitDamage;
+
+        public bool OffhandResolved(int attackId, int defenderId) => OffhandLedger.IsResolved(attackId, defenderId);
+
+        /// <summary>
+        /// 二刀流の副武器が相手の体に重なった。速さが足りなければ当たりにしない（true を返さない）。
+        /// 正面からのガードは受け止められる。主武器が先に当たっていれば 2 本目として威力を抑える。
+        /// 副武器は小さな追い打ちなので、吹き飛ばし・打ち上げ・叩き落としの連携は主武器だけが起こす。
+        /// </summary>
+        public bool ResolveOffhand(Fighter a, Fighter d, BodyPart part, Vector2 point, Vector2 velocity, float time)
+        {
+            var rtA = a.Runtime;
+            var rtD = d.Runtime;
+            var b = ctx.Balance;
+            if (ctx.MatchOver || rtD.state == FighterState.KO || OffhandLedger.IsResolved(rtA.currentAttackId, d.Id)) return false;
+            var style = rtA.attackStyle;
+            if (AttackTechniques.IsKick(style) || AttackTechniques.IsRanged(style) || style == AttackStyle.HookPull || style == AttackStyle.Throw) return false;
+            float speed = (velocity - d.PreBodyVelocity).magnitude;
+            if (style == AttackStyle.Smash) speed = Mathf.Max(speed, b.smashHitSpeed);
+            if (speed < b.minHitRelativeSpeed) return false;
+            OffhandLedger.MarkResolved(rtA.currentAttackId, d.Id);
+            rtA.attackHadContact = true;
+            if (rtD.state == FighterState.Guard && IsFrontal(d, point, Mathf.Min(180f, b.guardHalfAngle * d.Mods.guardRange)))
+            {
+                ctx.Events.Raise(new GuardEvent { attacker = a.Id, defender = d.Id, attackId = rtA.currentAttackId,
+                    load = 0f, vN = speed, point = point, time = time });
+                return true;
+            }
+            var tech = AttackTechniques.Tuning(style, b);
+            float dmg = DamageMath.BodyDamage(a.Stats.attack, d.Stats.defense, speed, HitQuality.Normal, part, b)
+                        * a.Mods.damage * (tech != null ? tech.damage : 1f) * (ctx.Interventions?.DamageScale(a, time) ?? 1f);
+            dmg = DamageMath.CapHit(dmg, rtD.maxHp, b);
+            if (Ledger.IsResolved(rtA.currentAttackId, d.Id)) dmg *= DualSecondHit;
+            if (ctx.Interventions != null) dmg = ctx.Interventions.ApplySpecialLimits(a, rtA.currentAttackId, d, dmg);
+            var stateBefore = rtD.state;
+            rtD.ApplyDamage(dmg);
+            rtA.metrics.damageDealt += dmg;
+            rtA.metrics.hitsLanded++;
+            rtA.metrics.partHits[(int)part]++;
+            if (part == BodyPart.Head) rtA.metrics.criticals++;
+            ctx.LastDamageTime = time;
+            float impulse = DamageMath.Impulse(speed, a.Offhand.Mass, d.Body.mass, b) / d.Mods.knockbackResistance * .5f;
+            bool armored = AbsorbHeavyArmor(a, d, stateBefore, dmg, b, out bool armorBroken);
+            bool stagger = (impulse >= b.staggerImpulse || armorBroken) && !armored;
+            if (rtD.hp <= 0f) d.Knockdown.EnterKO(time);
+            else if (stagger && !rtD.IsDown) d.EnterStagger(b.staggerDuration * .6f);
+            ctx.Events.Raise(new HitEvent
+            {
+                attacker = a.Id, defender = d.Id, attackId = rtA.currentAttackId,
+                part = part, quality = HitQuality.Normal, damage = dmg, vN = speed, impulse = impulse,
+                point = point, critical = part == BodyPart.Head, stagger = stagger, knockdown = rtD.hp <= 0f, time = time,
+                defenderStateBefore = stateBefore, style = style, offhand = true,
+            });
+            return true;
         }
 
         static bool AbsorbHeavyArmor(Fighter a, Fighter d, FighterState defenderState, float damage, CombatBalance b, out bool broken)

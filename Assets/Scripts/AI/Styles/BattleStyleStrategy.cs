@@ -44,7 +44,7 @@ namespace MojiBattle
             r.evadeBias = Mathf.Clamp01(t.evadeBias * p.evadeBiasScale);
             r.proactiveGuard = Mathf.Clamp01(p.proactiveGuard + guardBiasBonus * 0.5f);
             r.retreatAfterAttack = p.retreatAfterAttack;
-            r.comboMax = Mathf.Max(1, t.comboMax + p.comboBonus);
+            r.comboMax = Mathf.Max(1, t.comboMax + p.comboBonus + self.Mods.comboBonus);
             r.comboMin = Mathf.Clamp(t.comboMin, 1, r.comboMax);
             r.reactionChance = Mathf.Clamp01(t.reactionChance + p.reactionBonus);
             r.counterBias = p.counterBias;

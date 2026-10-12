@@ -19,6 +19,13 @@ namespace MojiBattle
         LineRenderer head, torso, armFront, armBack, legA, legB, ground, gripMarker, comMarker;
         readonly List<LineRenderer> colliderLines = new List<LineRenderer>();
         SpriteRenderer weapon;
+        // 二刀流の副武器（反対の手）
+        SpriteRenderer offhand;
+        GlyphDefinitionRuntime offGlyph;
+        WeaponGeometry offGeometry;
+        Sprite offSprite;
+        float offPsi = float.NaN;
+        public bool HasOffhand => Build != null && Build.IsDualWield && offGeometry != null;
         SpriteRenderer printedHead;
         Sprite currentSprite;
         FighterVolumeRig volume;
@@ -76,10 +83,16 @@ namespace MojiBattle
             go.transform.SetParent(transform, false);
             weapon = go.AddComponent<SpriteRenderer>();
             weapon.sortingOrder = 5;
+            var offGo = new GameObject("OffhandSprite");
+            offGo.transform.SetParent(transform, false);
+            offhand = offGo.AddComponent<SpriteRenderer>();
+            offhand.sortingOrder = 3;
+            offhand.enabled = false;
             pedestalSide = UiKit.Rect(transform, "DisplayPlinthSide", PaperUi.Edge, 0);
             pedestalTop = UiKit.Rect(transform, "DisplayPlinthTop", new Color(.94f, .9f, .8f, 1), 0);
             pedestalSide.sprite = pedestalTop.sprite = UiKit.DiscSprite;
             volume = new FighterVolumeRig(transform, weapon, RetroUi.Red);
+            volume.AddOffhand(transform, offhand);
             volume.SetVisible(true);
             head.enabled = torso.enabled = armFront.enabled = armBack.enabled = legA.enabled = legB.enabled = false;
             if (printedHead != null) printedHead.enabled = false;
@@ -126,6 +139,7 @@ namespace MojiBattle
             }
             weapon.sprite = currentSprite;
             weapon.color = RetroUi.Team(side);
+            ShowOffhand(build);
             volume.SetTeam(weapon.color);
 
             var rects = glyph.features.colliderRects;
@@ -139,6 +153,30 @@ namespace MojiBattle
             // Rebase the hover freeze onto that stance; only an in-progress drag keeps the old pose.
             RenderPose(preserveEditingPose: !poseChanged);
             if (gripEditing && poseChanged) CaptureEditingPose();
+        }
+
+        void ShowOffhand(FighterBuildData build)
+        {
+            offGeometry = null;
+            offhand.enabled = false;
+            if (!build.IsDualWield) return;
+            string ch = build.OffhandGlyph;
+            GlyphDefinitionRuntime g = glyph;
+            if (ch != build.character)
+            {
+                if (!GlyphCatalog.TryGet(ch, build.fontType, B, GlyphCalibration.Default, out g, out _)) g = glyph;
+                else g = GlyphFlip.Apply(g, build.weaponFlip);
+            }
+            offGlyph = g;
+            offGeometry = FighterFactory.ResolveWeapon(Build, g, StatCalculator.Compute(g, B), B, CB, out _);
+            var tex = g.texture;
+            if (offSprite != null) Destroy(offSprite);
+            offSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                new Vector2(offGeometry.gripPx.x / tex.width, offGeometry.gripPx.y / tex.height), 1f / offGeometry.scale, 0, SpriteMeshType.FullRect);
+            offhand.sprite = offSprite;
+            offhand.color = RetroUi.Team(Side);
+            offhand.enabled = true;
+            offPsi = float.NaN;
         }
 
         float ReadyPsi => float.IsNaN(Mods.readyPsi) ? B.ReadyPsi(Stats.weightScore) : Mods.readyPsi;
@@ -236,7 +274,19 @@ namespace MojiBattle
             Vector3 hand = pendingGripPx.HasValue ? PixelToWorld(pendingGripPx.Value) : grip;
             Line(armFront, shoulder, Vector3.Lerp(shoulder, hand, 0.5f) + Vector3.down * 0.12f, hand);
             Vector3 back = hand;
-            if (Mods.grip == GripType.TwoHanded)
+            Vector3 backAxis = rot * (Vector3)Geometry.comLocal;
+            if (HasOffhand)
+            {
+                // 主武器の振りに少し遅れて追い、構えている間は低く交差させる
+                bool swinging = demo == Demo.Windup || demo == Demo.Swing;
+                float target = psi + (swinging ? 0f : CB.dualOffhandIdleOffset);
+                offPsi = float.IsNaN(offPsi) ? target : Mathf.LerpAngle(offPsi, target, 1f - Mathf.Exp(-Time.unscaledDeltaTime / Mathf.Max(.01f, CB.dualOffhandLag)));
+                var offRot = Quaternion.Euler(0f, 0f, offPsi - offGeometry.alpha0Deg);
+                back = grip + new Vector3(-0.06f, -0.03f, 0f);
+                offhand.transform.SetPositionAndRotation(back, offRot);
+                backAxis = offRot * (Vector3)offGeometry.comLocal;
+            }
+            else if (Mods.grip == GripType.TwoHanded)
             {
                 float len = Geometry.comLocal.magnitude;
                 if (len > 1e-3f) back = hand + rot * (Vector3)(Geometry.comLocal / len * Mathf.Min(len, CB.secondHandOffset));
@@ -245,7 +295,7 @@ namespace MojiBattle
             Vector3 axis = rot * (Vector3)Geometry.comLocal;
             volume.Arm(shoulder, hand, Vector3.down * .12f, true, true, axis);
             volume.Arm(shoulder + new Vector3(-.05f, -.02f, 0), back, Vector3.down * .2f, false,
-                Mods.grip == GripType.TwoHanded, axis);
+                Mods.grip == GripType.TwoHanded || HasOffhand, HasOffhand ? backAxis : axis);
             volume.End();
 
             var rects = glyph.features.colliderRects;

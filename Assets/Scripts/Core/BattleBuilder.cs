@@ -24,6 +24,17 @@ namespace MojiBattle
     {
         static int sceneCounter;
 
+        /// <summary>二刀流の副武器の字形（同じ字体・反転）。使えない文字なら主武器と同じ字形。</summary>
+        public static GlyphDefinitionRuntime OffhandGlyph(FighterLoadout loadout, GlyphDefinitionRuntime main, CombatBalance balance, GlyphCalibration calibration)
+        {
+            var build = loadout.build;
+            if (build == null || !build.IsDualWield) return null;
+            string ch = build.OffhandGlyph;
+            if (ch == build.character) return main;
+            if (!GlyphCatalog.TryGet(ch, loadout.font, balance, calibration, out var g, out _)) return main;
+            return GlyphFlip.Apply(g, build.weaponFlip);
+        }
+
         public static BattleInstance Build(MatchConfig config, CombatBalance balance, GlyphCalibration calibration,
             bool presentation, float countdown, out string error, bool tournamentFinal = false)
         {
@@ -34,6 +45,8 @@ namespace MojiBattle
             { error = "右: " + reasonR; return null; }
             gl = GlyphFlip.Apply(gl, config.left.build?.weaponFlip ?? WeaponFlip.None);
             gr = GlyphFlip.Apply(gr, config.right.build?.weaponFlip ?? WeaponFlip.None);
+            var ol = OffhandGlyph(config.left, gl, balance, calibration);
+            var or = OffhandGlyph(config.right, gr, balance, calibration);
 
             Time.fixedDeltaTime = TimeController.BaseFixedDelta;
             // 重い武器とヒンジの伸びを抑えるため反復回数を増やす
@@ -57,8 +70,8 @@ namespace MojiBattle
 
             ArenaBuilder.Build(root.transform, balance);
             var rng = new MatchRandom(config.seed);
-            var left = FighterFactory.Create(0, config.left, gl, ctx, rng.Fork(1), root.transform);
-            var right = FighterFactory.Create(1, config.right, gr, ctx, rng.Fork(2), root.transform);
+            var left = FighterFactory.Create(0, config.left, gl, ctx, rng.Fork(1), root.transform, ol);
+            var right = FighterFactory.Create(1, config.right, gr, ctx, rng.Fork(2), root.transform, or);
             left.Opponent = right;
             right.Opponent = left;
             // Heavy resets and the return from ranged spacing load the hinge in close contact.

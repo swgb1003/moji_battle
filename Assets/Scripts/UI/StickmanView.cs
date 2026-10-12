@@ -131,7 +131,11 @@ namespace MojiBattle
             var rt = f.Runtime;
             bool down = rt.IsDown;
             // Lazy construction avoids adding meshes or material work to hidden cup fixtures.
-            if(VolumeRendering && volume==null)volume=new FighterVolumeRig(transform,f.WeaponSprite,FighterFactory.TeamColor(f.Id));
+            if(VolumeRendering && volume==null)
+            {
+                volume=new FighterVolumeRig(transform,f.WeaponSprite,FighterFactory.TeamColor(f.Id));
+                if(f.Offhand!=null)volume.AddOffhand(transform,f.Offhand.Sprite);
+            }
             volume?.SetVisible(VolumeRendering);
             head.enabled=torso.enabled=armFront.enabled=armBack.enabled=legA.enabled=legB.enabled=!VolumeRendering;
             // 前後の物理ステップ間を補間した姿勢で描く
@@ -143,6 +147,14 @@ namespace MojiBattle
             f.WeaponSprite.transform.SetPositionAndRotation(weaponPos, weaponRot);
             // 横振り: 縦軸まわりに回る字形（奥・手前を向く間は細く、後ろ向きは鏡像）
             f.WeaponSprite.transform.localScale = new Vector3(Mathf.Cos(rt.sweepYaw * Mathf.Deg2Rad), 1f, 1f);
+            Vector3 offhandGrip = Vector3.zero;
+            if (f.Offhand != null)
+            {
+                var o = f.Offhand;
+                offhandGrip = Vector2.Lerp(o.PrevPos, o.CurrPos, alpha);
+                o.Sprite.transform.SetPositionAndRotation(offhandGrip, Quaternion.Euler(0f, 0f, Mathf.LerpAngle(o.PrevRot, o.CurrRot, alpha)));
+                o.Sprite.transform.localScale = f.WeaponSprite.transform.localScale;
+            }
             bool wholeBody = rt.attackStyle == AttackStyle.Whirl && (rt.state == FighterState.AttackWindup
                 || rt.state == FighterState.AttackActive || rt.state == FighterState.AttackRecovery);
             float turn = wholeBody ? Mathf.Cos(rt.sweepYaw * Mathf.Deg2Rad) : 1f;
@@ -211,7 +223,8 @@ namespace MojiBattle
             Vector3 grip = rt.weaponDetached ? P(0.3f * f.Facing, 1.0f) : (Vector3)weaponPos;
             DrawArm(armFront, shoulder, grip, bodyRot * Vector3.down * 0.12f);
             // 両手持ち: 添え手は握りから重心方向の少し先（表示のみ。物理の接続は握り1点）
-            Vector3 backHand = f.Mods.customized && f.Mods.grip == GripType.TwoHanded && !rt.weaponDetached ? SecondHand(f, weaponPos, weaponRot) : VolumeRendering?P(-.17f*f.Facing,rt.state==FighterState.Guard?1.17f:1.02f):grip;
+            Vector3 backHand = f.Offhand != null ? offhandGrip
+                : f.Mods.customized && f.Mods.grip == GripType.TwoHanded && !rt.weaponDetached ? SecondHand(f, weaponPos, weaponRot) : VolumeRendering?P(-.17f*f.Facing,rt.state==FighterState.Guard?1.17f:1.02f):grip;
             DrawArm(armBack, shoulder + bodyRot * new Vector3(-0.05f * f.Facing, -0.02f, 0f), backHand, bodyRot * Vector3.down * 0.2f);
 
             // 脚: 接地中は歩行サイクル、空中は畳む、転倒中は胴に沿って伸ばす
@@ -319,8 +332,11 @@ namespace MojiBattle
             if(VolumeRendering)
             {
                 bool primary=lr==armFront;
-                bool holding=!f.Runtime.weaponDetached && (primary || f.Mods.grip==GripType.TwoHanded);
-                Vector3 axis=f.WeaponSprite.transform.rotation*new Vector3(f.Weapon.comLocal.x*f.Facing*Mathf.Cos(f.Runtime.sweepYaw*Mathf.Deg2Rad),f.Weapon.comLocal.y,0);
+                bool off=!primary && f.Offhand!=null;
+                bool holding=off || (!f.Runtime.weaponDetached && (primary || f.Mods.grip==GripType.TwoHanded));
+                var held=off?f.Offhand.Sprite.transform:f.WeaponSprite.transform;
+                var com=off?f.Offhand.Geometry.comLocal:f.Weapon.comLocal;
+                Vector3 axis=held.rotation*new Vector3(com.x*f.Facing*Mathf.Cos(f.Runtime.sweepYaw*Mathf.Deg2Rad),com.y,0);
                 volume.Arm(shoulder,hand,elbowBias,primary,holding,axis);
             }
         }

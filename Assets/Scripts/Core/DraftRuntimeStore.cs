@@ -81,6 +81,7 @@ namespace MojiBattle
                 var rng = new System.Random(unchecked(Current.seed + Current.round * 101 + ch[0]));
                 b.weaponSize = (WeaponSize)rng.Next(4);
                 b.gripType = (GripType)rng.Next(4); b.battleStyle = (BattleStyle)rng.Next(4);
+                b.MaybeDualWield(Current.seed + Current.round * 101);
             }
             var moves = SpecialMoveLibrary.For(ch); b.special = moves.Count > 0 ? moves[0].Clone() : null;
             return b;

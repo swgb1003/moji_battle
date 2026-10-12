@@ -43,7 +43,11 @@ namespace MojiBattle
             if(run) { builds[0]=RunRuntimeStore.Current.player.Clone(); builds[1]=RunRuntimeStore.Current.Opponent.Build.Clone(); }
             if(worldCup)builds[0]=WorldCupRuntimeStore.Preparing?WorldCupRuntimeStore.Draft:WorldCupRuntimeStore.Current.Entrants[0].Build;
             foreach (var b in builds)
+            {
                 if (!IsAvailable(b.character, b.fontType, out _)) b.character = "一";
+                if (!string.IsNullOrEmpty(b.offhandCharacter) && !IsAvailable(b.offhandCharacter, b.fontType, out _)) b.offhandCharacter = "";
+                if (b.gripType == GripType.DualWield && !FighterBuildData.DualWieldAllowed(b.weaponSize)) b.gripType = GripType.OneHanded;
+            }
             if(challenge)ChallengeRuntimeStore.SetDraft(builds[0]);
         }
 
@@ -97,14 +101,46 @@ namespace MojiBattle
         {
             if (!Editable) return;
             if (!IsAvailable(Current.character, font, out var reason)) { CharacterError = reason; Changed?.Invoke(); return; }
+            if (Current.IsDualWield && !IsAvailable(Current.OffhandGlyph, font, out reason)) { CharacterError = "左手の文字: " + reason; Changed?.Invoke(); return; }
             CharacterError = null;
             Current.fontType = font;
             Commit();
         }
 
-        public void SetSize(WeaponSize s) { if (!Editable) return; Current.weaponSize = challenge && ChallengeRuntimeStore.Current.FixedSize.HasValue
-            ? ChallengeRuntimeStore.Current.FixedSize.Value : worldCup ? WeaponSize.M : tournament ? WeaponSize.S : s; Commit(); }
-        public void SetGrip(GripType g) { if (!Editable) return; Current.gripType = g; Commit(); }
+        /// <summary>二刀流を L・XL に変えて外した時の知らせ（次の変更で消える）。</summary>
+        public string GripNotice { get; private set; }
+
+        public void SetSize(WeaponSize s)
+        {
+            if (!Editable) return;
+            Current.weaponSize = challenge && ChallengeRuntimeStore.Current.FixedSize.HasValue
+                ? ChallengeRuntimeStore.Current.FixedSize.Value : worldCup ? WeaponSize.M : tournament ? WeaponSize.S : s;
+            GripNotice = null;
+            // 二刀流は S・M のみ。大きいサイズにしたら片手に戻す
+            if (Current.gripType == GripType.DualWield && !FighterBuildData.DualWieldAllowed(Current.weaponSize))
+            { Current.gripType = GripType.OneHanded; GripNotice = "二刀流は S・M サイズのみ。片手に戻しました。"; }
+            Commit();
+        }
+        public void SetGrip(GripType g)
+        {
+            if (!Editable) return;
+            if (g == GripType.DualWield && !FighterBuildData.DualWieldAllowed(Current.weaponSize)) return;
+            GripNotice = null;
+            Current.gripType = g;
+            Commit();
+        }
+
+        /// <summary>二刀流の副武器（反対の手）の文字。ベイク済みでない文字は理由を残して変更しない。</summary>
+        public bool SetOffhandCharacter(string ch)
+        {
+            if (!Editable) return false;
+            if (string.IsNullOrWhiteSpace(ch)) { CharacterError = null; Current.offhandCharacter = ""; Commit(); return true; }
+            if (!IsAvailable(ch, Current.fontType, out var reason)) { CharacterError = "左手の文字: " + reason; Changed?.Invoke(); return false; }
+            CharacterError = null;
+            Current.offhandCharacter = ch.Trim();
+            Commit();
+            return true;
+        }
         public void SetGripPosition(float p) { if (!Editable) return; Current.gripPosition = Mathf.Clamp01(p); Current.customGrip = false; Commit(); }
 
         /// <summary>プレビューで選んだ場所を握る（外接矩形内の正規化座標）。</summary>

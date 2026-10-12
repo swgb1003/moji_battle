@@ -5,7 +5,7 @@ namespace MojiBattle
 {
     public sealed partial class CustomizeScreen
     {
-        static string DraftSummary(FighterBuildData b) => $"{b.character} / {GlyphCatalog.FontDisplayName(b.fontType)} / {b.weaponSize}\n{CustomizeLabels.Grip(b.gripType)} / {CustomizeLabels.StyleShort(b.battleStyle)}";
+        static string DraftSummary(FighterBuildData b) => $"{b.character} / {GlyphCatalog.FontDisplayName(b.fontType)} / {b.weaponSize}\n{CustomizeLabels.Grip(b)} / {CustomizeLabels.StyleShort(b.battleStyle)}";
         void BuildDraftVs(Transform root)
         {
             var bg=UguiKit.Fill(root,"VsPanel");vsPanel=bg.gameObject;

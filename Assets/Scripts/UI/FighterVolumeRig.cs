@@ -10,6 +10,8 @@ namespace MojiBattle
         readonly VolumeMesh body,front,shadow;
         readonly SpriteRenderer[] weaponEdges=new SpriteRenderer[3];
         readonly SpriteRenderer weapon;
+        SpriteRenderer offhand;
+        SpriteRenderer[] offhandEdges;
         readonly Material originalWeaponMaterial;
         Color team;
         Vector3[] footPins=new Vector3[2];
@@ -43,11 +45,26 @@ namespace MojiBattle
             body.Renderer.enabled=front.Renderer.enabled=shadow.Renderer.enabled=visible;
             foreach(var edge in weaponEdges)edge.enabled=visible;
             if(weapon!=null)weapon.sharedMaterial=visible?glyphMaterial:originalWeaponMaterial;
+            if(offhand!=null){offhand.sharedMaterial=visible?glyphMaterial:originalWeaponMaterial;foreach(var edge in offhandEdges)edge.enabled=visible;}
+        }
+        /// <summary>二刀流の副武器にも同じ厚みを付ける。</summary>
+        public void AddOffhand(Transform parent,SpriteRenderer sprite)
+        {
+            offhand=sprite;offhandEdges=new SpriteRenderer[weaponEdges.Length];
+            for(int i=0;i<offhandEdges.Length;i++)
+            {
+                offhandEdges[i]=UiKit.Rect(parent,"OffhandDepth"+i,team*.38f,2);
+                offhandEdges[i].sprite=sprite.sprite;
+                offhandEdges[i].color=new Color(team.r*.38f,team.g*.38f,team.b*.38f,1);
+            }
+            if(visible){offhand.sharedMaterial=glyphMaterial;}
+            else foreach(var edge in offhandEdges)edge.enabled=false;
         }
         public void SetTeam(Color color)
         {
             team = color;
             foreach (var edge in weaponEdges) edge.color = new Color(team.r * .38f, team.g * .38f, team.b * .38f, 1);
+            if (offhandEdges != null) foreach (var edge in offhandEdges) edge.color = new Color(team.r * .38f, team.g * .38f, team.b * .38f, 1);
         }
         public void Begin(Vector3 position,Vector3 hip,Vector3 neck,Vector3 head,float turn,bool down)
         {
@@ -68,6 +85,14 @@ namespace MojiBattle
                 var scale=edge.transform.localScale;
                 scale.x=Mathf.Sign(scale.x)*Mathf.Max(.025f,Mathf.Abs(scale.x));edge.transform.localScale=scale;
             }
+            if(offhand!=null)
+                for(int i=0;i<offhandEdges.Length;i++)
+                {
+                    var edge=offhandEdges[i];edge.flipX=offhand.flipX;
+                    edge.transform.SetPositionAndRotation(offhand.transform.position+new Vector3(.014f*(i+1),-.014f*(i+1),.03f),offhand.transform.rotation);
+                    var scale=offhand.transform.localScale;
+                    scale.x=Mathf.Sign(scale.x)*Mathf.Max(.025f,Mathf.Abs(scale.x));edge.transform.localScale=scale;
+                }
         }
         public static Vector3 Joint(Vector3 root,Vector3 end,float upper,float lower,Vector3 bend)
         {

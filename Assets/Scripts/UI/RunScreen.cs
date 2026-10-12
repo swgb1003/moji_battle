@@ -34,7 +34,7 @@ namespace MojiBattle
             RetroUi.Frame(root,x,y+54,width,26,RetroUi.Ink,2);
             RetroUi.Block(root,"RunHpFill",x+3,y+57,(width-6)*s.hpShare,20,RetroUi.Red);
         }
-        public static string BuildText(FighterBuildData b)=>$"{GlyphCatalog.FontDisplayName(b.fontType)}　{b.weaponSize}　{CustomizeLabels.Grip(b.gripType)}\n{CustomizeLabels.Style(b.battleStyle)}";
+        public static string BuildText(FighterBuildData b)=>$"{GlyphCatalog.FontDisplayName(b.fontType)}　{b.weaponSize}　{CustomizeLabels.Grip(b)}\n{CustomizeLabels.Style(b.battleStyle)}";
         public static string Perks(RunSession s)
         {
             string text="";
