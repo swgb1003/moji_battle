@@ -10,15 +10,15 @@ namespace MojiBattle.Tests
         [SetUp] public void Setup(){hadSave=PlayerPrefs.HasKey(RunRuntimeStore.PrefKey);save=PlayerPrefs.GetString(RunRuntimeStore.PrefKey);hadAwards=PlayerPrefs.HasKey(AchievementStore.PrefKey);awards=PlayerPrefs.GetString(AchievementStore.PrefKey);RunRuntimeStore.ClearSession();AchievementStore.Reset();}
         [TearDown] public void Cleanup(){RunRuntimeStore.ClearSession();if(hadSave)PlayerPrefs.SetString(RunRuntimeStore.PrefKey,save);else PlayerPrefs.DeleteKey(RunRuntimeStore.PrefKey);if(hadAwards)PlayerPrefs.SetString(AchievementStore.PrefKey,awards);else PlayerPrefs.DeleteKey(AchievementStore.PrefKey);PlayerPrefs.Save();AchievementStore.Reload();}
         static MatchResult Result(int winner,float hp=50)=>new MatchResult{winner=winner,hpRemaining=new[]{hp,0f},maxHp=new[]{100f,100f},elapsedSeconds=20};
-        static void Win(){Assert.IsTrue(RunRuntimeStore.Prepare());RunRuntimeStore.BeginMatch(60);Assert.IsTrue(RunRuntimeStore.Record(Result(0)));Assert.IsFalse(RunRuntimeStore.Record(Result(0)));}
+        static void Win(float hp=50){Assert.IsTrue(RunRuntimeStore.Prepare());RunRuntimeStore.BeginMatch(60);Assert.IsTrue(RunRuntimeStore.Record(Result(0,hp)));Assert.IsFalse(RunRuntimeStore.Record(Result(0,hp)));}
         [Test] public void OffersSelectionHpAndEnemySurviveResumeWithoutReroll()
         {
-            RunRuntimeStore.Begin(61);Win();Assert.IsTrue(RunRuntimeStore.OpenUpgrade());var s=RunRuntimeStore.Current;
+            RunRuntimeStore.Begin(61);Win(10);Assert.AreEqual(.1f+RunCatalog.RestRecovery,RunRuntimeStore.Current.hpShare,.001f);Assert.IsTrue(RunRuntimeStore.OpenUpgrade());var s=RunRuntimeStore.Current;
             Assert.AreEqual(3,s.offers.Distinct().Count());Assert.Contains(2,s.offers);Assert.IsFalse(RunRuntimeStore.ConfirmUpgrade());
             Assert.IsTrue(RunRuntimeStore.SelectUpgrade(2));var offers=(int[])s.offers.Clone();var enemy=s.Opponent.Build.character;
             RunRuntimeStore.ClearSession();Assert.IsTrue(RunRuntimeStore.Resume());s=RunRuntimeStore.Current;
-            CollectionAssert.AreEqual(offers,s.offers);Assert.AreEqual(2,s.selectedUpgrade);Assert.AreEqual(enemy,s.Opponent.Build.character);Assert.AreEqual(.5f,s.hpShare);
-            float hp=s.Hp;Assert.IsTrue(RunRuntimeStore.ConfirmUpgrade());Assert.AreEqual(2,s.round);Assert.AreEqual(Mathf.Min(s.MaxHp,hp+30),s.Hp,.001f);Assert.IsFalse(RunRuntimeStore.ConfirmUpgrade());
+            CollectionAssert.AreEqual(offers,s.offers);Assert.AreEqual(2,s.selectedUpgrade);Assert.AreEqual(enemy,s.Opponent.Build.character);Assert.AreEqual(.1f+RunCatalog.RestRecovery,s.hpShare,.001f);
+            float hp=s.Hp;Assert.IsTrue(RunRuntimeStore.ConfirmUpgrade());Assert.AreEqual(2,s.round);Assert.AreEqual(Mathf.Min(s.MaxHp,hp+s.MaxHp*RunCatalog.BreathRecovery),s.Hp,.001f);Assert.IsFalse(RunRuntimeStore.ConfirmUpgrade());
         }
         [Test] public void AdjustingBuildPreservesHpShareAndLockedGlyphAndOrdinaryBuilds()
         {
@@ -42,7 +42,7 @@ namespace MojiBattle.Tests
         }
         [Test] public void DrawDoesNotAdvanceAndMaxHpUpgradeKeepsShare()
         {
-            RunRuntimeStore.Begin(14);RunRuntimeStore.Prepare();RunRuntimeStore.BeginMatch(60);RunRuntimeStore.Record(Result(-1));Assert.IsTrue(RunRuntimeStore.ReplayDraw());Assert.AreEqual(1,RunRuntimeStore.Current.round);Assert.AreEqual(0,RunRuntimeStore.Current.Wins);
+            RunRuntimeStore.Begin(14);RunRuntimeStore.Prepare();RunRuntimeStore.BeginMatch(60);RunRuntimeStore.Record(Result(-1));Assert.AreEqual(.5f,RunRuntimeStore.Current.hpShare,.001f);Assert.IsTrue(RunRuntimeStore.ReplayDraw());Assert.AreEqual(1,RunRuntimeStore.Current.round);Assert.AreEqual(0,RunRuntimeStore.Current.Wins);
             var counts=new int[12];counts[11]=1;counts[0]=2;counts[1]=1;var b=RunCatalog.Bonuses(counts);Assert.AreEqual(.15f,b.maxHp);Assert.AreEqual(.3f,b.attackSpeed);Assert.AreEqual(.2f,b.cheerRecovery);
         }
         [Test] public void MalformedOrUnsupportedSaveIsRejected()

@@ -24,10 +24,14 @@ namespace MojiBattle
     public static class RunCatalog
     {
         public const int Battles=5;
+        /// <summary>Share of max HP restored automatically after every win, so damage carries over without forcing a heal pick.</summary>
+        public const float RestRecovery=.5f;
+        /// <summary>Share of max HP restored by the 一息 upgrade.</summary>
+        public const float BreathRecovery=.5f;
         public static readonly RunUpgrade[] Upgrades={
             new RunUpgrade(0,"速筆","攻撃速度 +15%","通常攻撃のテンポが上がる。"),
             new RunUpgrade(1,"声の泉","声援回復 +20%","声援ゲージが早く回復する。",2),
-            new RunUpgrade(2,"一息","HPを30回復","次の戦いに備えて回復する。",4),
+            new RunUpgrade(2,"一息","HPを50%回復","次の戦いに備えて回復する。",4),
             new RunUpgrade(3,"力強い一画","攻撃威力 +12%","一撃に、さらに力を込める。"),
             new RunUpgrade(4,"堅墨","防御 +10%","相手の攻撃を、堅く受け止める。"),
             new RunUpgrade(5,"風の足","移動速度 +12%","間合いを素早く変えられる。"),
@@ -38,6 +42,9 @@ namespace MojiBattle
             new RunUpgrade(10,"根を張る文字","吹き飛び耐性 +20%","相手の一撃にも、踏みとどまる。",2),
             new RunUpgrade(11,"長く続く筆","最大HP +15%","残りHPも、同じ割合で増える。",2)
         };
+        /// <summary>Opponent damage and max-HP offset per round. Early challengers sit below the player and the boss's XL weapon
+        /// already carries its threat, so its stats stay below par too; upgrades then build a real lead.</summary>
+        static readonly float[] EnemyPower={-.2f,-.2f,-.15f,-.15f,-.3f};
         public static RunUpgrade Upgrade(int id)=>id>=0 && id<Upgrades.Length?Upgrades[id]:null;
         public static RunBonuses Bonuses(int[] counts)
         {
@@ -54,15 +61,15 @@ namespace MojiBattle
             int pick=rng.Next(3);string ch=pool[round-1][pick];
             var build=FighterBuildData.Default(ch);build.fontType=FontStyleId.Gothic;
             if(!FighterCustomizer.IsAvailable(ch,build.fontType,out _))build.character="一";
-            build.weaponSize=round==5?WeaponSize.XL:round==2 || round==4?WeaponSize.L:WeaponSize.M;
+            build.weaponSize=round==5?WeaponSize.XL:round==4?WeaponSize.L:WeaponSize.M;
             build.gripType=round==2 || round==5?GripType.TwoHanded:round==3?GripType.Reverse:GripType.OneHanded;
             build.battleStyle=round==2?BattleStyle.Defensive:round==3?BattleStyle.HitAndAway:round==4?BattleStyle.Counter:BattleStyle.Aggressive;
             return new RunOpponent {Build=build,
                 Name=round==5?new[]{"墨龍","闇の王","天の覇者"}[pick]:new[]{"最初の挑戦者","鉄壁の守り手","光速の一文字","猛き好敵手"}[round-1],
                 Hint=round==5?"一文字の力を、ここで証明せよ。":new[]{"まずは一文字の力を試そう。","守りは堅い。連続攻撃で崩そう。","速い相手の動きを見極めよう。","重い一撃に注意して戦おう。"}[round-1],
                 Warning=round==5?"巨大な武器と、強力な必殺に注意。":"声援と必殺のタイミングが勝負の鍵。",
-                Bonuses=new RunBonuses {damage=(round-1)*.035f,defense=(round-1)*.03f,
-                    maxHp=(round-1)*.04f,specialDamage=round==5?.15f:0,gaugeRate=round==5?.15f:0}};
+                Bonuses=new RunBonuses {damage=EnemyPower[round-1],defense=EnemyPower[round-1]*.6f,
+                    maxHp=EnemyPower[round-1],specialDamage=round==5?.15f:0,gaugeRate=round==5?.15f:0}};
         }
         public static float MaxHp(FighterBuildData build,RunBonuses bonuses)
         {

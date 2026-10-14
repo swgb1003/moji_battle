@@ -111,7 +111,7 @@ namespace MojiBattle
             RunUi.Fighter(root,1540,215,.72f,FighterBuildData.Default("龍"),RetroUi.Blue,true);
             RunUi.Progress(root,460,395,1000,0,0);
             string[] titles={"一文字で出発","勝つたびに強化","全5戦を突破"};
-            string[] copy={"好きな文字と構成で挑戦\n途中で構成を調整できます","3つの候補から1つを選択\n回復か強化か、選択が鍵","HPを引き継いで連戦\n最終戦にはボスが待つ"};
+            string[] copy={"好きな文字と構成で挑戦\n途中で構成を調整できます","3つの候補から1つを選択\n回復か強化か、選択が鍵","勝利後の休息でHP半分回復\n最終戦にはボスが待つ"};
             for(int i=0;i<3;i++)
             {
                 var p=DraftUi.Panel(root,"RunRule"+i,76+i*598,560,572,288);
@@ -197,7 +197,7 @@ namespace MojiBattle
                 RunUi.Symbol(p,u.Id,130,100,.78f);
                 RetroUi.Label(p,"UpgradeEffect",u.Effect,24,264,524,54,33,RetroUi.Red,TextAnchor.MiddleCenter);
                 RetroUi.Label(p,"UpgradeDescription",u.Description,30,u.Id==2?343:321,512,35,25,null,TextAnchor.MiddleCenter);
-                if(u.Id==2)RetroUi.Label(p,"RecoveryPreview",$"{Mathf.CeilToInt(s.Hp)} → {Mathf.CeilToInt(Mathf.Min(s.MaxHp,s.Hp+30))} / {Mathf.CeilToInt(s.MaxHp)}",30,310,512,35,28,null,TextAnchor.MiddleCenter);
+                if(u.Id==2)RetroUi.Label(p,"RecoveryPreview",$"{Mathf.CeilToInt(s.Hp)} → {Mathf.CeilToInt(Mathf.Min(s.MaxHp,s.Hp+s.MaxHp*RunCatalog.BreathRecovery))} / {Mathf.CeilToInt(s.MaxHp)}",30,310,512,35,28,null,TextAnchor.MiddleCenter);
                 choices[i]=RetroUi.Button(p,"RunUpgradeSelect"+i,"選択する",28,382,516,46,29,()=>{RunRuntimeStore.SelectUpgrade(s.offers[index]);RefreshChoices();},shadow:false);
                 var border=RetroUi.Group(p,"UpgradeSelected",-3,-3,578,452);RetroUi.Frame(border,0,0,578,452,RetroUi.Red,3);borders[i]=border.gameObject;
             }

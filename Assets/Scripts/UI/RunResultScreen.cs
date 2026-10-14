@@ -33,10 +33,12 @@ namespace MojiBattle
             if(!clear)DraftUi.Title(left,"RunVerdict",last.winner<0?"引分":won?"勝利":"敗北",290,142,280,120,78,won?RetroUi.Red:RetroUi.Muted);
             RetroUi.Block(left,"Ground",30,354,804,2,RetroUi.Ink);
             RetroUi.Label(left,"Elapsed",finished?$"突破　{s.Wins} / 5戦　　合計 {s.Seconds:F1}秒":$"決着時間　{last.seconds:F1}秒",28,365,808,46,31);
-            RetroUi.Label(left,"Remaining",$"残りHP　{Mathf.CeilToInt(s.Hp)} / {Mathf.CeilToInt(s.MaxHp)}",28,416,808,40,31);
+            // After a win the rest recovery is already applied; show the battle-end HP alongside it.
+            bool rested=won && !finished;
+            RetroUi.Label(left,"Remaining",$"残りHP　{Mathf.CeilToInt(rested?last.hp:s.Hp)} / {Mathf.CeilToInt(s.MaxHp)}"+(rested?$"　→　休息後 {Mathf.CeilToInt(s.Hp)}":""),28,416,808,40,31);
             RetroUi.Label(right,"Growth",RunUi.Perks(s),30,108,814,148,32);
             RetroUi.Block(right,"Rule",28,282,818,2,RetroUi.Ink);
-            string note=clear?"称号「五連の覇者」\n一文字を育て、五連戦を突破した。":finished?"回復と強化を使い分けて、再び挑もう。\n相手に合わせた構成の調整も勝利の鍵。":won?"次は3つの候補から、強化をひとつ選択。\nHPは次の戦闘へ引き継ぎます。":"勝数はそのまま。同じ相手と再戦します。\nHPは引き継ぎます。";
+            string note=clear?"称号「五連の覇者」\n一文字を育て、五連戦を突破した。":finished?"回復と強化を使い分けて、再び挑もう。\n相手に合わせた構成の調整も勝利の鍵。":won?"次は3つの候補から、強化をひとつ選択。\n休息でHPが最大値の半分回復します。":"勝数はそのまま。同じ相手と再戦します。\nHPは引き継ぎます。";
             RetroUi.Label(right,"NextNote",note,30,311,814,126,30,null);
             if(finished)
             {

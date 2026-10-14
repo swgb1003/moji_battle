@@ -69,7 +69,7 @@ namespace MojiBattle
                 hp=Mathf.Clamp(result.hpRemaining[0],0,result.maxHp[0]),maxHp=result.maxHp[0],opponent=s.Opponent.Build.character});
             if(result.winner==1 || s.hpShare<=0 || (result.winner==0 && s.round==RunCatalog.Battles))s.stage=RunStage.Finished;
             else s.stage=RunStage.Result;
-            if(result.winner==0 && !s.Finished)DealOffers();
+            if(result.winner==0 && !s.Finished){s.hpShare=Mathf.Clamp01(s.hpShare+RunCatalog.RestRecovery);DealOffers();}
             Save();AchievementStore.Change(p=>p.RecordRun(s),true);return true;
         }
         static void DealOffers()
@@ -101,7 +101,7 @@ namespace MojiBattle
             var s=Current;
             if(s?.stage!=RunStage.Upgrade || s.offers==null || Array.IndexOf(s.offers,s.selectedUpgrade)<0)return false;
             int id=s.selectedUpgrade;
-            if(id==2)s.hpShare=Mathf.Clamp01(s.hpShare+30f/s.MaxHp);
+            if(id==2)s.hpShare=Mathf.Clamp01(s.hpShare+RunCatalog.BreathRecovery);
             s.upgrades[id]++;s.round++;s.offers=null;s.selectedUpgrade=-1;s.stage=RunStage.Prepare;
             Save();return true;
         }
