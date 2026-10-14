@@ -136,7 +136,9 @@ namespace MojiBattle
             float gravityTorque = wb.mass * -Physics2D.gravity.y * wb.gravityScale * r.x;
             // 持ち方の「攻撃時トルク」は溜め・振りの間だけ
             bool attacking = rt.state == FighterState.AttackWindup || rt.state == FighterState.AttackActive;
-            float limit = inertia * AccelLimit * torqueScale * (attacking ? self.Mods.attackTorque : 1f) + Mathf.Abs(gravityTorque) * b.gravityCompensation;
+            // 大型の振りは短い時間で弧を描くので、角加速度の上限を速さの分だけ上げる（重さ・握る位置の差は残す）
+            float swing = rt.state == FighterState.AttackActive ? self.Mods.swingSpeed : 1f;
+            float limit = inertia * AccelLimit * torqueScale * swing * (attacking ? self.Mods.attackTorque : 1f) + Mathf.Abs(gravityTorque) * b.gravityCompensation;
             torque += gravityTorque * b.gravityCompensation;
             torque = Mathf.Clamp(torque, -limit, limit);
 

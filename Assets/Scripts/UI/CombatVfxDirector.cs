@@ -87,19 +87,37 @@ namespace MojiBattle
                 rig?.Shake(b.smashShake, 0.3f);
                 rig?.ZoomPunch(b.smashZoom, 0.6f);
             }
-            else if (e.damage >= b.heavyHitDamage)
+            else
             {
-                TimeController.TriggerHitStop(director.Context.Balance.hitStopSeconds);
-                rig?.Shake(0.18f, 0.2f);
-                SpawnPopup("ドゴォ", e.point + new Vector2(0f, 1.0f), FighterFactory.Ink, 0.7f);
+                // 大型武器の一撃は、ダメージに関係なく重さに応じて長く止め、大きく揺らして寄る
+                float feel = AttackTechniques.StrikeFeel(director.Fighters[e.attacker], e);
+                if (feel > 0f || e.damage >= b.heavyHitDamage)
+                {
+                    TimeController.TriggerHitStop(Mathf.Lerp(b.hitStopSeconds, b.heavyFeelHitStop, feel));
+                    rig?.Shake(Mathf.Lerp(0.18f, b.heavyFeelShake, feel), Mathf.Lerp(0.2f, 0.32f, feel));
+                    if (feel > 0f) rig?.ZoomPunch(b.heavyFeelZoom * feel, 0.35f + 0.2f * feel);
+                    SpawnPopup(feel >= 1f ? "ズドォン！" : "ドゴォ", e.point + new Vector2(0f, 1.0f), FighterFactory.Ink, 0.7f + 0.2f * feel);
+                    if (feel > 0f) Burst(e.point, Mathf.RoundToInt(10 + 14 * feel), FighterFactory.Ink, 6f + 4f * feel, 0.1f + 0.04f * feel);
+                }
             }
+            // スーパーアーマーで踏みとどまった
+            if (e.armored) SpawnPopup("不動！", director.Fighters[e.defender].HeadWorld + Vector2.up * 0.35f, FighterFactory.TeamColor(e.defender), 0.42f);
         }
 
         void OnGuard(GuardEvent e)
         {
             Burst(e.point, 10, Color.white, 6f, 0.08f, outline: true);
             if (!e.parried) SpawnPopup(e.broke ? "GUARD BREAK" : "GUARD", e.point + Vector2.up * 0.35f, FighterFactory.Ink, 0.4f);
-            if (e.broke) rig?.Shake(0.1f, 0.15f);
+            var attacker = director.Fighters[e.attacker];
+            var style = attacker.Runtime.attackStyle;
+            float feel = e.parried || AttackTechniques.IsKick(style) || AttackTechniques.IsRanged(style) ? 0f : attacker.ImpactFeel;
+            if (e.broke) rig?.Shake(Mathf.Lerp(0.1f, 0.3f, feel), 0.15f + 0.1f * feel);
+            else if (feel > 0f)
+            {
+                // ガードの上からでも重さが伝わる
+                TimeController.TriggerHitStop(0.04f * feel);
+                rig?.Shake(0.14f * feel, 0.18f);
+            }
         }
 
         void OnEnv(EnvImpactEvent e)

@@ -215,6 +215,9 @@ MonoBehaviour:
   guardBreakStagger: 0.7
   heavyHitDamage: 15
   hitStopSeconds: 0.06
+  heavyFeelHitStop: 0.15
+  heavyFeelShake: 0.4
+  heavyFeelZoom: 0.08
   impulseFactor: 0.7
   impulseMax: 18
   impulseScale: 2

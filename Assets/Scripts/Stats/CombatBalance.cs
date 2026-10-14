@@ -180,6 +180,8 @@ namespace MojiBattle
         public float guardLoadPerMomentum = 1.0f, guardBreakThreshold = 70f, guardLoadDecayPerSec = 4f;
         public float guardBreakStagger = 0.7f;
         public float heavyHitDamage = 15f, hitStopSeconds = 0.06f;
+        [Tooltip("大型武器（演出の重さ 1）の一撃のヒットストップ秒・画面の揺れ・寄り。重さに応じて通常の値から補間する")]
+        public float heavyFeelHitStop = 0.15f, heavyFeelShake = 0.4f, heavyFeelZoom = 0.08f;
         [Tooltip("1 発の本体ダメージの上限（相手の最大 HP に対する割合）。満タンから一撃で倒れないように")]
         public float maxHitHpFraction = 0.6f;
 

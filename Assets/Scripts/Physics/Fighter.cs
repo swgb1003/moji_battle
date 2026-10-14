@@ -115,10 +115,12 @@ namespace MojiBattle
         public void SetTendency(ClassTendency t) => tendency = t;
         /// <summary>待機姿勢 ψ（持ち方で上書き、無ければ重量クラスの既定）。</summary>
         public float ReadyPsi => float.IsNaN(Mods.readyPsi) ? Balance.ReadyPsi(Stats.weightScore) : Mods.readyPsi;
-        /// <summary>溜め・振り・硬直の時間（サイズ・持ち方の攻撃速度を反映）。</summary>
-        public float WindupTime => StatCalculator.Windup(Stats.weightScore, Balance) / Mods.attackSpeed;
-        public float ActiveTime => StatCalculator.Active(Stats.weightScore, Balance) / Mods.attackSpeed;
+        /// <summary>溜め・振り・硬直の時間（サイズ・持ち方の攻撃速度を反映）。大型は溜めを長く、振りを速くする（硬直の短縮は StartAttack で上限の後に掛ける）。</summary>
+        public float WindupTime => StatCalculator.Windup(Stats.weightScore, Balance) / Mods.attackSpeed * Mods.windupTime;
+        public float ActiveTime => StatCalculator.Active(Stats.weightScore, Balance) / (Mods.attackSpeed * Mods.swingSpeed);
         public float RecoveryTime => StatCalculator.Recovery(Stats.weightScore, Balance) / Mods.attackSpeed;
+        /// <summary>演出の重さ（0〜1）。L・XL の武器だけ（カスタマイズ無しの確認用の試合は従来どおり）。</summary>
+        public float ImpactFeel => Mods.customized ? Mods.impactFeel : 0f;
         public bool HeavyTempoEnabled => Balance.heavyTempo && WeightClass == WeightClass.Heavy;
         // Special actions with their own physical timing retain that timing.
         public bool UsesHeavyWeaponTempo => HeavyTempoEnabled && !AttackTechniques.IsKick(Runtime.attackStyle)
@@ -413,6 +415,8 @@ namespace MojiBattle
                 rt.windupDuration = Mathf.Min(rt.windupDuration * b.tempoWindupScale, b.tempoMaxWindup);
                 rt.recoveryDuration = Mathf.Min(rt.recoveryDuration * b.tempoRecoveryScale, b.tempoMaxRecovery);
             }
+            // 大型武器は振り終わりの硬直を短くする（テンポの上限で打ち消されないよう、上限の後に掛ける）
+            rt.recoveryDuration *= Mods.recoveryTime;
             if (AttackTechniques.IsYaw(rt.attackStyle) || rt.attackStyle == AttackStyle.Bash
                 || AttackTechniques.IsKick(rt.attackStyle) || rt.attackStyle == AttackStyle.HookPull)
             {

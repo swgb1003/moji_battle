@@ -17,21 +17,53 @@ MonoBehaviour:
     massMultiplier: 0.65
     attackSpeed: 1.2
     moveSpeed: 1.1
+    windupTime: 1
+    swingSpeed: 1
+    recoveryTime: 1
+    impulseCap: 1
+    knockbackForce: 1
+    damage: 1
+    armorMassRatio: 0
+    impactFeel: 0
   sizeM:
     scale: 1
     massMultiplier: 1
     attackSpeed: 1
     moveSpeed: 1
+    windupTime: 1
+    swingSpeed: 1
+    recoveryTime: 1
+    impulseCap: 1
+    knockbackForce: 1
+    damage: 1
+    armorMassRatio: 0
+    impactFeel: 0
   sizeL:
     scale: 1.3
     massMultiplier: 1.45
     attackSpeed: 0.85
     moveSpeed: 0.92
+    windupTime: 1.05
+    swingSpeed: 1.3
+    recoveryTime: 0.85
+    impulseCap: 1.3
+    knockbackForce: 1.5
+    damage: 0.95
+    armorMassRatio: 0.8
+    impactFeel: 0.5
   sizeXL:
     scale: 1.65
     massMultiplier: 2.1
     attackSpeed: 0.68
     moveSpeed: 0.82
+    windupTime: 1.3
+    swingSpeed: 1.6
+    recoveryTime: 0.75
+    impulseCap: 1.6
+    knockbackForce: 1.75
+    damage: 0.93
+    armorMassRatio: 1
+    impactFeel: 1
   oneHanded:
     attackSpeed: 1.1
     attackTorque: 0.9

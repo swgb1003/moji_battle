@@ -188,7 +188,8 @@ namespace MojiBattle.Tests
                 f.StartAttack(free.Context.SimTime, AttackStyle.Overhead);
                 f.Runtime.swingFromPsi = 90f;
                 f.Runtime.swingToPsi = -30f;
-                f.Runtime.activeDuration = .6f;
+                // 大きさごとの振りの速さ（XL は速く振る）で同じ軌道を描く
+                f.Runtime.activeDuration = .6f / f.Mods.swingSpeed;
                 f.SetState(FighterState.AttackActive);
                 float peak = 0f;
                 for (int i = 0; i < 500; i++)

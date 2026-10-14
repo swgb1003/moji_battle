@@ -345,9 +345,9 @@ namespace MojiBattle
             rtD.guardLoad += load;
             rtD.metrics.guards++;
             // 持ち方のガード安定性: 崩れにくく、押し込まれにくい
-            float imp = DamageMath.Impulse(vN, ImpactMass(a), d.Body.mass, b) * b.guardImpulseRatio / d.Mods.guardStability;
+            float imp = DamageMath.Impulse(vN, ImpactMass(a), d.Body.mass, b, ImpulseCap(a)) * b.guardImpulseRatio / d.Mods.guardStability;
             Vector2 dir = KnockDirection(a, d, hit.normal, 0.1f);
-            d.Body.AddForce(dir * imp * b.impulseScale, ForceMode2D.Impulse);
+            d.Body.AddForce(dir * imp * b.impulseScale * KnockbackForce(a), ForceMode2D.Impulse);
             // 武器同士は反発し、重量差があると軽い側の本体も後退する
             float mA = a.WeaponBody.mass, mD = d.WeaponBody.mass;
             // 投げた武器の反発は持ち主に届かない
@@ -430,7 +430,7 @@ namespace MojiBattle
 
             // 両手持ちはノックバック耐性で衝撃を割る
             var tech = AttackTechniques.Tuning(rtA.attackStyle, b);
-            float impulse = DamageMath.Impulse(c.vN, ImpactMass(a), d.Body.mass, b) / d.Mods.knockbackResistance
+            float impulse = DamageMath.Impulse(c.vN, ImpactMass(a), d.Body.mass, b, ImpulseCap(a)) / d.Mods.knockbackResistance
                             * (tech != null ? tech.impulse : 1f)
                             * (hit.bodyAttack ? 1f : GlyphMass(a, a.WeaponBody.mass, b)); // 重い字形ほど一撃で大きく揺さぶる
             // 足払いは脚を払う（どこに当たっても転倒の判定は脚扱い）
@@ -448,7 +448,8 @@ namespace MojiBattle
             if (launch) d.MarkLaunched(time);
 
             Vector2 dir = KnockDirection(a, d, hit.normal, tech != null && tech.upBias >= 0f ? tech.upBias : b.launchUpBias);
-            Vector2 force = dir * impulse * b.impulseScale;
+            // 大型武器は判定（ひるみ・転倒）を変えずに、飛ぶ距離だけ伸ばす
+            Vector2 force = dir * impulse * b.impulseScale * KnockbackForce(a);
             if (hit.bodyAttack && !rtD.IsDown)
             {
                 force = Vector2.zero;
@@ -486,7 +487,7 @@ namespace MojiBattle
                 attacker = a.Id, defender = d.Id, attackId = rtA.currentAttackId,
                 part = hit.part, quality = quality, damage = dmg, vN = c.vN, impulse = impulse,
                 point = hit.point, critical = hit.part == BodyPart.Head,
-                stagger = stagger && !armored, launch = launch, knockdown = knock || rtD.hp <= 0f, time = time,
+                stagger = stagger && !armored, armored = armored && !knock && rtD.hp > 0f, launch = launch, knockdown = knock || rtD.hp <= 0f, time = time,
                 defenderStateBefore = stateBefore, style = rtA.attackStyle, combo = rtA.attackStyle == AttackStyle.Smash,
             });
         }
@@ -555,16 +556,24 @@ namespace MojiBattle
             return true;
         }
 
+        /// <summary>
+        /// スーパーアーマー: 溜め・振りの最中、ずっと軽い武器の打撃ではひるまない。重量級の字形に加え、
+        /// L・XL の武器は自分より軽い武器（サイズごとの割合）に対して踏みとどまる。
+        /// </summary>
         static bool AbsorbHeavyArmor(Fighter a, Fighter d, FighterState defenderState, float damage, CombatBalance b, out bool broken)
         {
             broken = false;
-            if (!b.heavyArmorDuringAttack || d.WeightClass != WeightClass.Heavy
-                || (defenderState != FighterState.AttackWindup && defenderState != FighterState.AttackActive)
-                || a.WeaponBody.mass >= d.WeaponBody.mass * b.heavyArmorMassRatio) return false;
+            if (!b.heavyArmorDuringAttack || (defenderState != FighterState.AttackWindup && defenderState != FighterState.AttackActive)) return false;
+            float ratio = Mathf.Max(d.WeightClass == WeightClass.Heavy ? b.heavyArmorMassRatio : 0f, d.Mods.armorMassRatio);
+            if (ratio <= 0f || a.WeaponBody.mass >= d.WeaponBody.mass * ratio) return false;
             d.Runtime.armorPressure += damage;
             broken = d.Runtime.armorPressure >= d.Runtime.maxHp * b.heavyArmorBreakHpFraction;
             return !broken;
         }
+
+        /// <summary>大型武器の振りは吹き飛ばしの上限を引き上げる（蹴りは本体なので対象外）。</summary>
+        static float ImpulseCap(Fighter a) => AttackTechniques.IsKick(a.Runtime.attackStyle) ? 1f : a.Mods.impulseCap;
+        static float KnockbackForce(Fighter a) => AttackTechniques.IsKick(a.Runtime.attackStyle) ? 1f : a.Mods.knockbackForce;
 
         static float ImpactMass(Fighter a) => AttackTechniques.IsKick(a.Runtime.attackStyle) ? a.Body.mass * .6f : a.WeaponBody.mass;
 

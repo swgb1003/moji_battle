@@ -327,7 +327,7 @@ namespace MojiBattle
                 && !AttackTechniques.IsKick(f.Runtime.attackStyle)
                 && !AttackTechniques.IsRanged(f.Runtime.attackStyle)
                 && f.Runtime.attackStyle != AttackStyle.DashSlash && f.Runtime.attackStyle != AttackStyle.Riposte && f.Runtime.attackStyle != AttackStyle.Whirl)
-                Play(Heavy(f) ? CombatSound.SwingHeavy : CombatSound.SwingLight, e.fighter, .5f, 40);
+                Play(Heavy(f) ? CombatSound.SwingHeavy : CombatSound.SwingLight, e.fighter, .5f + .3f * f.ImpactFeel, 40);
         }
 
         void OnHit(HitEvent e)
@@ -336,12 +336,15 @@ namespace MojiBattle
             var iv = director.Context.Interventions;
             if (iv != null && (iv.Side(e.attacker).OwnsAttack(e.attackId) || iv.InSpecial(e.attacker)))
                 Play(CombatSound.SpecialImpact, -1, 1f, 90);
+            float feel = AttackTechniques.StrikeFeel(Fighter(e.attacker), e);
             var sound = e.style == AttackStyle.DashSlash ? CombatSound.DashHit
                 : e.style == AttackStyle.Riposte ? CombatSound.CounterHit : e.style == AttackStyle.Whirl ? CombatSound.WhirlHit
                 : e.launch ? CombatSound.Launch : e.combo || e.style == AttackStyle.Smash ? CombatSound.Slam
                 : e.critical ? CombatSound.Critical : e.damage >= director.Context.Balance.heavyHitDamage
-                    || e.knockdown ? CombatSound.HeavyHit : CombatSound.Hit;
-            Play(sound, e.defender, e.quality == HitQuality.Graze ? .4f : .9f, 80);
+                    || e.knockdown || feel > 0f ? CombatSound.HeavyHit : CombatSound.Hit;
+            // 大型武器の打撃音は低く重くする（音程の上限は当てた側の武器で決める）
+            Play(sound, e.defender, e.quality == HitQuality.Graze ? .4f : Mathf.Min(1f, .9f + .1f * feel), 80,
+                feel > 0f ? Mathf.Lerp(.9f, .74f, feel) : float.MaxValue);
         }
         void OnGuard(GuardEvent e)
         {
@@ -374,7 +377,7 @@ namespace MojiBattle
             Play(CombatSound.EndGong, -1, 1f, 100);
         }
 
-        AudioSource Play(CombatSound sound, int fighter, float volume, int priority)
+        AudioSource Play(CombatSound sound, int fighter, float volume, int priority, float maxPitch = float.MaxValue)
         {
             if (!TimeController.PresentationEffectsEnabled || MasterVolume <= 0f || TimeController.Paused) return null;
             int kind = (int)sound;
@@ -398,6 +401,7 @@ namespace MojiBattle
             // Keep gongs stable; all other variation comes from a local counter.
             source.pitch = fighter < 0 ? 1f : Mathf.Lerp(1.08f, .9f,
                 Mathf.InverseLerp(1f, 3.5f, Fighter(fighter).Weapon.maxSide)) + (variation % 3 - 1) * .025f;
+            source.pitch = Mathf.Min(source.pitch, maxPitch);
             source.panStereo = fighter < 0 ? 0f : Mathf.Clamp(Fighter(fighter).X / director.Context.ArenaHalfWidth, -1f, 1f) * .25f;
             source.priority = 128 - priority;
             voicePriority[slot] = priority;

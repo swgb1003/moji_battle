@@ -10,6 +10,15 @@ namespace MojiBattle
         [Tooltip("武器の質量倍率")] public float massMultiplier = 1f;
         [Tooltip("溜め・振り・硬直の速さ倍率（大きいほど速い）")] public float attackSpeed = 1f;
         [Tooltip("歩行速度倍率")] public float moveSpeed = 1f;
+        [Header("重量級の手応え（溜めは重く、振りは速く）")]
+        [Tooltip("溜めの時間倍率（大きいほど長く溜める）")] public float windupTime = 1f;
+        [Tooltip("振り（有効時間）の速さ倍率。振りの角加速度の上限にも掛ける")] public float swingSpeed = 1f;
+        [Tooltip("振り終わりの硬直の時間倍率")] public float recoveryTime = 1f;
+        [Tooltip("吹き飛ばしの強さの上限（impulseMax）への倍率")] public float impulseCap = 1f;
+        [Tooltip("当てた相手を押し飛ばす力の倍率（ひるみ・転倒の判定は変えず、飛ぶ距離だけ伸ばす）")] public float knockbackForce = 1f;
+        [Tooltip("与ダメージ倍率（手応えの強化で上がった強さを戻す）")] public float damage = 1f;
+        [Tooltip("スーパーアーマー: 溜め・振りの最中、相手の武器質量が自分のこの割合未満ならひるまない（0 = なし）")] public float armorMassRatio;
+        [Tooltip("演出の重さ（0 = 通常、1 = 最大）。ヒットストップ・揺れ・音などに使う")] public float impactFeel;
     }
 
     [Serializable]
@@ -60,8 +69,10 @@ namespace MojiBattle
         [Header("9 文字サイズ（S / M / L / XL）")]
         public SizeProfile sizeS = new SizeProfile { scale = 0.75f, massMultiplier = 0.65f, attackSpeed = 1.20f, moveSpeed = 1.10f };
         public SizeProfile sizeM = new SizeProfile { scale = 1.00f, massMultiplier = 1.00f, attackSpeed = 1.00f, moveSpeed = 1.00f };
-        public SizeProfile sizeL = new SizeProfile { scale = 1.30f, massMultiplier = 1.45f, attackSpeed = 0.85f, moveSpeed = 0.92f };
-        public SizeProfile sizeXL = new SizeProfile { scale = 1.65f, massMultiplier = 2.10f, attackSpeed = 0.68f, moveSpeed = 0.82f };
+        public SizeProfile sizeL = new SizeProfile { scale = 1.30f, massMultiplier = 1.45f, attackSpeed = 0.85f, moveSpeed = 0.92f,
+            windupTime = 1.05f, swingSpeed = 1.3f, recoveryTime = .85f, impulseCap = 1.3f, knockbackForce = 1.5f, damage = .95f, armorMassRatio = .8f, impactFeel = .5f };
+        public SizeProfile sizeXL = new SizeProfile { scale = 1.65f, massMultiplier = 2.10f, attackSpeed = 0.68f, moveSpeed = 0.82f,
+            windupTime = 1.3f, swingSpeed = 1.6f, recoveryTime = .75f, impulseCap = 1.6f, knockbackForce = 1.75f, damage = .93f, armorMassRatio = 1f, impactFeel = 1f };
 
         [Header("6 持ち方")]
         public GripTypeProfile oneHanded = new GripTypeProfile

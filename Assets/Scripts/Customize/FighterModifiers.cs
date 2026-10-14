@@ -21,6 +21,12 @@ namespace MojiBattle
         /// <summary>溜め・振り・硬直の速さ（サイズ × 持ち方）</summary>
         public float attackSpeed;
         public float moveSpeed;
+        /// <summary>重量級の手応え（サイズ）: 溜め・硬直の時間倍率、振りの速さ倍率、吹き飛ばし上限の倍率</summary>
+        public float windupTime, swingSpeed, recoveryTime, impulseCap, knockbackForce;
+        /// <summary>スーパーアーマー: 溜め・振りの最中、相手の武器質量が自分のこの割合未満ならひるまない（0 = なし）</summary>
+        public float armorMassRatio;
+        /// <summary>演出の重さ（0〜1）</summary>
+        public float impactFeel;
         public float attackTorque, guardStability, knockbackResistance, reach, guardRange, postEvadeAttackSpeed, guardBiasBonus;
         /// <summary>同じトルクで出せる角加速度の倍率（基準構成との慣性比から。端持ち・大型ほど小さい）</summary>
         public float handlingAccel;
@@ -46,7 +52,8 @@ namespace MojiBattle
         public static FighterModifiers Identity => new FighterModifiers
         {
             customized = false, size = WeaponSize.M, grip = GripType.OneHanded, style = BattleStyle.Aggressive, gripPosition = -1f,
-            sizeScale = 1f, weaponMassMultiplier = 1f, attackSpeed = 1f, moveSpeed = 1f, attackTorque = 1f, guardStability = 1f,
+            sizeScale = 1f, weaponMassMultiplier = 1f, attackSpeed = 1f, moveSpeed = 1f,
+            windupTime = 1f, swingSpeed = 1f, recoveryTime = 1f, impulseCap = 1f, knockbackForce = 1f, armorMassRatio = 0f, impactFeel = 0f, attackTorque = 1f, guardStability = 1f,
             knockbackResistance = 1f, reach = 1f, guardRange = 1f, postEvadeAttackSpeed = 1f, guardBiasBonus = 0f,
             handlingAccel = 1f, damage = 1f, readyPsi = float.NaN, handlingPenalty = 1f,
         };
@@ -70,6 +77,13 @@ namespace MojiBattle
             m.weaponMassMultiplier = size.massMultiplier;
             m.attackSpeed = size.attackSpeed * grip.attackSpeed;
             m.moveSpeed = size.moveSpeed * grip.moveSpeed;
+            m.windupTime = size.windupTime;
+            m.swingSpeed = size.swingSpeed;
+            m.recoveryTime = size.recoveryTime;
+            m.impulseCap = size.impulseCap;
+            m.knockbackForce = size.knockbackForce;
+            m.armorMassRatio = size.armorMassRatio;
+            m.impactFeel = size.impactFeel;
             m.attackTorque = grip.attackTorque;
             m.guardStability = grip.guardStability;
             m.knockbackResistance = grip.knockbackResistance;
@@ -78,7 +92,7 @@ namespace MojiBattle
             m.postEvadeAttackSpeed = grip.postEvadeAttackSpeed;
             m.guardBiasBonus = grip.guardBiasBonus;
             m.readyPsi = grip.overrideReadyPsi ? grip.readyPsi : float.NaN;
-            m.damage = Mathf.Pow(size.massMultiplier, cb.massDamageExponent) * grip.damage;
+            m.damage = Mathf.Pow(size.massMultiplier, cb.massDamageExponent) * size.damage * grip.damage;
             m.comboBonus = grip.comboBonus;
             m.dualWield = build.IsDualWield;
 

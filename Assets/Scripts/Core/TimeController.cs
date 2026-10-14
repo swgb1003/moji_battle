@@ -22,6 +22,7 @@ namespace MojiBattle
         public static bool Paused => paused;
         public static bool KoSlowActive => koScale < 1f;
         public static bool HitStopActive => hitStopRemaining > 0f;
+        public static float HitStopRemaining => hitStopRemaining;
         /// <summary>必殺技のカットイン中（試合の時間が完全に止まる）。</summary>
         public static bool FreezeActive => freezeRemaining > 0f;
         /// <summary>ヒットストップ等の演出を無効化する（大量シミュレーション用）。</summary>

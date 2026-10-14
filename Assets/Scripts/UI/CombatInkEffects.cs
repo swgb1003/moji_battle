@@ -137,7 +137,15 @@ namespace MojiBattle
             if (strike) Ring(e.point, FighterFactory.TeamColor(e.attacker), e.critical ? 1.2f : .8f);
             else Slash(e.point, e.style == AttackStyle.Thrust ? Vector2.right : new Vector2(director.Fighters[e.attacker].Facing, -.65f),
                 FighterFactory.TeamColor(e.attacker), e.critical || e.combo ? 1.15f : .7f);
-            if (e.damage >= director.Context.Balance.heavyHitDamage) Scar(e.point, .65f, false);
+            float feel = AttackTechniques.StrikeFeel(director.Fighters[e.attacker], e);
+            if (e.damage >= director.Context.Balance.heavyHitDamage || feel > 0f) Scar(e.point, .65f + .5f * feel, false);
+            // 大型武器の一撃は足元の紙まで割る
+            if (feel > 0f)
+            {
+                Vector2 feet = director.Fighters[e.defender].Body.position;
+                GroundBurst(feet, .5f + .5f * feel);
+                if (feel >= 1f) Scar(feet, 1f, true);
+            }
         }
         void OnGuard(GuardEvent e)
         {
@@ -217,7 +225,7 @@ namespace MojiBattle
                 }
                 trails[i].positionCount = trailCounts[i];
                 for (int k = 0; k < trailCounts[i]; k++) trails[i].SetPosition(k, trailPoints[i][k]);
-                trails[i].widthMultiplier = Mathf.Lerp(.10f, .22f, Mathf.Clamp01(f.Stats.weightScore / 100f));
+                trails[i].widthMultiplier = Mathf.Lerp(.10f, .22f, Mathf.Clamp01(f.Stats.weightScore / 100f)) * (1f + .6f * f.ImpactFeel);
                 Color c = FighterFactory.TeamColor(i); c.a = .65f;
                 trails[i].startColor = c; c.a = 0; trails[i].endColor = c;
             }

@@ -28,6 +28,10 @@ namespace MojiBattle
         /// <summary>字形を縦軸まわりに回す（奥行き方向に振る）技。正面の盾を回り込み、反応して構えたガードでしか止まらない。</summary>
         public static bool IsYaw(AttackStyle s) => s == AttackStyle.Sweep || s == AttackStyle.LowSweep || s == AttackStyle.Spin || s == AttackStyle.Whirl;
 
+        /// <summary>武器を振って当てた重さのある一撃の演出の重さ（蹴り・飛び道具・副武器・かすり・貫通の削りは 0）。</summary>
+        public static float StrikeFeel(Fighter attacker, HitEvent e) =>
+            IsKick(e.style) || IsRanged(e.style) || e.offhand || e.pierce || e.quality == HitQuality.Graze ? 0f : attacker.ImpactFeel;
+
         public static bool CanDash(Fighter f) => f.IsGrounded && !f.Runtime.weaponDetached
             && (f.Mods.customized ? f.Mods.size <= WeaponSize.M : f.WeightClass != WeightClass.Heavy);
         public static bool CanWhirl(Fighter f) => f.IsGrounded && !f.Runtime.weaponDetached

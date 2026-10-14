@@ -26,9 +26,9 @@ namespace MojiBattle
         public static float CapHit(float damage, float defenderMaxHp, CombatBalance b) =>
             Mathf.Min(damage, defenderMaxHp * b.maxHitHpFraction);
 
-        /// <summary>式どおりのインパルス量（閾値判定に使う）。実際に加える力は impulseScale 倍。</summary>
-        public static float Impulse(float vN, float attackerWeaponMass, float defenderBodyMass, CombatBalance b) =>
-            Mathf.Clamp(vN * attackerWeaponMass * b.impulseFactor / (defenderBodyMass + 0.5f), 0f, b.impulseMax);
+        /// <summary>式どおりのインパルス量（閾値判定に使う）。実際に加える力は impulseScale 倍。capScale は大型武器の上限の引き上げ。</summary>
+        public static float Impulse(float vN, float attackerWeaponMass, float defenderBodyMass, CombatBalance b, float capScale = 1f) =>
+            Mathf.Clamp(vN * attackerWeaponMass * b.impulseFactor / (defenderBodyMass + 0.5f), 0f, b.impulseMax * capScale);
 
         public static float EnvironmentDamage(float vN, CombatBalance b) =>
             Mathf.Clamp((vN - b.envDamageMinSpeed) * b.envDamageK, 0f, b.envDamageMax);

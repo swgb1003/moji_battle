@@ -44,6 +44,8 @@ namespace MojiBattle
         public bool pierce;
         /// <summary>二刀流の副武器の当たり（主武器とは別に 1 スイング 1 回まで）</summary>
         public bool offhand;
+        /// <summary>スーパーアーマーで踏みとどまった（ダメージは受けたが、ひるまず振り切る）</summary>
+        public bool armored;
         /// <summary>連携（打ち上げ → 叩き落とし）の締めが当たった</summary>
         public bool combo;
     }
