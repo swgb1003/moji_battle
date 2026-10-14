@@ -22,6 +22,8 @@ namespace MojiBattle
         public MatchResult Result { get; private set; }
         public int StepCount { get; private set; }
         public int WeaponLockBreaks { get; private set; }
+        /// <summary>相手に引っ掛かった武器を外した回数（ResolveHookedWeapon）。</summary>
+        public int HookReleases { get; private set; }
         public bool SilentSimulation { get; set; }
         public bool CollectStepTelemetry { get; set; } = true;
         public bool FastSimulationQueries { get; set; }
@@ -54,6 +56,8 @@ namespace MojiBattle
         readonly float[] dropRestoreAt = { -1f, -1f };
         readonly float[] perchedTime = new float[2];
         readonly float[] stretchTime = new float[2];
+        readonly float[] hookedTime = new float[2];
+        readonly float[] contactTime = new float[2];
         readonly bool[] yawGhost = new bool[2];
         /// <summary>落ちている（投げた後の）武器と相手の体の衝突を外しているか</summary>
         readonly bool[] looseApplied = new bool[2];
@@ -153,6 +157,7 @@ namespace MojiBattle
             ResolveStandingOnWeapon();
             ResolveStacking(dt);
             ResolveHingeStretch(dt);
+            ResolveHookedWeapon(dt);
             ResolveWeaponLock(dt);
             Fighters[0].Tick(ctx.SimTime, dt);
             Fighters[1].Tick(ctx.SimTime, dt);
@@ -720,6 +725,51 @@ namespace MojiBattle
         }
 
         const float StretchLimit = 0.25f, StretchSeconds = 0.3f;
+
+        /// <summary>
+        /// 武器が相手の体・武器に引っ掛かって抜けなくなった状態を外す（武器の大きさ・カスタマイズ・自操作に関係なく）。
+        /// 相手に触れたまま「振ろうとしても回らない（失速）」「握りが手から引き伸ばされている」「下がろうとしても下がれない」が
+        /// HookSeconds 続くか、当たりの出ない接触が ContactSeconds 続いたら、触れている組の衝突を離れるまで外し、保持トルクを一瞬抜く。
+        /// 鍔迫り合い（Bind）は意図した押し合いなので対象外。
+        /// </summary>
+        void ResolveHookedWeapon(float dt)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                var f = Fighters[i];
+                var rt = f.Runtime;
+                if (Context.MatchOver || rt.weaponDetached || rt.state == FighterState.Bind || rt.state == FighterState.KO
+                    || Context.SimTime < rt.weaponLimpUntil || !TouchesOpponent(f))
+                { hookedTime[i] = contactTime[i] = 0f; continue; }
+                contactTime[i] = Context.SimTime - Context.LastDamageTime < 0.3f ? 0f : contactTime[i] + dt;
+                float stretch = (f.WeaponBody.position - f.Body.GetRelativePoint(f.HandLocal(f.Facing))).magnitude;
+                bool pinned = f.WeaponMotor.Stalled && rt.state != FighterState.Guard;
+                bool dragging = stretch > StretchLimit;
+                bool heldBack = rt.CanBeControlled && f.Brain.Move == MoveIntent.Retreat && f.IsGrounded
+                                && f.BackSpace > 0.6f && Mathf.Abs(f.Body.linearVelocity.x) < 0.25f;
+                hookedTime[i] = pinned || dragging || heldBack ? hookedTime[i] + dt : 0f;
+                if (hookedTime[i] < HookSeconds && contactTime[i] < ContactSeconds) continue;
+                hookedTime[i] = contactTime[i] = 0f;
+                var opp = f.Opponent;
+                foreach (var w in f.WeaponColliders)
+                {
+                    foreach (var o in opp.BodyColliders) SeparateIfTouching(w, o);
+                    foreach (var o in opp.WeaponColliders) SeparateIfTouching(w, o);
+                }
+                rt.weaponLimpUntil = Context.SimTime + 0.25f;
+                HookReleases++;
+                Telemetry?.Note($"RESOLVE hooked {i} pinned={pinned} stretch={stretch:F2} heldBack={heldBack}");
+            }
+        }
+
+        const float HookSeconds = 0.6f, ContactSeconds = 2f;
+
+        void SeparateIfTouching(Collider2D a, Collider2D b)
+        {
+            if (Physics2D.GetIgnoreCollision(a, b) || !a.bounds.Intersects(b.bounds)) return;
+            var d = Physics2D.Distance(a, b);
+            if (d.isValid && d.distance < 0.02f) Separate(a, b);
+        }
 
         /// <summary>武器を瞬間的に動かした直後（向きの反転）、相手の体・武器に重なった組は離れるまで衝突を外す。</summary>
         void SeparateWeaponOverlaps(Fighter f)

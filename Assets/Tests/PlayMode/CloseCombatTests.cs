@@ -89,6 +89,61 @@ namespace MojiBattle.Tests
             Assert.Less(worstGripDuration, .15f, "A held weapon must not remain stretched away from the hand after contact clearance.");
         }
 
+        /// <summary>
+        /// 自操作（AI の絡みほどきが働かない）で前後に詰めたり下がったりしながら振っても、
+        /// 武器が相手に引っ掛かって「下がれない・握りが引き伸ばされたまま」が長く続かない。武器の大きさ・カスタマイズに関係なく。
+        /// </summary>
+        [UnityTest]
+        public IEnumerator PlayerControlledWeapon_DoesNotStayHookedOnOpponent()
+        {
+            SimHarness.Begin(false);
+            float worst = 0f;
+            string worstAt = "";
+            int releases = 0;
+            var cases = new[] { ("回", "龍", WeaponSize.M), ("鬱", "品", WeaponSize.M), ("龍", "回", WeaponSize.L), ("品", "鬱", WeaponSize.L), ("火", "山", WeaponSize.M), ("刀", "龍", WeaponSize.S) };
+            for (int c = 0; c < cases.Length; c++)
+            for (int seed = 0; seed < 3; seed++)
+            {
+                var (l, r, size) = cases[c];
+                battle = SimHarness.Build(4100 + 37 * seed + c, SimHarness.Custom(l, size), SimHarness.Custom(r, size), 25f);
+                battle.Director.enabled = false;
+                battle.Context.PlayerSide = 0;
+                var player = battle.Left.Brain.AttachPlayer();
+                var rng = new System.Random(seed * 13 + c);
+                float next = 0f, hooked = 0f;
+                var f = battle.Left;
+                for (int step = 0; step < 1500 && !battle.Director.Ended; step++)
+                {
+                    float t = battle.Context.SimTime;
+                    if (t >= next)
+                    {
+                        next = t + .25f;
+                        var input = player.Input;
+                        input.Left = input.Right = false;
+                        int toward = f.TowardOpponent;
+                        double roll = rng.NextDouble();
+                        // 詰める・下がる・その場で振るを混ぜる（下がる入力は引っ掛かりを引き伸ばす）
+                        if (roll < .4) { if (toward > 0) input.Right = true; else input.Left = true; }
+                        else if (roll < .7) { if (toward > 0) input.Left = true; else input.Right = true; }
+                        if (rng.NextDouble() < .5) input.Press(rng.NextDouble() < .7 ? PlayerButton.Slash : PlayerButton.Tech, rng.Next(3) - 1, rng.Next(3) - 1);
+                    }
+                    battle.Director.SimulateStep();
+                    var rt = f.Runtime;
+                    float stretch = Vector2.Distance(f.GripWorld, f.Body.GetRelativePoint(f.HandLocal(f.Facing)));
+                    bool stuckBack = f.Brain.Move == MoveIntent.Retreat && f.IsGrounded && f.BackSpace > .6f && Mathf.Abs(f.Body.linearVelocity.x) < .25f;
+                    bool isHooked = !rt.IsDown && !rt.weaponDetached && rt.state != FighterState.Bind && Touching(f) && (stretch > .25f || stuckBack);
+                    hooked = isHooked ? hooked + TimeController.BaseFixedDelta : 0f;
+                    if (hooked > worst) { worst = hooked; worstAt = $"{l}/{r} {size} seed={seed} t={t:F2} state={rt.state} stretch={stretch:F2}"; }
+                    if (step % 100 == 0) yield return null;
+                }
+                releases += battle.Director.HookReleases;
+                battle.Destroy(); battle = null;
+                yield return null;
+            }
+            Debug.Log($"[CLOSE] player hook worst={worst:F2} at ({worstAt}) releases={releases}");
+            Assert.Less(worst, 1.2f, $"A player's weapon stayed hooked on the opponent: {worstAt}");
+        }
+
         [UnityTest]
         public IEnumerator LargeWeaponsWaitingApart_DoNotTriggerASeparationOrDamage()
         {
