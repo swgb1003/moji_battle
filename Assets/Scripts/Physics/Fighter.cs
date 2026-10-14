@@ -419,8 +419,10 @@ namespace MojiBattle
                 rt.windupDuration = Mathf.Min(rt.windupDuration * b.tempoWindupScale, b.tempoMaxWindup);
                 rt.recoveryDuration = Mathf.Min(rt.recoveryDuration * b.tempoRecoveryScale, b.tempoMaxRecovery);
             }
-            // 大型武器は振り終わりの硬直を短くする（テンポの上限で打ち消されないよう、上限の後に掛ける）
+            // 大型武器は振り終わりの硬直を短くする（テンポの上限で打ち消されないよう、上限の後に掛ける）。
+            // 全身ぶん回しは回転後の隙（whirlMinRecovery）を下限として残す
             rt.recoveryDuration *= Mods.recoveryTime;
+            if (rt.attackStyle == AttackStyle.Whirl) rt.recoveryDuration = Mathf.Max(b.whirlMinRecovery, rt.recoveryDuration);
             if (AttackTechniques.IsYaw(rt.attackStyle) || rt.attackStyle == AttackStyle.Bash
                 || AttackTechniques.IsKick(rt.attackStyle) || rt.attackStyle == AttackStyle.HookPull)
             {

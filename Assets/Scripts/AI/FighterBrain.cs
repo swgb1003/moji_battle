@@ -299,7 +299,9 @@ namespace MojiBattle
             {
                 // Keep defending a live threat above, but do not wait out an old guard
                 // timer once the thrown weapon has passed and its owner is unarmed.
-                if (time < holdGuardUntil && !opp.Runtime.weaponDetached) return;
+                // 戦闘テンポでは、相手が振り終わりの硬直に入ったら構えを解いて反撃へ移る
+                bool punish = B.combatTempo && opp.Runtime.state == FighterState.AttackRecovery;
+                if (time < holdGuardUntil && !opp.Runtime.weaponDetached && !punish) return;
                 holdGuardUntil = 0f;
                 self.SetState(FighterState.Approach);
                 s = FighterState.Approach;
@@ -539,14 +541,18 @@ namespace MojiBattle
             // 5) 接近 / 待機
             if (inRange) { Move = MoveIntent.Hold; LastDecision = "間合い"; return; }
             // 戦闘スタイル（鉄壁）: 相手の間合いの手前では字形を盾に構えて待つ
-            if (style != null && !stalemate && time >= guardBlockedUntil && !oppDown && style.PreferGuard(time, d))
+            // （戦闘テンポでは、相手も構えて待っている時は両者ガードのにらみ合いにしない）
+            bool mutualGuard = B.combatTempo && opp.Runtime.state == FighterState.Guard;
+            if (style != null && !stalemate && !mutualGuard && time >= guardBlockedUntil && !oppDown && style.PreferGuard(time, d))
             {
                 EnterGuard(time, Rng.Range(0.8f, 1.6f));
                 LastDecision = "盾構え";
                 return;
             }
             // 戦闘スタイル（カウンター）: 自分からは詰めず、相手の射程の少し外で攻撃を待つ
-            if (style != null && !stalemate && style.PreferWait(time, d))
+            // （戦闘テンポでは、相手も同じく待つつもりなら待ち合いにしない）
+            bool mutualWait = B.combatTempo && opp.Style != null && opp.Runtime.state == FighterState.Approach && opp.Style.PreferWait(time, d);
+            if (style != null && !stalemate && !mutualWait && style.PreferWait(time, d))
             {
                 Move = MoveIntent.Hold;
                 LastDecision = "待ち(カウンター)";
