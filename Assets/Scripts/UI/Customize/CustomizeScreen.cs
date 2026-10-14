@@ -32,7 +32,7 @@ namespace MojiBattle
         SpecialMovePanel specialPanel;
         GameObject vsPanel;
         Text vsLeftGlyph, vsRightGlyph, vsLeft, vsRight;
-        bool refreshing, tournament, friend, challenge, draft, run, worldCup;
+        bool refreshing, tournament, friend, challenge, draft, run, worldCup, practice;
         bool pointerOverPreview, gripDragging, gripDropValid;
         Vector2 pendingGrip;
         int dragSide;
@@ -53,6 +53,7 @@ namespace MojiBattle
             draft = GameFlow.DraftMode;
             run = GameFlow.RunMode;
             worldCup=GameFlow.WorldCupMode;
+            practice = GameFlow.PracticeMode;
             customizer = new FighterCustomizer(tournament);
             if (Camera.main != null) { Camera.main.backgroundColor = RetroUi.Paper; Camera.main.cullingMask = 0; }
             preview = new GameObject("FighterPreview").AddComponent<FighterPreviewController>();
@@ -73,7 +74,7 @@ namespace MojiBattle
         {
             menuRoot = RetroUi.Screen("CustomizeCanvas", out canvas);
             var root = menuRoot;
-            RetroUi.Header(root, worldCup ? "WORLD CUP / CUSTOMIZE" : run ? "RUN / CUSTOMIZE" : draft ? "DRAFT / CUSTOMIZE" : challenge ? "04 / CHALLENGE / PREPARE" : "02 / CUSTOMIZE",
+            RetroUi.Header(root, worldCup ? "WORLD CUP / CUSTOMIZE" : run ? "RUN / CUSTOMIZE" : draft ? "DRAFT / CUSTOMIZE" : challenge ? "04 / CHALLENGE / PREPARE" : practice ? "PRACTICE / CUSTOMIZE" : "02 / CUSTOMIZE",
                 worldCup ? (System.Action)GameFlow.ToWorldCupGuide : tournament ? (System.Action)GameFlow.ToTournamentSelect : run ? (System.Action)BackRun : draft ? (System.Action)GameFlow.ToDraftPicks : challenge ? (System.Action)GameFlow.BackToChallengeDetail : friend ? (System.Action)(() => FriendRoomSession.Instance.SaveAndReturn()) : GameFlow.ToModeSelect);
             if(worldCup)
             {
@@ -103,6 +104,13 @@ namespace MojiBattle
                 ((RectTransform)root.Find("Title")).sizeDelta=new Vector2(910,82);
                 var s=RunRuntimeStore.Current;
                 RetroUi.Label(root,"RunBuildRound",$"第{s.round}戦 / 全5戦　残りHP {Mathf.CeilToInt(s.Hp)} / {Mathf.CeilToInt(s.MaxHp)}",505,225,910,40,30,null,TextAnchor.MiddleCenter);
+            }
+            else if (practice)
+            {
+                RetroUi.Heading(root, "練習の組み合わせ", 64);
+                ((RectTransform)root.Find("Title")).sizeDelta = new Vector2(910, 82);
+                RetroUi.Label(root, "PracticeNote", "自分と相手を選ぶ。相手は動かない状態から、戦闘画面の右下で強さを変えると動く", 405, 225, 1110, 40,
+                    26, null, TextAnchor.MiddleCenter);
             }
             else RetroUi.Heading(root, challenge ? "挑戦の構成をつくる" : "選手をつくる", challenge ? 72 : 82);
             var left = RetroUi.Group(root, "PreviewPanel", 76, 292, 716, 736);
@@ -223,6 +231,7 @@ namespace MojiBattle
             battle = RetroUi.Button(settings, "Battle", tournament ? "大会エントリー →" : "対戦確認へ →", 496, 653, 508, 60, 36,
                 tournament ? (System.Action)EnterTournament : ShowVs, RetroUi.Red);
             if (friend) battle.label.text = "装備を決定 → ロビー";
+            if (practice) battle.label.text = "練習開始 →";
             if(worldCup)battle.label.text="この構成でエントリー →";
             specialButton = RetroUi.Button(settings, "SpecialMoves", "", 24, 653, 448, 60, 28, ShowSpecial, shadow: false);
             RetroUi.Enter(left.gameObject, .06f);
@@ -369,6 +378,7 @@ namespace MojiBattle
             vsLeft = RetroUi.Label(left, "VsLeft", "", 0, 330, 700, 194, 31, RetroUi.Red, TextAnchor.UpperCenter);
             vsRight = RetroUi.Label(right, "VsRight", "", 0, 330, 700, 194, 31, RetroUi.Blue, TextAnchor.UpperCenter);
             RetroUi.Button(bg, "Start", "BATTLE 開始 →", 650, 866, 620, 106, 52, StartBattle, RetroUi.Ink);
+            PlayModePicker.Build(bg, 660, 226);
             RetroUi.Enter(bg.gameObject, 0, 24);
             vsPanel.SetActive(false);
         }
@@ -385,7 +395,7 @@ namespace MojiBattle
             if (!battle.button.interactable) return;
             if (friend) { CancelGripDrag(); preview.EndGripEditing(); FriendRoomSession.Instance.SaveAndReturn(); return; }
             if (tournament) { EnterTournament(); return; }
-            if (challenge) { CancelGripDrag(); preview.EndGripEditing(); StartBattle(); return; }
+            if (challenge || practice) { CancelGripDrag(); preview.EndGripEditing(); StartBattle(); return; }
             CancelGripDrag(); preview.EndGripEditing();
             var l = customizer.Get(0); var r = customizer.Get(1);
             vsLeftGlyph.text = l.character; vsRightGlyph.text = r.character;

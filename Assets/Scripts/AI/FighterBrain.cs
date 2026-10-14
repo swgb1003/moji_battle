@@ -37,6 +37,30 @@ namespace MojiBattle
         public float MoveTargetX { get; private set; } = float.NaN;
         public string LastDecision { get; private set; } = "";
 
+        /// <summary>自操作の選手（null なら AI が操作）。</summary>
+        public PlayerController Player { get; private set; }
+        public bool IsPlayer => Player != null;
+        /// <summary>練習モードのサンドバッグ: 何もしない（移動・攻撃・ガードをしない）。</summary>
+        public bool Frozen;
+        /// <summary>COM の強さ（自操作の相手）: 判断の間隔・受け流し・技（蹴り・フェイント・投げなど）の確率の倍率。観戦では 1。</summary>
+        public float DecisionScale = 1f, ParryScale = 1f, TechniqueScale = 1f;
+        /// <summary>強さを当てる前の値（PlayControl.ApplyDifficulty が使う）。</summary>
+        public DifficultyBaseline Baseline;
+
+        public PlayerController AttachPlayer()
+        {
+            Player = new PlayerController(self);
+            return Player;
+        }
+
+        /// <summary>自操作の移動の意図（AI の判断を通さない）。</summary>
+        public void Steer(MoveIntent move)
+        {
+            Move = move;
+            CarryWeapon = false;
+            MoveTargetX = float.NaN;
+        }
+
         public FighterBrain(Fighter self, MatchRandom rng)
         {
             this.self = self;
@@ -98,6 +122,7 @@ namespace MojiBattle
 
         public void Idle()
         {
+            Player?.Drain();
             Move = MoveIntent.Hold;
             pendingAttackAt = -1f;
             if (Rt.state == FighterState.Guard) self.SetState(FighterState.Approach);
@@ -105,15 +130,18 @@ namespace MojiBattle
 
         public void Tick(float time)
         {
+            if (Player != null) { Player.Tick(time); return; }
+            if (Frozen) { Idle(); return; }
             self.Style?.Observe(time);
             if (time < nextDecisionAt) return;
-            nextDecisionAt = time + B.aiInterval * (B.combatTempo ? B.tempoAiScale : 1f);
+            nextDecisionAt = time + B.aiInterval * (B.combatTempo ? B.tempoAiScale : 1f) * DecisionScale;
             Decide(time);
         }
 
         public void OnAttackSequenceFinished(float time)
         {
             pendingAttackAt = -1f;
+            if (Player != null) return;
             if (B.combatTempo) nextDecisionAt = time;
             SequencesFinished++;
             if (AttackTechniques.IsRanged(Rt.attackStyle))
@@ -154,6 +182,7 @@ namespace MojiBattle
 
         public void OnWeaponLockBroken(float time)
         {
+            if (Player != null) { if (Rt.state == FighterState.Guard) self.SetState(FighterState.Approach); return; }
             pendingAttackAt = -1f;
             holdGuardUntil = 0f;
             blockedTime = stuckTime = 0f;
@@ -624,7 +653,7 @@ namespace MojiBattle
                 chance *= self.Style.AttackWillingnessBonus(time) > 0f ? 1.25f : .5f;
             if (B.rangedSpacing && self.Mods.customized && self.Mods.grip == GripType.Horizontal)
                 chance *= .75f; // Leave more openings to use the shield stance's stronger guard.
-            if (!rangedRng.Chance(chance)) return false;
+            if (!rangedRng.Chance(chance * TechniqueScale)) return false;
             Rt.comboRemaining = 0;
             if (B.rangedSpacing)
             {
@@ -648,7 +677,7 @@ namespace MojiBattle
                            || (ort.IsDown && B.allowAttackOnDowned) || ort.weaponDetached;
             if (!stalemate && !oppOpen) return false;
             float chance = StatCalculator.Lerp01(B.throwChanceLight, B.throwChanceHeavy, self.Stats.weightScore);
-            if (!Rng.Chance(chance)) return false;
+            if (!Rng.Chance(chance * TechniqueScale)) return false;
             Rt.comboRemaining = 0;
             self.StartAttack(time, AttackStyle.Throw);
             LastDecision = "投げ";
@@ -661,7 +690,7 @@ namespace MojiBattle
             if (s != FighterState.Approach || !self.IsGrounded || self.WeightClass == WeightClass.Heavy || !oppAttackable) return false;
             if (time < Rt.attackReadyAt || pendingAttackAt >= 0f || self.Opponent.Runtime.IsDown) return false;
             if (d < range * 1.3f || d > Mathf.Min(range * B.leapMaxRangeScale, self.LeapTravelRange)) return false;
-            if (!Rng.Chance(B.leapApproachChance)) return false;
+            if (!Rng.Chance(B.leapApproachChance * TechniqueScale)) return false;
             Rt.comboRemaining = 0;
             self.StartAttack(time, AttackStyle.Leap);
             LastDecision = "跳び斬り";
@@ -672,7 +701,7 @@ namespace MojiBattle
         {
             if (s != FighterState.Approach || !AttackTechniques.CanDash(self) || !oppAttackable || self.Opponent.Runtime.IsDown) return false;
             if (time < Rt.attackReadyAt || time < Rt.dashReadyAt || pendingAttackAt >= 0f) return false;
-            if (d < Mathf.Max(range * 1.1f, 0.8f) || d > range + B.dashMaxTravel || !Rng.Chance(B.dashApproachChance)) return false;
+            if (d < Mathf.Max(range * 1.1f, 0.8f) || d > range + B.dashMaxTravel || !Rng.Chance(B.dashApproachChance * TechniqueScale)) return false;
             Rt.comboRemaining = 0;
             self.StartAttack(time, AttackStyle.DashSlash);
             LastDecision = "踏み込み斬り";
@@ -684,7 +713,7 @@ namespace MojiBattle
             if (Rt.parryArmed || time < Rt.parryReadyAt || self.Opponent.Runtime.throwLive) return;
             float chance = self.Mods.customized && self.Mods.style == BattleStyle.Counter ? 0.8f
                 : self.Mods.customized && self.Mods.style == BattleStyle.Defensive ? 0.6f : B.parryChance;
-            if (Rng.Chance(chance + CheerBonus(time))) self.ArmParry(time, Mathf.Max(0f, timeToHit - 0.05f));
+            if (Rng.Chance(Mathf.Min(.95f, chance * ParryScale) + CheerBonus(time))) self.ArmParry(time, Mathf.Max(0f, timeToHit - 0.05f));
         }
 
         /// <summary>声援中は予兆への反応・受け流しが冴える。</summary>
@@ -835,7 +864,7 @@ namespace MojiBattle
         }
 
         /// <summary>来る技に合わせたガードの角度。</summary>
-        float GuardPsiFor(AttackStyle s)
+        public float GuardPsiFor(AttackStyle s)
         {
             switch (s)
             {

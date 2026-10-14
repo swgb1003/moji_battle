@@ -165,6 +165,7 @@ namespace MojiBattle
             var s=RunRuntimeStore.Current;
             RunUi.Header(overlay,"VS",()=>{Destroy(canvas.gameObject);root.gameObject.SetActive(true);},"← 次戦準備");
             RunUi.Progress(overlay,560,150,800,s.round,s.Wins);
+            PlayModePicker.Build(overlay,660,668);
             RetroUi.Group(overlay,"RunVersusInkRing",715,310,490,320).gameObject.AddComponent<DraftInkRing>();
             DraftUi.Title(overlay,"RunVsTitle","VS",760,330,400,260,190,RetroUi.Ink);
             RunUi.Fighter(overlay,230,275,1.08f,s.player,RetroUi.Red);

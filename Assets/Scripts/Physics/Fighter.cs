@@ -15,6 +15,10 @@ namespace MojiBattle
         public float ArenaHalfWidth;
         public bool MatchOver;
         public bool AiEnabled = true;
+        /// <summary>自操作の選手の側（-1 は両方 COM・観戦）。</summary>
+        public int PlayerSide = -1;
+        /// <summary>練習モード（HP が減らず、時間切れもない）。</summary>
+        public bool Practice;
         public float LastDamageTime;
         /// <summary>カスタマイズの調整値（カスタマイズ無しの試合でも参照だけはできる）。</summary>
         public CustomizeBalance Customize;
@@ -673,6 +677,16 @@ namespace MojiBattle
         {
             var rt = Runtime;
             if (rt.riposteAt < 0f || time < rt.riposteAt) return;
+            // 自操作: 受け流してから少しの間に斬るを押すと反撃。押さなければ反撃しない
+            if (Brain.IsPlayer)
+            {
+                float parriedAt = rt.riposteAt - Balance.parryCounterDelay;
+                if (!Brain.Player.TakeFollowUp(parriedAt, PlayerCommand.Riposte))
+                {
+                    if (time > rt.riposteAt + .45f) rt.riposteAt = -1f;
+                    return;
+                }
+            }
             rt.riposteAt = -1f;
             bool far = DistanceToOpponent > AttackRange * 1.4f;
             if (Context.MatchOver || rt.weaponDetached || !IsGrounded || !rt.CanBeControlled || Opponent.Runtime.IsDown || far) return;
@@ -799,6 +813,12 @@ namespace MojiBattle
             if (since < b.smashChainDelay) return;
             // 頂点付近まで待ってから振る（上昇中に振ると下をくぐってしまう）
             if (Opponent.Body.linearVelocity.y > b.smashApexSpeed && since < b.smashChainTimeout) return;
+            // 自操作: 斬るを押した時だけ叩き落とす（押さないまま時間切れなら通常の硬直へ）
+            if (Brain.IsPlayer && !Brain.Player.TakeFollowUp(time - since, PlayerCommand.Smash))
+            {
+                if (since >= b.smashChainTimeout) rt.launchConnectedAt = -1f;
+                return;
+            }
             rt.launchConnectedAt = -1f;
             var ort = Opponent.Runtime;
             float reach = (b.shoulderLocal.x + Weapon.length) * b.smashChainReach;
@@ -939,6 +959,7 @@ namespace MojiBattle
         {
             if (Actions != null && Actions.TryKickFollowup(time)) return;
             var rt = Runtime;
+            if (Brain.IsPlayer) rt.comboRemaining = 0;
             // 連撃を続ける前に相手の溜めを確認し、気づけば中断して対応する（反応率に従う）
             var ort = Opponent.Runtime;
             // 相手の溜めが自分の次の一撃より先に終わる時だけ中断する（遅い溜めには打ち勝てる）
@@ -962,6 +983,7 @@ namespace MojiBattle
             rt.attackReadyAt = time + (HeavyTempoEnabled ? Balance.heavyTempoCooldown
                 : WeightClass == WeightClass.Light ? Balance.attackCooldownLight : Balance.attackCooldownHeavy);
             if (Balance.combatTempo) rt.attackReadyAt = time + (rt.attackReadyAt-time) * Balance.tempoCooldownScale;
+            if (Brain.IsPlayer) rt.attackReadyAt = time + (rt.attackReadyAt - time) * PlayerController.CooldownScale;
             SetState(FighterState.Approach);
             Brain.OnAttackSequenceFinished(time);
         }

@@ -99,9 +99,12 @@ namespace MojiBattle
         public bool IsDown => state == FighterState.Knockdown || state == FighterState.KO;
         public bool CanBeControlled => state == FighterState.Approach || state == FighterState.Guard;
 
+        /// <summary>練習モード: ダメージを受けても HP が減らない（与えたダメージの記録・演出はそのまま）。</summary>
+        public bool invulnerable;
+
         public void ApplyDamage(float amount)
         {
-            hp -= amount;
+            if (!invulnerable) hp -= amount;
             metrics.damageTaken += amount;
         }
 

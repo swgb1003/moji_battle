@@ -129,6 +129,8 @@ namespace MojiBattle
         public Action<int, InterventionKind> Forward;
         /// <summary>ゲストの表示: 最後に試合の状態を受け取った時刻（実時間）。</summary>
         public float RemoteFrameAt;
+        /// <summary>練習モード: 必殺ゲージは常に満タン、声援は効果が切れたらすぐ使える。</summary>
+        public bool Practice;
 
         MatchContext Ctx => director.Context;
         InterventionTuning T => Ctx.Balance.intervention;
@@ -212,7 +214,13 @@ namespace MojiBattle
                 var s = Sides[i];
                 var f = director.Fighters[i];
                 s.gauge = Mathf.Min(1f, s.gauge + T.gaugePerSecond * s.gaugeRateScale * dt);
-                if (s.controller == InterventionController.Com) TickCom(i, time);
+                if (Practice)
+                {
+                    if (!s.chainActive) s.gauge = 1f;
+                    s.cheerReadyAt = Mathf.Min(s.cheerReadyAt, Mathf.Max(time, s.cheerUntil));
+                }
+                // 練習のサンドバッグは必殺・声援も使わない
+                if (s.controller == InterventionController.Com && !f.Brain.Frozen) TickCom(i, time);
                 if (s.chainActive)
                 {
                     HoldVictim(f.Opponent);

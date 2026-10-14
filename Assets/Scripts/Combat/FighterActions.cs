@@ -100,7 +100,7 @@ namespace MojiBattle
             if (!B.expandedActions || f.Context.MatchOver || !f.IsGrounded || !Rt.CanBeControlled || Rt.weaponDetached
                 || time < Rt.evadeReadyAt || time < Rt.duckReadyAt || f.WeightClass == WeightClass.Heavy
                 || !(o.attackStyle == AttackStyle.Sweep || o.attackStyle == AttackStyle.Spin || o.attackStyle == AttackStyle.Whirl)) return false;
-            if (!f.Brain.Rng.Chance(B.duckChance)) return false;
+            if (!f.Brain.Rng.Chance(B.duckChance * f.Brain.TechniqueScale)) return false;
             Rt.duckReadyAt = time + B.duckCooldown;
             Rt.duckCounterPending = true;
             f.StartEvade(EvadeKind.Duck, time);
@@ -116,7 +116,7 @@ namespace MojiBattle
             float chance = B.feintChance * (f.Mods.customized && f.Mods.style == BattleStyle.Counter ? 1.5f : 1f);
             if (f.Mods.customized && f.Mods.style == BattleStyle.Counter && f.Style.AttackWillingnessBonus(time) <= 0f) return false;
             if (f.WeightClass == WeightClass.Heavy) chance *= .35f;
-            if (!f.Brain.Rng.Chance(chance)) return false;
+            if (!f.Brain.Rng.Chance(chance * f.Brain.TechniqueScale)) return false;
             StartFeint(time);
             return true;
         }
@@ -140,7 +140,7 @@ namespace MojiBattle
         {
             if (!B.expandedActions || f.Context.MatchOver || !f.IsGrounded || !Rt.CanBeControlled || time < Rt.kickReadyAt
                 || time < Rt.attackReadyAt || f.DistanceToOpponent > B.kickRange * .85f || f.Opponent.Runtime.IsDown
-                || !f.Brain.Rng.Chance(B.kickChance)) return false;
+                || !f.Brain.Rng.Chance(B.kickChance * f.Brain.TechniqueScale)) return false;
             f.StartAttack(time, AttackStyle.FrontKick);
             return true;
         }
@@ -196,6 +196,8 @@ namespace MojiBattle
 
         public void OnPickup(bool reached)
         {
+            // 自操作は拾った直後に斬るを押すと拾い斬り
+            if (f.Brain.IsPlayer) { if (reached) f.Brain.Player.OnPickedUp(f.Context.SimTime); return; }
             if (!B.expandedActions || !reached || f.Context.MatchOver || !f.Context.AiEnabled
                 || !Rt.CanBeControlled || f.Context.SimTime < Rt.pickupSlashReadyAt || f.Opponent.Runtime.IsDown
                 || f.DistanceToOpponent > f.AttackRange * 1.1f) return;
@@ -204,7 +206,7 @@ namespace MojiBattle
 
         public bool TryKickFollowup(float time)
         {
-            if (Rt.attackStyle != AttackStyle.FrontKick || !Rt.attackHadContact || f.Opponent.Runtime.IsDown
+            if (f.Brain.IsPlayer || Rt.attackStyle != AttackStyle.FrontKick || !Rt.attackHadContact || f.Opponent.Runtime.IsDown
                 || !AttackTechniques.CanDash(f) || time < Rt.dashReadyAt || f.DistanceToOpponent < .8f
                 || f.DistanceToOpponent > f.AttackRange + B.dashMaxTravel || f.Context.MatchOver) return false;
             f.StartAttack(time, AttackStyle.DashSlash);
@@ -213,8 +215,11 @@ namespace MojiBattle
 
         public void FinishRecover(float time)
         {
+            // 倒れてから起き上がるまで（自操作の起き上がりの入力を受け付ける間）
+            float downSince = time - Rt.stateTime - 1.5f;
             f.SetState(FighterState.Approach);
             if (!B.expandedActions || f.Context.MatchOver || !f.Context.AiEnabled || f.Opponent.Runtime.IsDown) return;
+            if (f.Brain.IsPlayer) { f.Brain.Player.OnRecovered(time, downSince); return; }
             if (f.DistanceToOpponent <= B.kickRange && time >= Rt.kickReadyAt)
                 f.StartAttack(time, AttackStyle.RecoverKick);
             else if (f.BackSpace > .8f && f.IsGrounded)
@@ -341,11 +346,12 @@ namespace MojiBattle
                 float guard = float.IsNaN(o.guardPsiTarget) ? B.guardPsi : o.guardPsiTarget;
                 f.StartAttack(time, o.state == FighterState.Guard && guard < 30f ? AttackStyle.Overhead : AttackStyle.Thrust);
                 Rt.windupDuration = Mathf.Min(f.WeightClass == WeightClass.Heavy ? .35f : .16f, Rt.windupDuration);
-                Rt.comboRemaining = f.Brain.Rng.RangeInclusive(f.Tendency.comboMin, f.Tendency.comboMax) - 1;
+                Rt.comboRemaining = f.Brain.IsPlayer ? 0 : f.Brain.Rng.RangeInclusive(f.Tendency.comboMin, f.Tendency.comboMax) - 1;
             }
             if (Rt.state == FighterState.Evade && Rt.evadeKind == EvadeKind.Duck && Rt.stateTime >= B.duckDuration)
             {
-                bool counter = Rt.duckCounterPending;
+                // 自操作はしゃがんでいる間に斬るを押した時だけ斬り返す
+                bool counter = Rt.duckCounterPending && (!f.Brain.IsPlayer || f.Brain.Player.TakeFollowUp(time - Rt.stateTime, PlayerCommand.DuckCounter));
                 Rt.duckCounterPending = false;
                 Rt.evadeEndedAt = time;
                 f.SetState(FighterState.Approach);
@@ -353,7 +359,7 @@ namespace MojiBattle
                 {
                     f.StartAttack(time, AttackStyle.Rising);
                     Rt.windupDuration = Mathf.Min(.15f, Rt.windupDuration);
-                    Rt.comboRemaining = f.Brain.Rng.RangeInclusive(f.Tendency.comboMin, f.Tendency.comboMax) - 1;
+                    Rt.comboRemaining = f.Brain.IsPlayer ? 0 : f.Brain.Rng.RangeInclusive(f.Tendency.comboMin, f.Tendency.comboMax) - 1;
                     Motion(FighterMotionKind.DuckCounter);
                 }
             }
@@ -372,7 +378,8 @@ namespace MojiBattle
                         light.AddVelocity(new Vector2(heavy.TowardOpponent * B.kickPushSpeed, .1f));
                         heavy.Actions.Motion(FighterMotionKind.BindPush);
                         if (B.bindCounters && f.Context.AiEnabled && !heavy.Runtime.weaponDetached
-                            && heavy.DistanceToOpponent <= heavy.AttackRange + .4f)
+                            && heavy.DistanceToOpponent <= heavy.AttackRange + .4f
+                            && (!heavy.Brain.IsPlayer || heavy.Brain.Player.TakeFollowUp(time - Rt.stateTime, PlayerCommand.BindCounter)))
                         {
                             heavy.StartAttack(time, AttackStyle.Bash);
                             heavy.Runtime.windupDuration = .16f;
@@ -384,7 +391,12 @@ namespace MojiBattle
                     {
                         // One fighter flows sideways into a riposte; the other disengages.
                         // Resolve from the seeded AI stream, once per bind (lower id owns it).
-                        var counter = B.bindCounters && f.Context.AiEnabled && f.Brain.Rng.Chance(.5f) ? f : d;
+                        // 自操作は鍔迫り合いの間に斬るを押していれば崩し反撃。押していなければ COM が半々で反撃する
+                        var player = f.Brain.IsPlayer ? f : d.Brain.IsPlayer ? d : null;
+                        Fighter counter;
+                        if (player == null) counter = B.bindCounters && f.Context.AiEnabled && f.Brain.Rng.Chance(.5f) ? f : d;
+                        else counter = player.Brain.Player.TakeFollowUp(time - Rt.stateTime, PlayerCommand.BindCounter) ? player
+                            : player.Opponent.Brain.Frozen || !player.Opponent.Brain.Rng.Chance(.5f * player.Opponent.Brain.TechniqueScale) ? null : player.Opponent;
                         foreach (var fighter in new[] { f, d })
                         {
                             fighter.SetState(FighterState.Approach);
@@ -392,7 +404,7 @@ namespace MojiBattle
                             if (fighter.BackSpace > .6f) fighter.AddVelocity(new Vector2(-fighter.TowardOpponent * 1.8f, .1f));
                             fighter.Actions.Motion(FighterMotionKind.BindEscape);
                         }
-                        if (B.bindCounters && f.Context.AiEnabled && !counter.Runtime.weaponDetached
+                        if (B.bindCounters && f.Context.AiEnabled && counter != null && !counter.Runtime.weaponDetached
                             && counter.DistanceToOpponent <= counter.AttackRange + .4f)
                         {
                             var other = counter.Opponent;
@@ -420,6 +432,8 @@ namespace MojiBattle
                 || d.IsGrounded || d.Runtime.state == FighterState.KO
                 || f.DistanceToOpponent > f.AttackRange + .65f
                 || f.Context.Interventions?.InSpecial(f.Id) == true) return false;
+            // 自操作は打ち上げが当たった後に斬るを押した時だけ追いかける
+            if (f.Brain.IsPlayer && !f.Brain.Player.TakeFollowUp(Rt.launchConnectedAt, PlayerCommand.AerialChase)) return false;
             Rt.launchConnectedAt = -1f;
             Rt.aerialReadyAt = time + B.aerialCooldown;
             Rt.aerialStartedAt = time;

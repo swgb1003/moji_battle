@@ -114,6 +114,7 @@ namespace MojiBattle
                 500,244,920,28,24,null,TextAnchor.MiddleCenter);
             var left=Panel(body,"ChallengeOpponent",80,278,910,677);
             Tag(left,"VS プレビュー",18,18,204);
+            PlayModePicker.Build(left,290,14);
             RetroUi.Fighter(left,64,107,.61f,d.PlayerGlyph,RetroUi.Red);
             RetroUi.Fighter(left,544,107,.61f,d.OpponentGlyph,RetroUi.Blue,true);
             RetroUi.Label(left,"VS","VS",354,251,170,92,54,null,TextAnchor.MiddleCenter);

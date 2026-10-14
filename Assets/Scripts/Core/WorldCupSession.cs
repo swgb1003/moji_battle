@@ -46,6 +46,10 @@ namespace MojiBattle
         public WorldCupPage Page=WorldCupPage.Draw;
         public int LastMatch=-1, SelectedMatch=-1;
         public bool WatchRest, CeremonySeen;
+        /// <summary>自分の試合をすべて「moji Fighter」以上の COM と自操作で戦った（優勝すると「真・mojiFighter」を解放）。</summary>
+        public bool SelfAllHard = true;
+        /// <summary>この大会の優勝で「真・mojiFighter」を解放した（結果の画面で知らせる）。</summary>
+        public bool UnlockedTrue;
         public bool GroupsFinished => matches.Take(72).All(m=>m.Complete);
         public bool Qualified => GroupsFinished && matches.Skip(72).Take(16).Any(m=>m.IncludesPlayer);
         public bool Finished => matches.Count==104 && matches[102].Complete && matches[103].Complete;

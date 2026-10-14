@@ -87,10 +87,10 @@ namespace MojiBattle.Tests
             GameFlow.ToModeSelect();yield return Ready();
             var frame=GameObject.Find("ModeHoverFrame").GetComponent<RectTransform>();
             var alpha=frame.GetComponent<CanvasGroup>();Assert.AreEqual(0,alpha.alpha,.001f);
-            Assert.AreEqual(7,Object.FindObjectsByType<ModeCardHover>(FindObjectsSortMode.None).Length);
+            Assert.AreEqual(8,Object.FindObjectsByType<ModeCardHover>(FindObjectsSortMode.None).Length);
             Capture("02_mode_select");Capture("02_mode_select_880x450",880,450);
-            string[] names={"BattleMode","TournamentMode","ChallengeMode","DraftMode","RunMode","FriendMode","AchievementsMode"};
-            string[] actions={"BattleModeStart","TournamentModeStart","ChallengeModeStart","DraftModeStart","RunModeStart","FriendModeStart","AchievementsStart"};
+            string[] names={"BattleMode","TournamentMode","ChallengeMode","DraftMode","RunMode","PracticeMode","FriendMode","AchievementsMode"};
+            string[] actions={"BattleModeStart","TournamentModeStart","ChallengeModeStart","DraftModeStart","RunModeStart","PracticeModeStart","FriendModeStart","AchievementsStart"};
             var pointer=new PointerEventData(EventSystem.current);
             var hoverMethod=typeof(BaseInputModule).GetMethod("HandlePointerExitAndEnter",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);
             var input=EventSystem.current.currentInputModule;Assert.IsNotNull(input);

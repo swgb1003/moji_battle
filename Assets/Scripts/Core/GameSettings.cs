@@ -11,6 +11,9 @@ namespace MojiBattle
         public int spectatorSpeed = 1;
         public bool showInstructions = true, showDamage = true;
         public bool reducedEffects, simpleSpecial;
+        /// <summary>自操作で戦う（false は観戦）。COM の強さは ComDifficulty の値。</summary>
+        public bool selfControl;
+        public int comDifficulty = (int)MojiBattle.ComDifficulty.Normal;
         public GameSettingsData Clone() => (GameSettingsData)MemberwiseClone();
         public void Sanitize()
         {
@@ -19,6 +22,7 @@ namespace MojiBattle
             effectsVolume = Volume(effectsVolume, .9f);
             battleMusic = Mathf.Clamp(battleMusic, 0, 3);
             if (spectatorSpeed != 1 && spectatorSpeed != 2 && spectatorSpeed != 4) spectatorSpeed = 1;
+            comDifficulty = Mathf.Clamp(comDifficulty, 0, (int)MojiBattle.ComDifficulty.TrueMojiFighter);
         }
         static float Volume(float value, float fallback) => float.IsNaN(value) || float.IsInfinity(value) ? fallback : Mathf.Clamp01(value);
     }
@@ -38,6 +42,8 @@ namespace MojiBattle
         public static bool SimpleSpecial { get { Load(); return current.simpleSpecial; } }
         public static int BattleMusic { get { Load(); return current.battleMusic; } }
         public static int InitialSpeed { get { Load(); return current.spectatorSpeed; } }
+        public static bool SelfControl { get { Load(); return current.selfControl; } }
+        public static int ComDifficulty { get { Load(); return current.comDifficulty; } }
         public static void Change(Action<GameSettingsData> edit)
         {
             var next = Current; edit(next); next.Sanitize(); current = next; Save(); Changed?.Invoke();

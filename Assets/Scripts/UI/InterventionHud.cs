@@ -17,6 +17,8 @@ namespace MojiBattle
         BattleHudPresenter presenter;
         BattleIntervention iv;
         int localSide = -1;
+        bool SelfControl => director != null && director.Context.PlayerSide >= 0;
+        string CheerKey => SelfControl ? "D" : "L";
         readonly RectTransform[] gaugeFill = new RectTransform[2];
         readonly RectTransform[] cheerFill = new RectTransform[2];
         readonly Text[] gaugeState = new Text[2], cheerTag = new Text[2];
@@ -67,7 +69,7 @@ namespace MojiBattle
             cheerTag[side].gameObject.SetActive(false);
             if (!local) return;
             special = RetroUi.Button(panel, "SpecialButton", "", 12, 88, 360, 58, 24, () => iv.Press(side, InterventionKind.Special), shadow: false);
-            cheer = RetroUi.Button(panel, "CheerButton", "声援  L", 382, 88, 166, 58, 24, () => iv.Press(side, InterventionKind.Cheer), shadow: false);
+            cheer = RetroUi.Button(panel, "CheerButton", SelfControl ? "声援  D" : "声援  L", 382, 88, 166, 58, 24, () => iv.Press(side, InterventionKind.Cheer), shadow: false);
         }
 
         /// <summary>必殺の告知。戦っている所を隠さないよう、アリーナ上部の中央に短く出す。</summary>
@@ -111,10 +113,11 @@ namespace MojiBattle
 
         void Update()
         {
-            if (SettingsScreen.BlocksInput) return;
+            if (SettingsScreen.BlocksInput || ControlsGuide.BlocksInput) return;
             if (localSide < 0 || director.Ended) return;
-            if (Input.GetKeyDown(KeyCode.K)) iv.Press(localSide, InterventionKind.Special);
-            if (Input.GetKeyDown(KeyCode.L)) iv.Press(localSide, InterventionKind.Cheer);
+            // 自操作は S・D（K・L も使える）。観戦は K・L
+            if (Input.GetKeyDown(KeyCode.K) || SelfControl && Input.GetKeyDown(KeyCode.S)) iv.Press(localSide, InterventionKind.Special);
+            if (Input.GetKeyDown(KeyCode.L) || SelfControl && Input.GetKeyDown(KeyCode.D)) iv.Press(localSide, InterventionKind.Cheer);
         }
 
         void LateUpdate()
@@ -165,13 +168,13 @@ namespace MojiBattle
 
             special.button.interactable = live && s.gauge >= 1f && !pending;
             RetroUi.Selected(special, special.button.interactable, RetroUi.Team(localSide));
-            special.label.text = pending ? "必殺 準備中" : s.chainActive ? "必殺 発動中" : $"必殺「{s.plan.name}」  K";
+            special.label.text = pending ? "必殺 準備中" : s.chainActive ? "必殺 発動中" : $"必殺「{s.plan.name}」  {(SelfControl ? "S" : "K")}";
 
             float cheerWait = s.cheerReadyAt - now;
             bool canBrace = iv.Side(1 - localSide).chainActive && !s.braced;
             cheer.button.interactable = live && s.CheerReady(now) && !s.braced;
             RetroUi.Selected(cheer, now <= s.cheerUntil || s.braced || (canBrace && s.CheerReady(now)), canBrace ? RetroUi.Red : RetroUi.Team(localSide));
-            cheer.label.text = s.braced ? "踏ん張り中" : cheerWait > 0 ? $"声援  {Mathf.CeilToInt(cheerWait)}" : canBrace ? "踏ん張る  L" : "声援  L";
+            cheer.label.text = s.braced ? "踏ん張り中" : cheerWait > 0 ? $"声援  {Mathf.CeilToInt(cheerWait)}" : canBrace ? $"踏ん張る  {CheerKey}" : $"声援  {CheerKey}";
         }
 
         /// <summary>ワールド座標をアリーナ内の位置へ（左上が原点）。</summary>

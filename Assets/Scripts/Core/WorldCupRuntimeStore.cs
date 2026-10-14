@@ -43,7 +43,7 @@ namespace MojiBattle
             public List<WorldCupEntrant> entrants;
             public List<WorldCupRecordedResult> results;
             public WorldCupPage page;
-            public bool watchRest,ceremonySeen;
+            public bool watchRest,ceremonySeen,selfAllHard=true,unlockedTrue;
         }
         public static void Prepare()
         {Current=null;Preparing=true;draft=BuildRuntimeStore.Get(0).Clone();draft.weaponSize=WeaponSize.M;}
@@ -55,9 +55,12 @@ namespace MojiBattle
             Current=WorldCupCatalog.Create(b,seed);Preparing=false;Save();
             AchievementStore.Change(p=>p.RecordWorldCup(Current),true);
         }
-        public static bool Record(int id,MatchResult r,bool displayed=false)
+        public static bool Record(int id,MatchResult r,bool displayed=false,bool selfHard=false)
         {
             if(Current==null || !Current.Record(id,r))return false;
+            // 自分の試合を観戦・「強い」以下で戦ったら、この大会では解放の条件を満たさない
+            if(Current.Match(id).IncludesPlayer && !selfHard)Current.SelfAllHard=false;
+            if(Current.Finished && Current.ChampionId==0 && Current.SelfAllHard && PlayControl.Unlock())Current.UnlockedTrue=true;
             if(displayed){Current.LastMatch=id;Current.SelectedMatch=-1;Current.Page=WorldCupPage.MatchResult;}
             Save();
             var session=Current;AchievementStore.Change(p=>p.RecordWorldCup(session),true);
@@ -74,7 +77,7 @@ namespace MojiBattle
         {
             var s=Current;if(s==null)return;
             var saved=new Saved {seed=s.Seed,id=s.Id,entrants=s.Entrants.ToList(),results=s.Journal,page=s.Page,lastMatch=s.LastMatch,
-                watchRest=s.WatchRest,ceremonySeen=s.CeremonySeen};
+                watchRest=s.WatchRest,ceremonySeen=s.CeremonySeen,selfAllHard=s.SelfAllHard,unlockedTrue=s.UnlockedTrue};
             PlayerPrefs.SetString(PrefKey,JsonUtility.ToJson(saved));PlayerPrefs.Save();
         }
         public static void ClearSession(){Current=null;Preparing=false;}
@@ -97,7 +100,7 @@ namespace MojiBattle
                 }
                 s.LastMatch=x.lastMatch;
                 if(s.LastMatch!=-1 && (s.Match(s.LastMatch)==null || !s.Journal.Any(r=>r.matchId==s.LastMatch)))return null;
-                s.WatchRest=x.watchRest;s.CeremonySeen=x.ceremonySeen;
+                s.WatchRest=x.watchRest;s.CeremonySeen=x.ceremonySeen;s.SelfAllHard=x.selfAllHard;s.UnlockedTrue=x.unlockedTrue;
                 s.Page=x.page==WorldCupPage.Versus ? (s.GroupsFinished?WorldCupPage.Bracket:WorldCupPage.Groups) : x.page;
                 if((s.Page==WorldCupPage.Bracket || s.Page==WorldCupPage.GroupResult || s.Page==WorldCupPage.ThirdRanking || s.Page==WorldCupPage.Eliminated) && !s.GroupsFinished)return null;
                 if(s.Page==WorldCupPage.MatchResult && s.LastMatch<0)return null;

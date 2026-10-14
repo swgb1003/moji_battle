@@ -37,6 +37,7 @@ namespace MojiBattle
             vsRight=RetroUi.Label(bg,"VsRight","",1330,883,420,99,31,null,TextAnchor.MiddleCenter);
             RetroUi.Label(bg,"VsCaption","選んだ一文字で、勝負。",640,796,640,60,36,null,TextAnchor.MiddleCenter);
             RetroUi.Button(bg,"Start","対戦開始 →",680,875,560,106,52,StartBattle,RetroUi.Red);
+            PlayModePicker.Build(bg,660,726);
             vsPanel.SetActive(false);
         }
     }

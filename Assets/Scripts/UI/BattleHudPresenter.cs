@@ -25,7 +25,10 @@ namespace MojiBattle
         Text timer, step, status, center, sub, technique, techniqueEnglish;
         Image techniqueStripe;
         GameObject details, announcement, techniqueTag;
-        UguiKit.ChoiceButton pause, again, detailButton;
+        UguiKit.ChoiceButton pause, again, detailButton, guideButton, practiceEasier, practiceHarder;
+        Text practiceLevel;
+        PlayerController player;
+        bool practice;
         Vector2 techniquePoint;
         float techniqueLife;
         bool isTournament;
@@ -280,6 +283,47 @@ namespace MojiBattle
             for(int i=0;i<2;i++)names[i].text=(i==0?"あなた":"COM")+" / "+director.Fighters[i].Loadout.grapheme+" / "+CustomizeLabels.StyleShort(director.Fighters[i].Mods.style);
             again.button.gameObject.SetActive(false);root.Find("BattleAgainShadow").gameObject.SetActive(false);
         }
+        public void GoBack() => Back();
+
+        /// <summary>
+        /// 自操作の表示: 速度の切り替えを隠して操作説明のボタンを置き、左下に直前の入力と出た技を出す。
+        /// 練習は時間を ∞ にし、右下（詳細・もう一度の場所）で相手の強さを切り替える。
+        /// </summary>
+        public void SetSelfControl(PlayerController controller)
+        {
+            player = controller;
+            practice = director.Context.Practice;
+            status.resizeTextForBestFit = true; status.resizeTextMinSize = 18; status.resizeTextMaxSize = 32;
+            foreach (var s in speeds) s.image.gameObject.SetActive(false);
+            var auto = root.Find("Automatic")?.GetComponent<Text>();
+            if (auto != null) auto.text = practice ? "練習" : "操作";
+            guideButton = RetroUi.Button(root, "BattleControlsGuide", "操作説明  H", 958, 983, 408, 46, 24, ControlsGuide.Open, shadow: false);
+            if (!practice) return;
+            detailButton.image.gameObject.SetActive(false);
+            again.image.gameObject.SetActive(false);
+            practiceEasier = RetroUi.Button(root, "PracticeEasier", "◀", 1404, 983, 54, 46, 24, () => StepPractice(-1), shadow: false);
+            RetroUi.Block(root, "PracticeLevelPlate", 1462, 983, 326, 46, RetroUi.Paper);
+            RetroUi.Frame(root, 1462, 983, 326, 46, RetroUi.Ink, 2);
+            practiceLevel = RetroUi.Label(root, "PracticeLevel", "", 1462, 983, 326, 46, 22, null, TextAnchor.MiddleCenter);
+            practiceHarder = RetroUi.Button(root, "PracticeHarder", "▶", 1792, 983, 54, 46, 24, () => StepPractice(1), shadow: false);
+        }
+
+        /// <summary>練習の相手の強さを 1 段階変える（真・mojiFighter は解放後のみ）。</summary>
+        public void StepPractice(int dir)
+        {
+            var choices = PracticeSession.Choices;
+            int i = System.Array.IndexOf(choices, PracticeSession.Difficulty);
+            for (int n = i + dir; n >= 0 && n < choices.Length; n += dir)
+                if (PlayControl.Available(choices[n])) { FindFirstObjectByType<BattleBootstrap>()?.SetPracticeDifficulty(choices[n]); break; }
+        }
+
+        string PlayerStatus()
+        {
+            float now = director.Context.SimTime;
+            if (player.LastRejectionAt >= 0 && now - player.LastRejectionAt < 1.2f && player.LastRejectionAt > player.LastCommandAt) return player.LastRejection;
+            if (player.LastCommandAt >= 0 && now - player.LastCommandAt < 1.2f) return PlayerController.Label(player.LastCommand);
+            return practice ? "練習中" : "自操作中";
+        }
         void Back()
         {
             if(GameFlow.WorldCupMode){GameFlow.BackFromWorldCupBattle();return;}
@@ -315,7 +359,9 @@ namespace MojiBattle
             timer.text = director.Overtime ? "延長" : Mathf.CeilToInt(director.TimeRemaining).ToString("00");
             timer.color = !director.Ended && director.TimeRemaining <= 10 ? RetroUi.Red : RetroUi.Ink;
             pause.label.text = TimeController.Paused ? "▶  再開" : "Ⅱ  一時停止";
-            status.text = director.Ended ? "試合終了" : TimeController.Paused ? "一時停止中" : HasLocalInterventions ? "観戦＋応援中" : "観戦中";
+            status.text = director.Ended ? "試合終了" : TimeController.Paused ? "一時停止中" : player != null ? PlayerStatus()
+                : HasLocalInterventions ? "観戦＋応援中" : "観戦中";
+            if (practice) { timer.text = "∞"; timer.color = RetroUi.Ink; practiceLevel.text = "相手：" + PlayControl.Label(PracticeSession.Difficulty); }
             for (int i = 0; i < speeds.Length; i++) RetroUi.Selected(speeds[i], Mathf.Approximately(TimeController.SpectatorSpeed, i == 0 ? .5f : i == 1 ? 1 : i == 2 ? 2 : 4), RetroUi.Ink);
             if (techniqueLife > 0 && !TimeController.Paused) techniqueLife -= Time.unscaledDeltaTime;
             techniqueTag.SetActive(techniqueLife > 0 && !director.Ended);
@@ -335,7 +381,7 @@ namespace MojiBattle
             if (director.CountdownRemaining > 0)
             {
                 title = Mathf.CeilToInt(director.CountdownRemaining).ToString();
-                if (GameSettings.ShowInstructions) caption = involved ? "オート戦闘　K 必殺 ／ L 声援・踏ん張り" : "完全オート戦闘";
+                if (GameSettings.ShowInstructions) caption = player != null ? "自操作　H 操作説明 ／ S 必殺 ／ D 声援" : involved ? "オート戦闘　K 必殺 ／ L 声援・踏ん張り" : "完全オート戦闘";
             }
             else if (director.Clock < .8f && !director.Ended && director.StepCount > 5) title = "FIGHT!";
             if (director.KoInProgress && !director.Ended && !director.ReplayPhase) title = "K.O.";

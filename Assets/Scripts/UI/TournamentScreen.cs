@@ -29,6 +29,7 @@ namespace MojiBattle
             RetroUi.Label(menuRoot, "Title", TournamentSession.CupName, 76, 148, 1360, 126, 70);
             RetroUi.Block(menuRoot, "StatusPlate", 1462, 168, 376,  84, RetroUi.Red);
             status = RetroUi.Label(menuRoot, "TournamentStatus", "", 1470, 168, 360, 84, 36, RetroUi.Paper, TextAnchor.MiddleCenter);
+            PlayModePicker.Build(menuRoot, 1240, 268);
             RetroUi.Label(menuRoot, "Rules", "Sサイズ限定・3連勝で優勝 / 大会中は装備固定 / 毎試合HP回復", 76, 277, 1768, 42, 24, RetroUi.Muted);
             string[] headings = { "1回戦", "準決勝", "決勝", "優勝" };
             for (int i = 0; i < 4; i++)

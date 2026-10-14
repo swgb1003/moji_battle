@@ -28,6 +28,7 @@ namespace MojiBattle
         public static bool ChallengeMode => ChallengeRuntimeStore.Active;
         public static bool FriendMode { get; private set; }
         public static bool TournamentMode { get; private set; }
+        public static bool PracticeMode => PracticeSession.Active;
 
         static void LeaveTournament()
         {
@@ -40,13 +41,17 @@ namespace MojiBattle
             RunRuntimeStore.ClearSession();
             WorldCupRuntimeStore.ClearSession();
             TournamentSelect=false;
+            PracticeSession.Active = false;
             TimeController.ResetAll();
         }
 
         public static void ToTitle() { LeaveTournament(); SceneManager.LoadScene(TitleScene); }
         public static void ToModeSelect() { LeaveTournament(); SceneManager.LoadScene(ModeSelectScene); }
         public static void ToAchievements() { LeaveTournament(); SceneManager.LoadScene(AchievementsScene); }
-        public static void ToCustomize() { LeaveTournament(); SceneManager.LoadScene(CustomizeScene); }
+        /// <summary>カスタマイズへ（練習の試合から戻る時は練習の構成画面のまま）。</summary>
+        public static void ToCustomize() { bool practice = PracticeMode; LeaveTournament(); PracticeSession.Active = practice; SceneManager.LoadScene(CustomizeScene); }
+        /// <summary>練習: 自分と相手の構成を選ぶ画面（カスタマイズ）へ。</summary>
+        public static void ToPractice() { LeaveTournament(); PracticeSession.Active = true; SceneManager.LoadScene(CustomizeScene); }
         public static void ToChallenges()
         {
             LeaveTournament(); SceneManager.LoadScene(ChallengeScene);

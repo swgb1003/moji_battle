@@ -129,6 +129,8 @@ namespace MojiBattle
             battle = BattleBuilder.Build(config, b, c, true, useCountdown ? b.countdownSeconds : 0f, out error, tournamentFinal);
             if(battle!=null && GameFlow.RunMode)
             { RunRuntimeStore.ApplyCombat(battle.Left,true);RunRuntimeStore.ApplyCombat(battle.Right,false); }
+            // 自操作（練習は常に自操作）: 必殺・声援の操作表示を合わせるため、関与を付ける前に側を決める
+            if (battle != null && (GameFlow.PracticeMode || PlayControl.SelfControl)) battle.Context.PlayerSide = PlayerSide();
             if (resultPanel != null) resultPanel.SetActive(false);
             if (battle == null) Debug.LogError("試合を開始できません: " + error);
             // 友人対戦は部屋の情報が揃ってから Start で付ける。それ以外は左（P1）を観戦者、右を COM が操作する
@@ -136,8 +138,10 @@ namespace MojiBattle
             {
                 var m=GameFlow.WorldCupMode?WorldCupRuntimeStore.Current.Match(worldCupMatchId):null;
                 if(m!=null)AttachInterventions(m.LeftId==0?InterventionController.Local:InterventionController.Com,m.RightId==0?InterventionController.Local:InterventionController.Com);
+                else if(IsTournament && battle.Context.PlayerSide==1)AttachInterventions(InterventionController.Com,InterventionController.Local);
                 else AttachInterventions(InterventionController.Local,InterventionController.Com);
             }
+            if (battle != null && battle.Context.PlayerSide >= 0) SetupSelfControl();
             if(battle!=null && GameFlow.ChallengeMode)battle.Root.GetComponent<BattleHudPresenter>().SetChallengeInfo();
             if(battle!=null && GameFlow.DraftMode)battle.Root.GetComponent<BattleHudPresenter>().SetDraftInfo();
             if(battle!=null && GameFlow.RunMode)
@@ -153,7 +157,7 @@ namespace MojiBattle
                 Debug.Log($"[MojiBattle] seed={r.seed} {r.finishReason} winner={r.winner} t={r.elapsedSeconds:F1}s HP {r.hpRemaining[0]:F0}/{r.hpRemaining[1]:F0}");
                 if(GameFlow.WorldCupMode)
                 {
-                    if(WorldCupRuntimeStore.Record(worldCupMatchId,r,true))StartCoroutine(ReturnToWorldCup());
+                    if(WorldCupRuntimeStore.Record(worldCupMatchId,r,true,SelfHard))StartCoroutine(ReturnToWorldCup());
                 }
                 else if (IsTournament)
                 {
@@ -183,6 +187,50 @@ namespace MojiBattle
                 }
                 else ShowResultButtons();
             };
+        }
+
+        /// <summary>この端末の選手の側（-1 は自分の試合ではない）。ワールド文字カップ・大会は対戦表の位置で決まる。</summary>
+        int PlayerSide()
+        {
+            if (GameFlow.FriendMode) return -1;
+            if (GameFlow.WorldCupMode)
+            {
+                var m = WorldCupRuntimeStore.Current.Match(worldCupMatchId);
+                return m.LeftId == 0 ? 0 : m.RightId == 0 ? 1 : -1;
+            }
+            if (IsTournament) return tournament.Matches[tournamentMatchId].LeftId != 0 ? 1 : 0;
+            return 0;
+        }
+
+        /// <summary>この試合を「moji Fighter」以上の COM と自操作で戦った（「真・mojiFighter」の解放条件）。</summary>
+        bool SelfHard => battle != null && battle.Context.PlayerSide >= 0 && PlayControl.Difficulty >= ComDifficulty.MojiFighter;
+
+        /// <summary>自操作: 自分の選手を入力で動かし、相手の COM に強さを当てる。練習は HP が減らず、相手はサンドバッグから。</summary>
+        void SetupSelfControl()
+        {
+            var ctx = battle.Context;
+            var me = battle.Director.Fighters[ctx.PlayerSide];
+            var player = me.Brain.AttachPlayer();
+            battle.Root.AddComponent<PlayerInputReader>().Bind(player.Input);
+            TimeController.SetSpectatorSpeed(1f);
+            if (GameFlow.PracticeMode)
+            {
+                ctx.Practice = true;
+                foreach (var f in battle.Director.Fighters) f.Runtime.invulnerable = true;
+                if (ctx.Interventions != null) ctx.Interventions.Practice = true;
+                PracticeSession.Difficulty = ComDifficulty.Sandbag;
+            }
+            PlayControl.ApplyDifficulty(me.Opponent, GameFlow.PracticeMode ? PracticeSession.Difficulty : PlayControl.Difficulty, ctx.Interventions);
+            battle.Root.GetComponent<BattleHudPresenter>().SetSelfControl(player);
+            ControlsGuide.OpenOnce();
+        }
+
+        /// <summary>練習: 右下の切り替えで相手の強さを変える（サンドバッグなら動かない）。</summary>
+        public void SetPracticeDifficulty(ComDifficulty d)
+        {
+            if (battle == null || !battle.Context.Practice || !PlayControl.Available(d)) return;
+            PracticeSession.Difficulty = d;
+            PlayControl.ApplyDifficulty(battle.Director.Fighters[1 - battle.Context.PlayerSide], d, battle.Context.Interventions);
         }
 
         void AttachInterventions(InterventionController left, InterventionController right)
@@ -225,9 +273,19 @@ namespace MojiBattle
         /// <summary>同じ設定（BuildRuntimeStore の内容をそのまま）で新しい seed の試合。</summary>
         public void RematchSameBuild() { if(!GameFlow.WorldCupMode && !GameFlow.DraftMode && !GameFlow.RunMode) StartMatch(NewSeed()); }
 
+        bool SelfControlled => battle != null && battle.Context.PlayerSide >= 0;
+
         void Update()
         {
-            if (SettingsScreen.BlocksInput) return;
+            if (SettingsScreen.BlocksInput || ControlsGuide.BlocksInput) return;
+            if (Input.GetKeyDown(KeyCode.H) && SelfControlled) { ControlsGuide.Open(); return; }
+            // 自操作: 矢印・Z・X・C・V・A・S・D は操作に使うので、観戦の速度・確認用のキーは使わない
+            if (SelfControlled)
+            {
+                if (Input.GetKeyDown(KeyCode.Space)) TimeController.SetPaused(!TimeController.Paused);
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.B)) battle.Root.GetComponent<BattleHudPresenter>().GoBack();
+                return;
+            }
             if (GameFlow.FriendMode)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.B)) FriendRoomSession.Instance.BackToLobby();

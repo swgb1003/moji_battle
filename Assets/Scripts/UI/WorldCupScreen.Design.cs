@@ -223,7 +223,8 @@ namespace MojiBattle
             D.InkFill(root,"VersusRoundBand",484,103,704,78,D.Navy);T(root,"VersusRound",m.Name,499,103,674,78,43,D.Paper,TextAnchor.MiddleCenter);
             Fighter(root,m.LeftId,181,184,470,322);Fighter(root,m.RightId,1058,160,466,345,true);D.Art(root,"design_vs",660,215,350,302);
             BuildCard(m.LeftId,82,519,710,216,false);BuildCard(m.RightId,880,519,710,216,false);
-            D.Frame(root,453,758,766,95,D.Ink,2,true);T(root,"VersusCaption","次の勝利で決勝進出に近づく",474,763,724,86,40,null,TextAnchor.MiddleCenter);
+            if(m.IncludesPlayer)PlayModePicker.Build(root,536,776);
+            else{D.Frame(root,453,758,766,95,D.Ink,2,true);T(root,"VersusCaption","次の勝利で決勝進出に近づく",474,763,724,86,40,null,TextAnchor.MiddleCenter);}
             Button("WorldCupVersusBack","← 大会表",52,798,351,()=>Open(Session.GroupsFinished?WorldCupPage.Bracket:WorldCupPage.Groups),D.Ink,87,37);
             StartButton(m,1264,801,351,84,"試合開始 →");
         }
@@ -240,7 +241,8 @@ namespace MojiBattle
         void BronzeVersus(WorldCupMatch m)
         {
             Header("BRONZE MATCH",()=>Open(WorldCupPage.Bracket));D.Title(root,"<color=#AE2319>3位</color>決定戦",119,98);
-            T(root,"VersusCaption","準決勝の敗者同士が、最後の表彰台を争う。",282,300,1110,50,34,null,TextAnchor.MiddleCenter);
+            if(m.IncludesPlayer)PlayModePicker.Build(root,535,290);
+            else T(root,"VersusCaption","準決勝の敗者同士が、最後の表彰台を争う。",282,300,1110,50,34,null,TextAnchor.MiddleCenter);
             foreach(int side in new[]{0,1}){int id=side==0?m.LeftId:m.RightId;var b=Session.Entrants[id].Build;var p=D.Panel(root,"BronzeBuild"+side,side==0?65:1279,386,329,297);D.InkFill(p,"BronzeNameBand",9,9,311,103,D.Navy);T(p,"BronzeName",b.character,10,9,309,103,67,D.Paper,TextAnchor.MiddleCenter);T(p,"BronzeQualification","準決勝敗退",10,133,309,63,29,null,TextAnchor.MiddleCenter);T(p,"BronzeBuild","M・"+GlyphCatalog.FontDisplayName(b.fontType)+"・"+CustomizeLabels.Grip(b),10,217,309,62,26,null,TextAnchor.MiddleCenter);}
             Fighter(root,m.LeftId,426,377,345,311);Fighter(root,m.RightId,915,377,344,311,true);T(root,"Versus","VS",755,480,160,136,79,null,TextAnchor.MiddleCenter);
             T(root,"BronzeCondition","この試合の勝者が3位。",455,718,760,53,34,D.Red,TextAnchor.MiddleCenter);
@@ -248,7 +250,9 @@ namespace MojiBattle
         }
         void FinalVersus(WorldCupMatch m)
         {
-            Header("FINAL",()=>Open(WorldCupPage.Bracket));D.Title(root,"決勝戦",83,101);T(root,"VersusCaption","48文字の頂点を決める、最後の一戦。",450,213,772,48,35,null,TextAnchor.MiddleCenter);
+            Header("FINAL",()=>Open(WorldCupPage.Bracket));D.Title(root,"決勝戦",83,101);
+            if(m.IncludesPlayer)PlayModePicker.Build(root,536,206);
+            else T(root,"VersusCaption","48文字の頂点を決める、最後の一戦。",450,213,772,48,35,null,TextAnchor.MiddleCenter);
             Fighter(root,m.LeftId,237,266,480,285);Fighter(root,m.RightId,1059,214,469,336,true);D.Art(root,"design_trophy",737,270,195,121);T(root,"FinalVS","VS",737,403,195,127,86,D.Gold,TextAnchor.MiddleCenter);
             BuildCard(m.LeftId,215,565,560,109,true);BuildCard(m.RightId,897,565,560,109,true);
             var bronze=D.Panel(root,"FinalBronzeResult",97,704,712,120);T(bronze,"BronzeResultCaption","3位決定戦\n結果",25,12,181,89,28);Fighter(bronze,Session.ThirdId,226,8,143,96);Fighter(bronze,Session.FourthId,480,8,144,96);T(bronze,"BronzeWinner","○",379,26,70,68,44,D.Red,TextAnchor.MiddleCenter);
@@ -305,6 +309,8 @@ namespace MojiBattle
             bool podium=Session.ChampionId==0 || Session.RunnerUpId==0 || Session.ThirdId==0;
             Fighter(p,0,35,podium?87:115,podium?365:320,podium?471:420,false,podium?"winner":Session.Eliminated?"kneel":"ready");
             if(champion)D.Art(p,"design_laurel",394,102,524,224);
+            // 「moji Fighter」以上で全試合を自操作して優勝: 最強の COM「真・mojiFighter」を解放
+            if(champion && Session.UnlockedTrue){D.InkFill(p,"TrueMojiUnlocked",18,14,250,64,D.Ink);T(p,"TrueMojiUnlockedText","真・mojiFighter\n解放！",22,14,242,64,22,D.Paper,TextAnchor.MiddleCenter);}
             string placement=Session.PlayerPlace;
             if(Session.Eliminated && Session.Qualified && Session.FourthId!=0)placement+="敗退";
             if(!Session.Qualified)placement="グループリーグ\n敗退";

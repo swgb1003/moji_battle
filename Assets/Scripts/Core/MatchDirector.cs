@@ -143,7 +143,8 @@ namespace MojiBattle
                     bool damaged = Fighters[0].Runtime.hp < otHpLeft || Fighters[1].Runtime.hp < otHpRight;
                     if (damaged || OvertimeElapsed >= Context.Balance.suddenDeathMaxSeconds - 1e-5f) TimeUp();
                 }
-                else if (Clock >= Config.durationSeconds - 1e-5f) TimeUp();
+                // 練習は時間切れなし
+                else if (!ctx.Practice && Clock >= Config.durationSeconds - 1e-5f) TimeUp();
             }
 
             ctx.SimTime += dt;
