@@ -377,8 +377,9 @@ namespace MojiBattle
             vsRightGlyph = RetroUi.Label(right, "VsRightGlyph", "文字", 0, 0, 700, 300, 220, RetroUi.Blue, TextAnchor.MiddleCenter);
             vsLeft = RetroUi.Label(left, "VsLeft", "", 0, 330, 700, 194, 31, RetroUi.Red, TextAnchor.UpperCenter);
             vsRight = RetroUi.Label(right, "VsRight", "", 0, 330, 700, 194, 31, RetroUi.Blue, TextAnchor.UpperCenter);
-            RetroUi.Button(bg, "Start", "BATTLE 開始 →", 650, 866, 620, 106, 52, StartBattle, RetroUi.Ink);
-            PlayModePicker.Build(bg, 660, 226);
+            // 観戦／自操作の切り替えは開始ボタンの右に並べる（見出し・選手の説明に重ねない）。2 つ合わせて中央に置く
+            RetroUi.Button(bg, "Start", "BATTLE 開始 →", 330, 866, 620, 106, 52, StartBattle, RetroUi.Ink);
+            PlayModePicker.Build(bg, 990, 866 + (106 - PlayModePicker.Height) / 2);
             RetroUi.Enter(bg.gameObject, 0, 24);
             vsPanel.SetActive(false);
         }

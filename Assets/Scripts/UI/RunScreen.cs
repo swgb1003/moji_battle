@@ -165,7 +165,6 @@ namespace MojiBattle
             var s=RunRuntimeStore.Current;
             RunUi.Header(overlay,"VS",()=>{Destroy(canvas.gameObject);root.gameObject.SetActive(true);},"← 次戦準備");
             RunUi.Progress(overlay,560,150,800,s.round,s.Wins);
-            PlayModePicker.Build(overlay,660,668);
             RetroUi.Group(overlay,"RunVersusInkRing",715,310,490,320).gameObject.AddComponent<DraftInkRing>();
             DraftUi.Title(overlay,"RunVsTitle","VS",760,330,400,260,190,RetroUi.Ink);
             RunUi.Fighter(overlay,230,275,1.08f,s.player,RetroUi.Red);
@@ -176,7 +175,9 @@ namespace MojiBattle
             var e=DraftUi.Panel(overlay,"RunVsEnemy",1080,760,764,150);
             RetroUi.Label(e,"Opponent",s.Opponent.Name,24,12,710,60,38);
             RetroUi.Label(e,"OpponentHint",s.Opponent.Hint,24,80,710,55,26);
-            RetroUi.Button(overlay,"RunStart","対戦開始 →",610,947,700,75,43,GameFlow.ToRunBattle,RetroUi.Red);
+            // 観戦／自操作の切り替えは開始ボタンの右に並べ、2 つ合わせて中央に置く（選手の絵・説明に重ねない）
+            RetroUi.Button(overlay,"RunStart","対戦開始 →",330,947,620,75,43,GameFlow.ToRunBattle,RetroUi.Red);
+            PlayModePicker.Build(overlay,990,947+(75-PlayModePicker.Height)/2);
         }
         void Upgrade()
         {
