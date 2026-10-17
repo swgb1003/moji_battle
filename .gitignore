@@ -16,20 +16,20 @@
 *.booproj
 .vs/
 .vscode/
-/Reports/*.xml
-/Reports/*.pid
-/Reports/Seq/
-/Reports/trace_*.txt
 /Assets/InitTestScene*.unity
 /Assets/InitTestScene*.unity.meta
-Reports/p2_round_robin_only.md
 TestResults-*.xml
+
+# Test and verification output (screenshots, logs, reports)
+/Reports/
 
 # Server dependencies
 Server/node_modules/
 
-# Local verification output (large or machine-specific)
-/Reports/UI/FreeRoomVerification/
-/Reports/CombatTempo/
-/Reports/UI/FighterVolume/
-/Reports/**/*.log
+# PR video (footage, renders, tools, node modules)
+/PRVideo/tools/
+/PRVideo/footage/
+/PRVideo/out/
+/PRVideo/remotion/node_modules/
+/PRVideo/remotion/public/footage/
+/PRVideo/footage_*/

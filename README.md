@@ -8,12 +8,13 @@
 - Unity 6000.0.61f1（`ProjectSettings/ProjectVersion.txt`）、Built-in レンダーパイプライン、Unity 2D Physics
 - 確認結果: [P1](Assets/Documentation/P1_Verification.md) / [P2](Assets/Documentation/P2_Verification.md) / [カスタマイズ](Assets/Documentation/Customize_Verification.md)
 - 調整値と経緯: [Assets/Documentation/BalanceNotes.md](Assets/Documentation/BalanceNotes.md)
+- 使用素材（フォント・生成AIで作成した曲／効果音／画像）とライセンス: [ThirdPartyNotices](Assets/Documentation/ThirdPartyNotices.md)
 - 戦闘アクション8案（しゃがみ・フェイント・鍔迫り合い・前蹴り・壁蹴り・拾い斬り・起き上がり分岐・引き崩し）: [実装説明](Assets/Documentation/ExpandedActions.md)
 - トーナメントモード「ワタナベチャレンジカップ」（8人制・Sサイズ限定・3連勝で優勝）: [実装説明](Assets/Documentation/TournamentMode.md)
 - 観戦者の関与（K 必殺技・L 声援。基本はオートのまま）。必殺技は選んだ文字を入れた7文字以内の技名から AI が動きと見た目を設計（一文字につき3つまで登録）: [仕様と操作](Assets/Documentation/SpectatorInterventions.md)
 - 友人対戦モード（6桁ルームコード・装備共有・双方の準備完了・ホストの試合と結果を同期）: [サーバーの起動・接続方法](Server/README.md)。部屋作成／参加画面と対戦ロビーを追加。
-- レトロな紙面デザインのメニューUI・アニメーション: [実画面と検証](Reports/UI/verification.md)。F6で動きの抑制、Ctrl+Enterで対戦確認・開始。
-- 戦闘画面も紙面デザインに統一。広いアリーナ、薄いHP・タイマー帯、観戦操作バー、開閉できる能力値の詳細、動く技名札: [実画面と検証](Reports/UI/battle-verification.md)。
+- レトロな紙面デザインのメニューUI・アニメーション。F6で動きの抑制、Ctrl+Enterで対戦確認・開始。
+- 戦闘画面も紙面デザインに統一。広いアリーナ、薄いHP・タイマー帯、観戦操作バー、開閉できる能力値の詳細、動く技名札。
 - 称号コレクション（50種類・右上の獲得通知・未獲得条件と累計進捗・モード共通の連勝）: [判定と保存](Assets/Documentation/Achievements.md)。メニュー下段の「称号を見る」から。
 
 ## 動かし方
@@ -60,6 +61,7 @@ START → モード選択 → バトルモード／トーナメントモード�
 ```
 
 PlayMode の seed 掃引は `Reports/p1_seed_sweep.md/.json`、撮影画像は `Reports/Screenshots/` に出力される。
+`Reports/` はテストや検証ツールの出力先（作業用）なのでリポジトリには含めていない。各ドキュメントに出てくる `Reports/` 内のファイルは開発時の検証記録。
 調整用: `Tools/sweep.sh`（`SWEEP_SEEDS=40` で試合数変更）、`TRACE_SEED=<seed>` を付けて `-testFilter MojiBattle.Tests.TraceDebug` で 1 試合のトレース。
 
 ## 構成

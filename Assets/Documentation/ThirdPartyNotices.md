@@ -43,6 +43,54 @@
 
 いずれも初期 9 文字（一口山火鬱AIOX）を自前の字形として収録していることを cmap で確認済み。
 
+## Noto Sans CJK JP Black（ワールド文字カップの見出し）
+
+- 同梱ファイル: `Assets/Resources/UI/WorldCup/Fonts/NotoSansCJKjp-Black.otf`（ライセンス全文: `Assets/Resources/UI/WorldCup/Fonts/OFL.txt`）
+- 用途: ワールド文字カップ画面の見出し（`WorldCupDesign.HeadingFont`）
+- 著作権: Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'.
+- ライセンス: SIL Open Font License 1.1 — https://openfontlicense.org/
+- 出典: https://github.com/notofonts/noto-cjk
+- SHA-256: cd66686594a861a42fe752990a406fcedafb51b3a91d6639f30f8948f7a10b4d
+
+# 生成AIで作成した素材
+
+ゲーム内の曲・効果音・画像は、以下の生成AIサービスで作者が作成したもの。各サービスの利用規約に従って使用している。
+
+## BGM（Suno）
+
+- 作成: Suno（https://suno.com/）、作成者アカウント sw_gb_1003
+- 収録先と使用場面（`Assets/Resources/Audio/BattleMusic.asset` で割り当て）
+
+| ファイル | 曲名 | 場面 | 作成日（UTC） |
+|---|---|---|---|
+| `Assets/Audio/title.mp3` | Adventure Awaits | タイトル | 2026-10-07 |
+| `Assets/Audio/menu.mp3` | 勇者の冒険 | メニュー | 2026-10-07 |
+| `Assets/Audio/custermize.mp3` | 装備選択画面 | カスタマイズ | 2026-10-07 |
+| `Assets/Audio/draft.mp3` | 冒险选择画面 | 文字ドラフト | 2026-10-11 |
+| `Assets/Audio/taunament.mp3` | 決戦の瞬間 | トーナメント | 2026-10-07 |
+| `Assets/Audio/battle.mp3` | Adventure Awaits | バトル 1 | 2026-10-07 |
+| `Assets/Audio/battle2.mp3` | 神の決闘 | バトル 2 | 2026-10-07 |
+| `Assets/Audio/battle3.mp3` | Pixel Showdown | バトル 3 | 2026-10-07 |
+| `Assets/Audio/final2.mp3` | 決戦の鼓動 | 決勝 | 2026-10-17 |
+
+## 効果音
+
+- Runway Sound Effects（https://runwayml.com/）で作成: `Assets/Resources/Audio/Combat/` の 38 素材と、
+  `Assets/Audio/UI/title_start.wav`・`battle_start.wav`。生成プロンプトとタスク ID は `Tools/combat_audio_sources.json`・`Tools/ui_audio_sources.json`。
+- 自作（プログラムで合成）: `special_cutin.wav`・`special_impact.wav`（numpy で合成）。
+- 声援 `cheer_01〜04.wav`: Windows の音声合成（Microsoft Haruka・Ichiro）の声を重ね、歓声と反響を合成したもの。
+
+## 画像
+
+- OpenAI の画像生成（ChatGPT / Codex の画像生成機能）で作成: `Assets/Resources/UI/` 以下の PNG 34 点
+  （ロゴ `MojiFighterXLogo.png`、紙の背景、ステージ背景と小物 `Stages/`、称号バッジ `Achievements/`、ワールド文字カップの背景・トロフィー・図解 `WorldCup/`、タイトル背景 `Title/`）。
+- `Design/` 以下の画像はデザイン検討用の案で、ゲームには含まれない（生成時の指示文を同じフォルダに保存）。
+- 文字の武器（`Assets/Art/Glyphs/Baked/`）は上記フォントからプログラムで生成したもの。
+
+## ゲーム内で使う生成AI
+
+- AI 必殺技の生成: Anthropic の Claude API（`Server/specials.mjs`、既定モデル `claude-opus-5-5`）。技名から動きと見た目のデータを作る。
+
 ## HUD 表示用フォント
 
 P1/P2 の HUD・擬音は実行時に OS フォント（Noto Sans JP → Yu Gothic UI → Meiryo → Arial の順で存在するもの）を

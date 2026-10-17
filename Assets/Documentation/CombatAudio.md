@@ -52,7 +52,7 @@ UnityではPCM・事前読み込みで取り込む。
 
 通常戦・大会1回戦・準決勝では、`Assets/Audio/battle.mp3`（1曲目）・`battle2.mp3`・`battle3.mp3` から試合ごとに各1/3の確率で抽選する。
 同じ曲が連続することもある。戦闘用の乱数とは独立しており、曲の選択は試合結果に影響しない。
-大会決勝は `Assets/Audio/final.mp3` に切り替える（引き分け再試合も同じ決勝BGM）。
+大会決勝は `Assets/Audio/final2.mp3` に切り替える（引き分け再試合も同じ決勝BGM）。
 カウントダウン中は再生せず、開始ゴング（約2.48秒）が鳴り終わった直後にループ再生を始める。
 一時停止時はゴング待ち／BGMの再生位置を保ち、再開時に続きから再生する。
 観戦速度やヒットストップでBGMの速さ・音程は変わらない。
@@ -72,7 +72,7 @@ BGM音量は `CombatAudioDirector.MusicVolume`（既定0.35）で調整でき、
 |トーナメント表|taunament.mp3|
 |カスタマイズ・VS確認・大会準備|custermize.mp3|
 |通常戦・大会1回戦・準決勝|battle.mp3 / battle2.mp3 / battle3.mp3 からランダム|
-|大会決勝|final.mp3|
+|大会決勝|final2.mp3|
 
 `ScreenAudioDirector` が起動時に作られ、画面切り替えを検知して2D・ループ再生する。
 戦闘シーンへ移った時点で画面BGMを停止し、戦闘BGMは `CombatAudioDirector` が開始ゴング後に再生する。
@@ -87,7 +87,6 @@ SE用音源は画面切り替えで破棄せず、余韻や2打目が途切れ�
 追加SEは Runway Sound Effects で生成し、`Assets/Audio/UI/title_start.wav` と `battle_start.wav` に収録。
 冒頭の無音を除き、PCM16・44.1kHz・モノラル・ピーク0.85で事前読み込みする。
 生成記録は `Tools/ui_audio_sources.json`、音量・長さの記録は `Reports/ui_audio_assets.json`。
-元の `MOJI_Fighter_X_battle_loop.wav` は保持している。
 
 ## 試聴
 
