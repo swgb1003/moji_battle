@@ -32,6 +32,7 @@ namespace MojiBattle
 
         static void LeaveTournament()
         {
+            StageSession.OpenOnCustomize=false;
             FriendMode = false;
             if (FriendRoomSession.Instance != null) FriendRoomSession.Instance.CloseImmediately();
             TournamentRuntimeStore.Clear();
@@ -50,6 +51,7 @@ namespace MojiBattle
         public static void ToAchievements() { LeaveTournament(); SceneManager.LoadScene(AchievementsScene); }
         /// <summary>カスタマイズへ（練習の試合から戻る時は練習の構成画面のまま）。</summary>
         public static void ToCustomize() { bool practice = PracticeMode; LeaveTournament(); PracticeSession.Active = practice; SceneManager.LoadScene(CustomizeScene); }
+        public static void ToStageSelect() { ToCustomize(); StageSession.OpenOnCustomize=true; }
         /// <summary>練習: 自分と相手の構成を選ぶ画面（カスタマイズ）へ。</summary>
         public static void ToPractice() { LeaveTournament(); PracticeSession.Active = true; SceneManager.LoadScene(CustomizeScene); }
         public static void ToChallenges()

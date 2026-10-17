@@ -115,6 +115,24 @@ namespace MojiBattle.EditorTools
             AssetDatabase.Refresh();
             return results;
         }
+        /// <summary>Prebake the split prototype source in each bundled font, retaining the existing calibration.</summary>
+        public static void BakeSplitPrototype()
+        {
+            var balance = CombatBalance.Default;
+            foreach (var src in Fonts)
+            {
+                var font = AssetDatabase.LoadAssetAtPath<Font>(src.path);
+                var hash = Sha256(File.ReadAllBytes(src.path)); var cmap = TrueTypeCmap.Load(src.path);
+                foreach (var entry in SplitKanjiCatalog.Entries)
+                {
+                    var result = BakeOne(font, src, hash, cmap, entry.Character, balance);
+                    if (!result.ok) throw new InvalidOperationException(result.ToString());
+                }
+            }
+            AssetDatabase.SaveAssets(); AssetDatabase.Refresh();
+            Debug.Log("[MojiBattle] Prebaked " + SplitKanjiCatalog.Entries.Length + " split kanji in all four fonts.");
+        }
+
         /// <summary>Prebake the draft pool without recalibrating existing combat stats.</summary>
         public static void BakeDraft()
         {

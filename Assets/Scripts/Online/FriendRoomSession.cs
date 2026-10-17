@@ -114,6 +114,7 @@ namespace MojiBattle
             else if (Connected && Room.stage == "lobby" && scene == GameFlow.BattleScene) GameFlow.ToFriendRoom(false);
         }
         public void ToggleReady() => Run(Client.SetReady(!Room.players[Room.side].ready));
+        public void SelectStage(BattleStageId id) { if(Connected && IsHost && Room.stage=="lobby")Run(Client.SetStage(id)); }
         public void BeginBattle() { if (Connected && IsHost && Room.BothReady) Run(Client.StartBattle()); }
         public void Customize() { if (Connected && Room.stage == "lobby") Run(Client.SetReady(false), () => { Draft = Room.players[Room.side].build.Clone(); GameFlow.ToFriendCustomize(); }); }
         public void SaveDraft(FighterBuildData build) => Draft = build.Clone();

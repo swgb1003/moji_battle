@@ -163,7 +163,7 @@ namespace MojiBattle
                 case AttackStyle.FrontKick:
                 case AttackStyle.RecoverKick:
                     Rt.windupDuration = .12f; Rt.activeDuration = .28f; Rt.recoveryDuration = .38f;
-                    Rt.kickReadyAt = time + B.kickCooldown;
+                    Rt.kickReadyAt = time + (f.Brain.IsPlayer ? 0f : B.kickCooldown);
                     Rt.comboRemaining = 0;
                     break;
                 case AttackStyle.PickupSlash:

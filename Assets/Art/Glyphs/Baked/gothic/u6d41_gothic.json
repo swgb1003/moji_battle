@@ -1,0 +1,485 @@
+﻿{
+    "grapheme": "流",
+    "font": "Gothic",
+    "fontAssetPath": "Assets/Art/Fonts/Gothic/NotoSansJP-Bold.ttf",
+    "fontFamily": "Noto Sans JP",
+    "fontHash": "9e4e354e728cfc32e04bbc0bf686c7285a1cf47f64ce2ac27c1d813ad1dc9d63",
+    "settingsHash": "fb8263744cba8b65",
+    "bakedAt": "2026-10-16T19:02:46",
+    "unityVersion": "6000.0.61f1",
+    "features": {
+        "inkRatio": 0.4277430474758148,
+        "widthRatio": 0.9541666507720947,
+        "heightRatio": 0.9333333373069763,
+        "edgeRatio": 10.841666221618653,
+        "balance": 0.8695082664489746,
+        "centerOfMass": {
+            "x": 139.8066864013672,
+            "y": 126.34394073486328
+        },
+        "colliderRects": [
+            {
+                "serializedVersion": "2",
+                "x": 92.0,
+                "y": 16.0,
+                "width": 8.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 200.0,
+                "y": 18.0,
+                "width": 24.0,
+                "height": 26.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 40.0,
+                "y": 20.0,
+                "width": 12.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 88.0,
+                "y": 20.0,
+                "width": 16.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 188.0,
+                "y": 20.0,
+                "width": 48.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 32.0,
+                "y": 24.0,
+                "width": 8.0,
+                "height": 36.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 84.0,
+                "y": 24.0,
+                "width": 24.0,
+                "height": 24.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 222.0,
+                "y": 24.0,
+                "width": 18.0,
+                "height": 44.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 144.0,
+                "y": 25.0,
+                "width": 27.0,
+                "height": 98.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 28.0,
+                "y": 28.0,
+                "width": 8.0,
+                "height": 24.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 36.0,
+                "y": 28.0,
+                "width": 20.0,
+                "height": 40.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 76.0,
+                "y": 28.0,
+                "width": 36.0,
+                "height": 15.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 184.0,
+                "y": 28.0,
+                "width": 28.0,
+                "height": 98.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 21.0,
+                "y": 32.0,
+                "width": 15.0,
+                "height": 16.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 94.0,
+                "y": 32.0,
+                "width": 22.0,
+                "height": 28.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 240.0,
+                "y": 32.0,
+                "width": 4.0,
+                "height": 31.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 52.0,
+                "y": 36.0,
+                "width": 8.0,
+                "height": 60.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 96.0,
+                "y": 40.0,
+                "width": 24.0,
+                "height": 28.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 48.0,
+                "y": 44.0,
+                "width": 16.0,
+                "height": 44.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 88.0,
+                "y": 44.0,
+                "width": 36.0,
+                "height": 12.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 44.0,
+                "y": 52.0,
+                "width": 24.0,
+                "height": 28.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 104.0,
+                "y": 56.0,
+                "width": 24.0,
+                "height": 70.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 40.0,
+                "y": 60.0,
+                "width": 32.0,
+                "height": 12.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 56.0,
+                "y": 68.0,
+                "width": 20.0,
+                "height": 36.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 100.0,
+                "y": 68.0,
+                "width": 4.0,
+                "height": 12.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 128.0,
+                "y": 68.0,
+                "width": 4.0,
+                "height": 58.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 224.0,
+                "y": 68.0,
+                "width": 4.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 72.0,
+                "y": 76.0,
+                "width": 8.0,
+                "height": 32.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 76.0,
+                "y": 84.0,
+                "width": 11.0,
+                "height": 16.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 60.0,
+                "y": 104.0,
+                "width": 12.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 212.0,
+                "y": 121.0,
+                "width": 12.0,
+                "height": 47.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 224.0,
+                "y": 124.0,
+                "width": 8.0,
+                "height": 32.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 53.0,
+                "y": 128.0,
+                "width": 7.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 212.0,
+                "y": 128.0,
+                "width": 24.0,
+                "height": 24.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 92.0,
+                "y": 130.0,
+                "width": 16.0,
+                "height": 2.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 48.0,
+                "y": 132.0,
+                "width": 16.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 90.0,
+                "y": 132.0,
+                "width": 94.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 209.0,
+                "y": 132.0,
+                "width": 34.0,
+                "height": 12.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 40.0,
+                "y": 136.0,
+                "width": 28.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 88.0,
+                "y": 136.0,
+                "width": 140.0,
+                "height": 24.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 36.0,
+                "y": 140.0,
+                "width": 20.0,
+                "height": 28.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 28.0,
+                "y": 144.0,
+                "width": 36.0,
+                "height": 20.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 64.0,
+                "y": 144.0,
+                "width": 11.0,
+                "height": 12.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 20.0,
+                "y": 148.0,
+                "width": 28.0,
+                "height": 24.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 16.0,
+                "y": 152.0,
+                "width": 52.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 116.0,
+                "y": 160.0,
+                "width": 8.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 124.0,
+                "y": 160.0,
+                "width": 24.0,
+                "height": 24.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 184.0,
+                "y": 160.0,
+                "width": 28.0,
+                "height": 20.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 120.0,
+                "y": 164.0,
+                "width": 32.0,
+                "height": 12.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 180.0,
+                "y": 168.0,
+                "width": 36.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 28.0,
+                "y": 172.0,
+                "width": 8.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 148.0,
+                "y": 172.0,
+                "width": 8.0,
+                "height": 12.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 156.0,
+                "y": 180.0,
+                "width": 4.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 192.0,
+                "y": 180.0,
+                "width": 15.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 88.0,
+                "y": 184.0,
+                "width": 152.0,
+                "height": 28.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 84.0,
+                "y": 188.0,
+                "width": 4.0,
+                "height": 32.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 64.0,
+                "y": 192.0,
+                "width": 12.0,
+                "height": 8.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 56.0,
+                "y": 200.0,
+                "width": 24.0,
+                "height": 4.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 48.0,
+                "y": 204.0,
+                "width": 36.0,
+                "height": 20.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 44.0,
+                "y": 208.0,
+                "width": 16.0,
+                "height": 28.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 36.0,
+                "y": 212.0,
+                "width": 32.0,
+                "height": 20.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 144.0,
+                "y": 212.0,
+                "width": 32.0,
+                "height": 30.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 28.0,
+                "y": 216.0,
+                "width": 48.0,
+                "height": 12.0
+            },
+            {
+                "serializedVersion": "2",
+                "x": 40.0,
+                "y": 232.0,
+                "width": 12.0,
+                "height": 8.0
+            }
+        ],
+        "inkBounds": {
+            "x": 15,
+            "y": 17,
+            "width": 229,
+            "height": 224
+        },
+        "gripPoint": {
+            "x": 29.5,
+            "y": 40.0
+        },
+        "componentCount": 7,
+        "maskSize": 256,
+        "emSizePx": 240.0,
+        "colliderGridUsed": 64
+    }
+}

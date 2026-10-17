@@ -88,6 +88,7 @@ namespace MojiBattle.Tests
             PlayerPrefs.SetInt(ControlsGuide.SeenKey, 1);
             GameFlow.ToCustomize(); yield return Scene(GameFlow.CustomizeScene);
             B("Battle").onClick.Invoke(); yield return Ready();
+            B("ConfirmStage").onClick.Invoke();yield return Ready();
             Assert.AreEqual("COM 同士", T("PlayModeLevel").text);
             B("PlayModeSelf").onClick.Invoke(); B("PlayModeHarder").onClick.Invoke(); yield return null;
             Assert.IsTrue(GameSettings.SelfControl); Assert.AreEqual(ComDifficulty.Strong, PlayControl.Difficulty);

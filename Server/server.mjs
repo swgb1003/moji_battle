@@ -1,11 +1,18 @@
 import http from 'node:http';
 import { randomBytes, randomInt } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
+import { readFileSync } from 'node:fs';
 import { checkName, sanitizeSpecial, createClaudeGenerator, createFakeGenerator } from './specials.mjs';
 
-export const VERSION = 'moji-fighter-x-rooms-v3';
+export const VERSION = 'moji-fighter-x-rooms-v7';
 const inputKinds = ['special', 'cheer'];
 const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+// The release copies the same curated structural table used by Unity.
+const structuralRows = readFileSync(new URL('./split-kanji.csv', import.meta.url), 'utf8')
+  .split(/\r?\n/).filter(line => line && !line.startsWith('#')).map(line => line.split(','));
+export const SPLIT_KANJI = structuralRows.map(row => row[0]);
+const leftRight = new Map(structuralRows.filter(row => row[3] === 'lr').map(row => [row[0], row]));
+const allParts = new Map(structuralRows.map(row => [row[0], row]));
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
 export function allowOrigin(setting, origin) {
   const list = String(setting || '*').split(',').map(x => x.trim()).filter(Boolean);
@@ -22,17 +29,66 @@ export function createRoomServer({ now = Date.now, grace = 20000, maxRooms = 100
   const specialLimits = new Map(), specialCache = new Map(), pending = new Map();
   let specialDay = { count: 0, reset: now() + 86400000 };
   const segmenter = new Intl.Segmenter('ja', { granularity: 'grapheme' });
+  function fusion(value, character) {
+    if (value == null) return null;
+    if (typeof value !== 'object' || Array.isArray(value) || ![1, 2].includes(value.version))
+      fail(400, '合成文字の部品を確認してください。');
+    const sources = value.version === 1 ? leftRight : allParts;
+    if (!sources.has(value.leftSource) || !sources.has(value.rightSource)) fail(400, '合成文字の部品を確認してください。');
+    const result = { version: value.version, name: value.name, leftSource: value.leftSource, rightSource: value.rightSource };
+    if (value.version === 2) {
+      if (!Number.isInteger(value.layout) || value.layout < 0 || value.layout > 2 ||
+          typeof value.leftUseSecond !== 'boolean' || typeof value.rightUseFirst !== 'boolean') fail(400, '合成文字の配置を確認してください。');
+      Object.assign(result, { layout: value.layout, leftUseSecond: value.leftUseSecond, rightUseFirst: value.rightUseFirst });
+    } else if ((value.layout != null && value.layout !== 0) || value.leftUseSecond || value.rightUseFirst) {
+      fail(400, '旧形式の合成文字の部品を確認してください。');
+    }
+    if (typeof result.name !== 'string' || result.name.length > 24 || [...segmenter.segment(result.name)].length > 12 || /[\u0000-\u001f\u007f-\u009f]/u.test(result.name))
+      fail(400, '合成文字の名前は12文字までです。');
+    for (const [key, min, max] of [
+      ['leftWidth', .7, 1.3], ['leftHeight', .7, 1.3], ['rightWidth', .7, 1.3], ['rightHeight', .7, 1.3],
+      ['leftX', -20, 20], ['rightX', -20, 20], ['leftY', -24, 24], ['rightY', -24, 24], ['gap', 0, 24],
+    ]) {
+      if (!Number.isFinite(value[key]) || value[key] < min || value[key] > max) fail(400, '合成文字の配置を確認してください。');
+      result[key] = value[key];
+    }
+    const first = sources.get(result.leftSource)[result.leftUseSecond ? 2 : 1], second = sources.get(result.rightSource)[result.rightUseFirst ? 1 : 2];
+    const layout = ['lr', 'tb', 'enc'][result.layout ?? 0];
+    const identity = structuralRows.find(row => row[3] === layout && row[1] === first && row[2] === second)?.[0] ?? '合';
+    if (identity !== character) fail(400, '合成文字の情報が一致しません。');
+    return result;
+  }
   function build(b) {
     if (!b || typeof b.character !== 'string' || b.character.length > 12 ||
         [...segmenter.segment(b.character.trim())].length !== 1) fail(400, '文字を一つ選んでください。');
-    for (const [key, max] of Object.entries({ fontType: 3, weaponSize: 3, gripType: 3, battleStyle: 3, weaponFlip: 3 }))
+    for (const [key, max] of Object.entries({ fontType: 3, weaponSize: 3, gripType: 4, battleStyle: 3, weaponFlip: 3 }))
       if (!Number.isInteger(b[key]) || b[key] < 0 || b[key] > max) fail(400, '装備の設定を確認してください。');
     for (const value of [b.gripPosition, b.gripPoint?.x, b.gripPoint?.y])
       if (!Number.isFinite(value) || value < 0 || value > 1) fail(400, '持ち手の位置を確認してください。');
+    if (b.gripType === 4 && b.weaponSize > 1) fail(400, '二刀流はS・Mサイズのみです。');
+    const offhandCharacter = typeof b.offhandCharacter === 'string' ? b.offhandCharacter.trim() : '';
+    if (offhandCharacter && (offhandCharacter.length > 12 || [...segmenter.segment(offhandCharacter)].length !== 1))
+      fail(400, '左手の文字を一つ選んでください。');
+    const independentOffhandGrip = Boolean(b.independentOffhandGrip);
+    const offhandGripPosition = independentOffhandGrip ? b.offhandGripPosition : b.gripPosition;
+    const offhandGripPoint = independentOffhandGrip ? b.offhandGripPoint : b.gripPoint;
+    for (const value of [offhandGripPosition, offhandGripPoint?.x, offhandGripPoint?.y])
+      if (!Number.isFinite(value) || value < 0 || value > 1) fail(400, '左手の持ち手の位置を確認してください。');
+    if (b.fusionEnabled && b.fusion == null) fail(400, '合成文字のデータがありません。');
+    if (b.offhandFusionEnabled && (!offhandCharacter || b.offhandFusion == null)) fail(400, '左手の合成文字を確認してください。');
+    const mainFusion = b.fusionEnabled ? fusion(b.fusion, b.character.trim()) : null;
+    const offhandFusion = b.offhandFusionEnabled ? fusion(b.offhandFusion, offhandCharacter) : null;
+    if (b.splitMing && !mainFusion && !SPLIT_KANJI.includes(b.character.trim())) fail(400, 'この漢字は分離に対応していません。');
     return { character: b.character.trim(), fontType: b.fontType, weaponSize: b.weaponSize, gripType: b.gripType,
       battleStyle: b.battleStyle, weaponFlip: b.weaponFlip, gripPosition: b.gripPosition,
       gripPoint: { x: b.gripPoint.x, y: b.gripPoint.y }, customGrip: Boolean(b.customGrip),
-      special: sanitizeSpecial(b.special, b.character.trim()) };
+      offhandCharacter, independentOffhandGrip: true, offhandGripPosition,
+      offhandGripPoint: { x: offhandGripPoint.x, y: offhandGripPoint.y },
+      offhandCustomGrip: independentOffhandGrip ? Boolean(b.offhandCustomGrip) : Boolean(b.customGrip),
+      splitMing: Boolean(b.splitMing), splitSwapped: Boolean(b.splitSwapped),
+      fusion: mainFusion, offhandFusion,
+      fusionEnabled: mainFusion != null, offhandFusionEnabled: offhandFusion != null,
+      special: sanitizeSpecial(b.special, b.character.trim(), mainFusion) };
   }
   function sweep() {
     for (const [code, r] of rooms) {
@@ -44,7 +100,7 @@ export function createRoomServer({ now = Date.now, grace = 20000, maxRooms = 100
   }
   function view(r, side, credential = false) {
     return { code: r.code, side, token: credential ? r.players[side].token : '', revision: r.revision,
-      stage: r.stage, matchId: r.matchId, seed: r.seed, frame: r.frame, inputs: r.inputs,
+      stage: r.stage, arena: r.arena ?? 0, matchId: r.matchId, seed: r.seed, frame: r.frame, inputs: r.inputs,
       players: r.players.map(p => ({ joined: !!p, ready: !!p?.ready, build: p?.build ?? null })) };
   }
   const server = http.createServer(async (req, res) => {
@@ -68,7 +124,7 @@ export function createRoomServer({ now = Date.now, grace = 20000, maxRooms = 100
       if (limits.size > 4096) for (const [k, v] of limits) if (t > v.reset) limits.delete(k);
       sweep();
       const path = new URL(req.url, 'http://local').pathname;
-      if (path === '/health' && req.method === 'GET') { res.end(JSON.stringify({ ok: true, version: VERSION, specials: Boolean(generateSpecial) })); return; }
+      if (path === '/health' && req.method === 'GET') { res.end(JSON.stringify({ ok: true, version: VERSION, specials: Boolean(generateSpecial), capabilities: { dualGrip: true, splitMing: true, stages: true, fusion: true, fusionVersion: 2, fusionSpecials: true, fusionLayouts: ['lr', 'tb', 'enc'], splitCharacters: SPLIT_KANJI } })); return; }
       let body = {};
       if (req.method === 'POST') {
         let size = 0, chunks = [];
@@ -79,10 +135,11 @@ export function createRoomServer({ now = Date.now, grace = 20000, maxRooms = 100
       let result;
       if (path === '/specials' && req.method === 'POST') {
         if (body.version !== VERSION) fail(409, 'ゲームのバージョンをそろえてください。');
-        const name = checkName(body.name, body.character), character = body.character.trim();
+        if (body.fusionEnabled && body.fusion == null) fail(400, '合成文字のデータがありません。');
+        const recipe = body.fusionEnabled ? fusion(body.fusion, typeof body.character === 'string' ? body.character.trim() : '') : null;
+        const name = checkName(body.name, body.character, recipe != null), character = body.character.trim();
         if (!generateSpecial) fail(503, 'AI の技づくりは準備中です。');
-        const key = `${character}
-${name}`;
+        const key = JSON.stringify([character, recipe, name]);
         let made = specialCache.get(key);
         if (!made) {
           const quota = specialLimits.get(ip) ?? { count: 0, reset: t + 3600000 };
@@ -94,11 +151,19 @@ ${name}`;
           if (specialLimits.size > 4096) for (const [k, v] of specialLimits) if (t > v.reset) specialLimits.delete(k);
           // Same name requested twice at once: share one AI call.
           let job = pending.get(key);
-          if (!job) { job = generateSpecial({ character, name }); pending.set(key, job); }
+          if (!job) {
+            let weaponDescription;
+            if (recipe) {
+              const first = allParts.get(recipe.leftSource)[recipe.leftUseSecond ? 2 : 1];
+              const second = allParts.get(recipe.rightSource)[recipe.rightUseFirst ? 1 : 2];
+              weaponDescription = `合成文字「${recipe.name || first + '＋' + second}」。素材: ${recipe.leftSource}の${first} ＋ ${recipe.rightSource}の${second}。配置: ${['左右', '上下', '囲み'][recipe.layout ?? 0]}。通常の文字コードを持たない創作字。`;
+            }
+            job = generateSpecial({ character, name, weaponDescription }); pending.set(key, job);
+          }
           let raw;
           try { raw = await job; } finally { pending.delete(key); }
           if (!raw || raw.ok === false) fail(422, (typeof raw?.reason === 'string' && raw.reason.trim().slice(0, 60)) || 'この技名では作れませんでした。');
-          made = sanitizeSpecial({ ...raw, name }, character);
+          made = sanitizeSpecial({ ...raw, name, ...(recipe ? { fusionEnabled: true, fusion: recipe } : {}) }, character, recipe);
           if (!made) fail(502, 'AI で技を作れませんでした。');
           specialCache.set(key, made);
           if (specialCache.size > 2000) specialCache.delete(specialCache.keys().next().value);
@@ -109,10 +174,10 @@ ${name}`;
         if (rooms.size >= maxRooms) fail(503, '現在、部屋がいっぱいです。');
         let code;
         do { code = Array.from({ length: 6 }, () => alphabet[randomInt(alphabet.length)]).join(''); } while (rooms.has(code));
-        const r = { code, players: [player(body.build), null], revision: 1, stage: 'lobby', seed: 0, matchId: 0,
+        const r = { code, players: [player(body.build), null], revision: 1, stage: 'lobby', arena: 0, seed: 0, matchId: 0,
           frame: null, inputs: [], created: now() }; rooms.set(code, r); result = view(r, 0, true);
       } else {
-        const match = /^\/rooms\/([A-Z2-9]{6})(?:\/(join|build|ready|start|frame|input|lobby|leave))?$/.exec(path);
+        const match = /^\/rooms\/([A-Z2-9]{6})(?:\/(join|build|ready|arena|start|frame|input|lobby|leave))?$/.exec(path);
         if (!match) fail(404, '部屋が見つかりません。');
         const r = rooms.get(match[1]); if (!r) fail(404, '部屋が見つかりません。コードを確認してください。');
         const action = match[2];
@@ -130,6 +195,16 @@ ${name}`;
           else if (action === 'build') {
             if (r.stage !== 'lobby') fail(409, '対戦中は装備を変更できません。');
             p.build = build(body.build); p.ready = false; r.revision++; result = view(r, side);
+          } else if (action === 'arena') {
+            if (side !== 0) fail(403, 'ステージはホストが選びます。');
+            if (r.stage !== 'lobby') fail(409, '対戦中はステージを変更できません。');
+            if (!Number.isInteger(body.arena) || body.arena < 0 || body.arena > 5) fail(400, 'ステージを選び直してください。');
+            if (r.arena !== body.arena) {
+              r.arena = body.arena;
+              for (const item of r.players) if (item) item.ready = false;
+              r.revision++;
+            }
+            result = view(r, side);
           } else if (action === 'ready') {
             if (r.stage !== 'lobby') fail(409, '対戦中です。');
             p.ready = Boolean(body.ready); r.revision++; result = view(r, side);

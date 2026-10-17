@@ -24,13 +24,32 @@ namespace MojiBattle
     {
         static int sceneCounter;
 
+        public static bool MainGlyph(FighterLoadout loadout, CombatBalance balance, GlyphCalibration calibration,
+            out GlyphDefinitionRuntime glyph, out string reason)
+        {
+            if (loadout.build != null && loadout.build.IsSplitMing)
+                return SplitMingGlyphs.TryGet(loadout.build, balance, calibration, false, out glyph, out reason);
+            if (loadout.build != null && loadout.build.fusionEnabled)
+            {
+                bool ok = FusionGlyphs.TryGet(loadout.build.fusion, loadout.font, balance, calibration, -1, out glyph, out reason);
+                if (ok) glyph = GlyphFlip.Apply(glyph, loadout.build.weaponFlip);
+                return ok;
+            }
+            if (!GlyphCatalog.TryGet(loadout.grapheme, loadout.font, balance, calibration, out glyph, out reason)) return false;
+            glyph = GlyphFlip.Apply(glyph, loadout.build?.weaponFlip ?? WeaponFlip.None);
+            return true;
+        }
+
         /// <summary>二刀流の副武器の字形（同じ字体・反転）。使えない文字なら主武器と同じ字形。</summary>
         public static GlyphDefinitionRuntime OffhandGlyph(FighterLoadout loadout, GlyphDefinitionRuntime main, CombatBalance balance, GlyphCalibration calibration)
         {
             var build = loadout.build;
             if (build == null || !build.IsDualWield) return null;
+            if (build.IsSplitMing && SplitMingGlyphs.TryGet(build, balance, calibration, true, out var component, out _)) return component;
             string ch = build.OffhandGlyph;
-            if (ch == build.character) return main;
+            if (build.OffhandFusion != null && FusionGlyphs.TryGet(build.OffhandFusion, loadout.font, balance, calibration, -1, out var fused, out _))
+                return GlyphFlip.Apply(fused, build.weaponFlip);
+            if (ch == build.character && !build.HasFusion) return main;
             if (!GlyphCatalog.TryGet(ch, loadout.font, balance, calibration, out var g, out _)) return main;
             return GlyphFlip.Apply(g, build.weaponFlip);
         }
@@ -39,12 +58,10 @@ namespace MojiBattle
             bool presentation, float countdown, out string error, bool tournamentFinal = false)
         {
             error = null;
-            if (!GlyphCatalog.TryGet(config.left.grapheme, config.left.font, balance, calibration, out var gl, out var reasonL))
+            if (!MainGlyph(config.left, balance, calibration, out var gl, out var reasonL))
             { error = "左: " + reasonL; return null; }
-            if (!GlyphCatalog.TryGet(config.right.grapheme, config.right.font, balance, calibration, out var gr, out var reasonR))
+            if (!MainGlyph(config.right, balance, calibration, out var gr, out var reasonR))
             { error = "右: " + reasonR; return null; }
-            gl = GlyphFlip.Apply(gl, config.left.build?.weaponFlip ?? WeaponFlip.None);
-            gr = GlyphFlip.Apply(gr, config.right.build?.weaponFlip ?? WeaponFlip.None);
             var ol = OffhandGlyph(config.left, gl, balance, calibration);
             var or = OffhandGlyph(config.right, gr, balance, calibration);
 
@@ -68,7 +85,7 @@ namespace MojiBattle
             ctx.Hits = new HitResolver(ctx);
             ctx.Env = new EnvironmentImpactResolver(ctx);
 
-            ArenaBuilder.Build(root.transform, balance);
+            var arena = ArenaBuilder.Build(root.transform, balance);
             var rng = new MatchRandom(config.seed);
             var left = FighterFactory.Create(0, config.left, gl, ctx, rng.Fork(1), root.transform, ol);
             var right = FighterFactory.Create(1, config.right, gr, ctx, rng.Fork(2), root.transform, or);
@@ -85,6 +102,8 @@ namespace MojiBattle
 
             var director = root.AddComponent<MatchDirector>();
             director.Init(config, ctx, left, right, countdown, scene.GetPhysicsScene2D());
+            ctx.Stage = root.AddComponent<ArenaStage>();
+            ctx.Stage.Bind(director, arena, presentation);
             SceneManager.SetActiveScene(prevActive);
 
             var instance = new BattleInstance { Scene = scene, Root = root, Director = director, Context = ctx, Left = left, Right = right };

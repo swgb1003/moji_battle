@@ -10,7 +10,7 @@ namespace MojiBattle
     [Serializable] public sealed class RoomState
     {
         public string code, token, stage;
-        public int side, revision, seed, matchId;
+        public int side, revision, seed, matchId, arena;
         public RoomPlayer[] players;
         public FriendBattleFrame frame;
         /// <summary>ゲストの関与の操作（ホストだけが読んで試合に反映する）。</summary>
@@ -22,7 +22,7 @@ namespace MojiBattle
         public string version = FriendRoomClient.Version;
         public FighterBuildData build;
         public bool ready;
-        public int matchId;
+        public int matchId, arena;
         public FriendBattleFrame frame;
         public FriendInputFrame input;
     }
@@ -32,7 +32,7 @@ namespace MojiBattle
     /// <summary>Each client holds its own bearer credential; room state never exposes another player's token.</summary>
     public sealed class FriendRoomClient
     {
-        public const string Version = "moji-fighter-x-rooms-v3";
+        public const string Version = "moji-fighter-x-rooms-v7";
         public string ServerUrl { get; private set; }
         /// <summary>
         /// 予備の経路: ゲームのページと同じドメインの /rooms-api（Vercel がサーバーへ中継する）。
@@ -102,6 +102,7 @@ namespace MojiBattle
         public IEnumerator SetReady(bool ready) => Call("/rooms/" + Code + "/ready", new RoomRequest { ready = ready });
         public IEnumerator SetBuild(FighterBuildData build) => Call("/rooms/" + Code + "/build", new RoomRequest { build = build });
         public IEnumerator StartBattle() => Call("/rooms/" + Code + "/start", new RoomRequest());
+        public IEnumerator SetStage(BattleStageId id) => Call("/rooms/"+Code+"/arena",new RoomRequest {arena=(int)id});
         public IEnumerator ReturnToLobby() => Call("/rooms/" + Code + "/lobby", new RoomRequest());
         public IEnumerator Leave() => Call("/rooms/" + Code + "/leave", new RoomRequest());
         public IEnumerator SendFrame(int matchId, FriendBattleFrame frame) => Call("/rooms/" + Code + "/frame", new RoomRequest { matchId = matchId, frame = frame });

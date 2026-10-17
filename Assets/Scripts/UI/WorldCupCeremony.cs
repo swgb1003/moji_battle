@@ -140,7 +140,7 @@ namespace MojiBattle
         public void Build(RectTransform root,WorldCupSession s,Action finished)
         {
             done=finished;backdrop=root.Find("design_ceremony_backdrop").GetComponent<RawImage>();
-            WorldCupDesign.Header(root,"WORLD CUP / CEREMONY",Skip);headerStep=root.Find("Step").GetComponent<Text>();
+            WorldCupDesign.Header(root,"WORLD MOJI CUP / CEREMONY",Skip);headerStep=root.Find("Step").GetComponent<Text>();
             var titleLeft=WorldCupDesign.Art(root,"design_laurel",272,91,76,118,false);titleLeft.uvRect=new Rect(0,0,.4f,1);
             titleLeftArt=titleLeft;var titleRight=WorldCupDesign.Art(root,"design_laurel",1324,91,76,118,false);titleRight.uvRect=new Rect(.6f,0,.4f,1);titleRightArt=titleRight;
             title=WorldCupDesign.Title(root,"ワールド文字カップ <color=#AE2319>表彰式</color>",101,72,WorldCupDesign.Navy);
@@ -188,7 +188,7 @@ namespace MojiBattle
             {
                 celebrating=phase;podium.SetActive(!phase);stage.Find("ChampionSteps").gameObject.SetActive(phase);
                 foreach(Transform child in stage)if(child.name.StartsWith("PodiumRank") || child.name.StartsWith("PodiumPlace"))child.gameObject.SetActive(!phase);
-                championPlate.alpha=phase?1:0;skip.image.gameObject.SetActive(phase);headerStep.text=phase?"WORLD CUP / CHAMPION":"WORLD CUP / CEREMONY";
+                championPlate.alpha=phase?1:0;skip.image.gameObject.SetActive(phase);headerStep.text=phase?"WORLD MOJI CUP / CHAMPION":"WORLD MOJI CUP / CEREMONY";
                 backdrop.texture=Resources.Load<Texture2D>("UI/WorldCup/"+(phase?"design_champion_backdrop":"design_ceremony_backdrop"));
                 stage.anchoredPosition=new Vector2(phase?421:336,phase?-270:-120);
                 stage.localScale=Vector3.one*(phase?.83f:1);next.label.text=phase?"記念撮影へ":"演出をスキップ →";
@@ -246,7 +246,7 @@ namespace MojiBattle
             WorldCupDesign.Art(frame,"design_paper",14,14,width-28,height-28,false);WorldCupDesign.Frame(frame,0,0,width,height,WorldCupDesign.Ink,3);
             PreviewPodium(frame,s,20,23,width-40,height-89);
             foreach(float cx in new[]{40f,width-65})foreach(float cy in new[]{35f,height-110})
-            {RetroUi.Block(frame,"CameraCornerHorizontal",cx,cy,25,3,WorldCupDesign.Ink);RetroUi.Block(frame,"CameraCornerVertical",cx+(cx>width/2?22:0),cy,3,25,WorldCupDesign.Ink);}
+            {RetroUi.Block(frame,"CameraCornerHorizontal",cx,cy+(cy>height/2?22:0),25,3,WorldCupDesign.Ink);RetroUi.Block(frame,"CameraCornerVertical",cx+(cx>width/2?22:0),cy,3,25,WorldCupDesign.Ink);}
             WorldCupDesign.Text(frame,"PhotoPlacements",$"ワールド文字カップ　優勝 {s.Entrants[s.ChampionId].Build.character}　準優勝 {s.Entrants[s.RunnerUpId].Build.character}　3位 {s.Entrants[s.ThirdId].Build.character}",20,height-65,width-40,54,29,WorldCupDesign.Navy,TextAnchor.MiddleCenter,true);
             return frame;
         }

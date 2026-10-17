@@ -11,6 +11,7 @@ namespace MojiBattle
         public static float ArenaY => GameFlow.WorldCupMode || GameFlow.RunMode || GameFlow.ChallengeMode || GameFlow.DraftMode ? 245 : 185;
         public static float ArenaHeight => GameFlow.WorldCupMode || GameFlow.RunMode || GameFlow.ChallengeMode || GameFlow.DraftMode ? 726 : 786;
         public static float GroundViewport => 38f / ArenaHeight;
+        public bool CompactStageHud => !GameFlow.PracticeMode;
         MatchDirector director;
         CameraRig rig;
         RectTransform root, arena;
@@ -18,6 +19,7 @@ namespace MojiBattle
         RenderTexture battleTexture;
         Camera displayCamera;
         Image groundLine, groundWash;
+        Text stageName,stageNotice;
         readonly Text[] names = new Text[2], hp = new Text[2];
         readonly RectTransform[] fill = new RectTransform[2], trail = new RectTransform[2];
         readonly float[] trailValue = { 1, 1 };
@@ -73,13 +75,17 @@ namespace MojiBattle
             arena = RetroUi.Group(root, "BattleArena", ArenaX, ArenaY, ArenaWidth, ArenaHeight);
             arena.gameObject.AddComponent<RectMask2D>();
             var paper = RetroUi.Group(arena, "ArenaPaper", 0, 0, ArenaWidth, ArenaHeight).gameObject.AddComponent<RawImage>();
-            paper.texture = Resources.Load<Texture2D>("UI/BattlePaper"); paper.raycastTarget = false;
+            paper.texture = StageCatalog.Get(d.Config.stage).Texture; paper.raycastTarget = false;
             groundWash = RetroUi.Block(arena, "GroundWash", 0, ArenaHeight - 38, ArenaWidth, 38, new Color(.85f, .81f, .70f, .23f));
             groundLine = RetroUi.Block(arena, "GroundLine", 0, ArenaHeight - 40, ArenaWidth, 5, RetroUi.Ink);
             battleImage = RetroUi.Group(arena, "BattleView", 0, 0, ArenaWidth, ArenaHeight).gameObject.AddComponent<RawImage>();
             battleImage.raycastTarget = false;
             // Only hide the stage's renderers. Colliders and simulation remain unchanged.
             foreach (var sr in transform.Find("Arena").GetComponentsInChildren<SpriteRenderer>()) sr.enabled = false;
+            if(d.Config.stage!=BattleStageId.Dojo){groundLine.enabled=false;groundWash.enabled=false;}
+            RetroUi.Block(arena,"StageNamePaper",580,8,676,48,new Color(.96f,.93f,.86f,.92f));
+            stageName=StageUi.Text(arena,"BattleStageName",StageCatalog.Get(d.Config.stage).Name,580,8,676,48,31,null,TextAnchor.MiddleCenter);
+            stageNotice=StageUi.Text(arena,"StageNotice","",480,65,876,46,25,RetroUi.Red,TextAnchor.MiddleCenter);
             ResizeTarget();
             foreach (var f in d.Fighters) f.View.PrintedCallouts = true;
             BuildTechniqueTag(); BuildAnnouncement(); BuildControls(); BuildDetails();
@@ -97,7 +103,7 @@ namespace MojiBattle
         }
         public void SetWorldCupInfo(WorldCupSession s,WorldCupMatch m)
         {
-            step.text="WORLD CUP / BATTLE";step.rectTransform.anchoredPosition=new Vector2(650,-31);step.rectTransform.sizeDelta=new Vector2(600,42);
+            step.text="WORLD MOJI CUP / BATTLE";step.rectTransform.anchoredPosition=new Vector2(650,-31);step.rectTransform.sizeDelta=new Vector2(600,42);
             RetroUi.Label(root,"WorldCupBattleRound",m.Name,520,89,880,54,31,null,TextAnchor.MiddleCenter);
             names[0].text=(m.LeftId==0?"YOU / ":"COM / ")+s.Entrants[m.LeftId].Build.character;
             names[1].text=(m.RightId==0?"YOU / ":"COM / ")+s.Entrants[m.RightId].Build.character;
@@ -111,8 +117,9 @@ namespace MojiBattle
             RetroUi.Block(root, "PlayerTile" + side, tileX, 93+offset, 92, 83, team);
             var glyph = RetroUi.Label(root, "PlayerGlyph" + side, f.Loadout.grapheme, tileX, 92+offset, 92, 84, 66, RetroUi.Paper, TextAnchor.MiddleCenter);
             glyph.font = GlyphFontLibrary.Default.Get(f.Loadout.font).font;
+            FusionUi.Glyph(glyph, f.Loadout.build);
             string style = f.Mods.customized ? CustomizeLabels.Style(f.Mods.style) : "オート";
-            names[side] = RetroUi.Label(root, "PlayerName" + side, $"PLAYER 0{side + 1}  {f.Loadout.grapheme} / {style}", textX, 94+offset, 474, 32, 22, null,
+            names[side] = RetroUi.Label(root, "PlayerName" + side, $"PLAYER 0{side + 1}  {FusionUi.Name(f.Loadout)} / {style}", textX, 94+offset, 474, 32, 22, null,
                 side == 0 ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight);
             float barX = side == 0 ? 201 : 1294;
             RetroUi.Frame(root, barX - 2, 133+offset, 429, 29, RetroUi.Ink, 2);
@@ -156,6 +163,16 @@ namespace MojiBattle
             }
             detailButton = RetroUi.Button(root, "BattleDetails", "詳細", 1427, 983, 151, 46, 24, ToggleDetails, shadow: false);
             again = RetroUi.Button(root, "BattleAgain", "もう一度 →", 1604, 983, 240, 40, 24, () => FindFirstObjectByType<BattleBootstrap>()?.RematchSameBuild(), RetroUi.Red);
+            if(CompactStageHud)
+            {
+                status.rectTransform.anchoredPosition=new Vector2(110,-982);status.rectTransform.sizeDelta=new Vector2(165,48);status.fontSize=24;
+                dot.rectTransform.anchoredPosition=new Vector2(73,-997);dot.rectTransform.sizeDelta=new Vector2(20,20);
+                void Position(UguiKit.ChoiceButton b,float x,float w){b.image.rectTransform.anchoredPosition=new Vector2(x,-983);b.image.rectTransform.sizeDelta=new Vector2(w,46);b.image.GetComponent<RetroButtonMotion>()?.Rebase();}
+                Position(pause,280,180);
+                for(int i=0;i<speeds.Length;i++)Position(speeds[i],480+i*85,85);
+                Position(detailButton,840,130);Position(again,990,185);again.label.fontSize=22;
+                root.Find("BattleAgainShadow")?.gameObject.SetActive(false);
+            }
         }
 
         void BuildDetails()
@@ -169,7 +186,7 @@ namespace MojiBattle
             for (int i = 0; i < 2; i++)
             {
                 var f = director.Fighters[i]; var s = f.Stats; float x = 32 + i * 390;
-                RetroUi.Label(panel, "DetailPlayer" + i, $"PLAYER 0{i + 1}「{f.Loadout.grapheme}」", x, 83, 360, 44, 28, RetroUi.Team(i));
+                RetroUi.Label(panel, "DetailPlayer" + i, $"PLAYER 0{i + 1}「{FusionUi.Name(f.Loadout)}」", x, 83, 360, 44, 28, RetroUi.Team(i));
                 string build = f.Mods.customized ? $"{f.Mods.size} / {CustomizeLabels.Grip(f.Mods.grip)}\n{f.Mods.gripLabel} / {CustomizeLabels.Style(f.Mods.style)}" : "既定の構え";
                 RetroUi.Label(panel, "DetailStats" + i, $"{GlyphCatalog.FontDisplayName(f.Loadout.font)}\n攻撃 {s.attack}    防御 {s.defense}\n速度 {s.speed}    耐久 {s.durability}\n重量 {new string('★', s.WeightStars)}\n{build}", x, 133, 365, 228, 24);
             }
@@ -242,14 +259,14 @@ namespace MojiBattle
         public void SetTournamentInfo(TournamentSession session, TournamentMatch match)
         {
             isTournament = true; step.text = TournamentSession.RoundName(match.Round) + $"  /  {session.Wins}/3勝";
-            names[0].text = $"YOU  {director.Config.left.grapheme}";
-            names[1].text = session.Entrants[match.RightId].Name + $"  {director.Config.right.grapheme}";
+            names[0].text = $"YOU  {FusionUi.Name(director.Config.left)}";
+            names[1].text = session.Entrants[match.RightId].Name + $"  {FusionUi.Name(director.Config.right)}";
             again.button.interactable = false; again.label.text = "大会対戦中";
         }
         public void SetFriendInfo(int side)
         {
             step.text = "FRIEND BATTLE";
-            for (int i = 0; i < 2; i++) names[i].text = (i == side ? "YOU " : "FRIEND ") + director.Fighters[i].Loadout.grapheme;
+            for (int i = 0; i < 2; i++) names[i].text = (i == side ? "YOU " : "FRIEND ") + FusionUi.Name(director.Fighters[i].Loadout);
             pause.button.interactable = false; pause.label.text = "オンライン対戦";
             foreach (var speed in speeds) speed.button.interactable = false;
             again.button.interactable = false; again.label.text = "ルーム対戦中";
@@ -272,7 +289,7 @@ namespace MojiBattle
             var label=RetroUi.Label(banner,"ChallengeBattleCondition",$"{d.Id+1:00}　{d.Name} ｜ 条件：{d.Condition}",16,0,728,50,23,null,TextAnchor.MiddleCenter);
             label.resizeTextForBestFit=true;label.resizeTextMinSize=18;label.resizeTextMaxSize=23;
             label.horizontalOverflow=HorizontalWrapMode.Overflow;label.verticalOverflow=VerticalWrapMode.Truncate;
-            for(int i=0;i<2;i++)names[i].text=(i==0?"あなた":"COM")+" / "+director.Fighters[i].Loadout.grapheme+" / "+CustomizeLabels.StyleShort(director.Fighters[i].Mods.style);
+            for(int i=0;i<2;i++)names[i].text=(i==0?"あなた":"COM")+" / "+FusionUi.Name(director.Fighters[i].Loadout)+" / "+CustomizeLabels.StyleShort(director.Fighters[i].Mods.style);
             again.button.gameObject.SetActive(false);root.Find("BattleAgainShadow").gameObject.SetActive(false);
         }
         public void SetDraftInfo()
@@ -280,7 +297,7 @@ namespace MojiBattle
             step.text="DRAFT / BATTLE";
             step.rectTransform.anchoredPosition=new Vector2(720,-31);step.rectTransform.sizeDelta=new Vector2(480,42);
             DraftUi.Score(root,580,91,760);
-            for(int i=0;i<2;i++)names[i].text=(i==0?"あなた":"COM")+" / "+director.Fighters[i].Loadout.grapheme+" / "+CustomizeLabels.StyleShort(director.Fighters[i].Mods.style);
+            for(int i=0;i<2;i++)names[i].text=(i==0?"あなた":"COM")+" / "+FusionUi.Name(director.Fighters[i].Loadout)+" / "+CustomizeLabels.StyleShort(director.Fighters[i].Mods.style);
             again.button.gameObject.SetActive(false);root.Find("BattleAgainShadow").gameObject.SetActive(false);
         }
         public void GoBack() => Back();
@@ -297,7 +314,7 @@ namespace MojiBattle
             foreach (var s in speeds) s.image.gameObject.SetActive(false);
             var auto = root.Find("Automatic")?.GetComponent<Text>();
             if (auto != null) auto.text = practice ? "練習" : "操作";
-            guideButton = RetroUi.Button(root, "BattleControlsGuide", "操作説明  H", 958, 983, 408, 46, 24, ControlsGuide.Open, shadow: false);
+            guideButton = RetroUi.Button(root, "BattleControlsGuide", "操作説明  H", CompactStageHud?480:958, 983, CompactStageHud?340:408, 46, 24, ControlsGuide.Open, shadow: false);
             if (!practice) return;
             detailButton.image.gameObject.SetActive(false);
             again.image.gameObject.SetActive(false);
@@ -372,6 +389,7 @@ namespace MojiBattle
                     -Mathf.Clamp((1 - p.y) * ArenaHeight - 85, 30, ArenaHeight - 145));
             }
             UpdateAnnouncement();
+            if(stageNotice!=null)stageNotice.text=director.Fighting?director.Context.Stage?.Notice??"":"";
         }
 
         void UpdateAnnouncement()
@@ -389,7 +407,7 @@ namespace MojiBattle
             if (director.Ended)
             {
                 var r = director.Result;
-                title = r.winner < 0 ? "DRAW" : $"「{director.Fighters[r.winner].Loadout.grapheme}」の勝ち";
+                title = r.winner < 0 ? "DRAW" : $"「{FusionUi.Name(director.Fighters[r.winner].Loadout)}」の勝ち";
                 center.color = r.winner < 0 ? RetroUi.Ink : RetroUi.Team(r.winner);
                 string reason = r.finishReason.StartsWith("TIME") ? "TIME UP" : r.finishReason.StartsWith("SUDDEN") ? "延長戦" : "K.O.";
                 caption = $"{reason}   /   {r.elapsedSeconds:F1}秒\n残HP {r.hpRemaining[0]:F0} / {r.hpRemaining[1]:F0}   与ダメ {r.metrics[0].damageDealt:F0} / {r.metrics[1].damageDealt:F0}";

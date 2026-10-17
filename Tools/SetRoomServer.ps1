@@ -15,7 +15,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $taskRoot 'ProjectSettings\ProjectVe
 }
 $taskUrl = $taskEndpoint.AbsoluteUri.TrimEnd('/')
 $taskHealth = Invoke-RestMethod -Uri ($taskUrl + '/health') -TimeoutSec 90
-if ($taskHealth.ok -ne $true -or $taskHealth.version -ne 'moji-fighter-x-rooms-v3') {
+if ($taskHealth.ok -ne $true -or $taskHealth.version -ne 'moji-fighter-x-rooms-v7') {
     throw 'The URL is not a compatible MOJI Fighter X room server. Configuration was not changed.'
 }
 $taskDirectory = Join-Path $taskRoot 'Assets\Resources\Online'

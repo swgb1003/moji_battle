@@ -33,7 +33,7 @@ namespace MojiBattle
 
         /// <summary>武器の一文字の入力（カスタマイズ画面）。</summary>
         public static WebCharacterInput Attach(InputField input, CustomizeScreen owner) =>
-            Attach(input, () => owner.TextInputVisible, () => owner.Customizer.Side, "武器の文字", "文字", 0, .8f);
+            Attach(input, () => owner.TextInputVisible && !owner.Customizer.Current.HasFusion, () => owner.Customizer.Side, "武器の文字", "文字", 0, .8f);
 
         /// <param name="isVisible">false の間は隠す（重なる画面を開いている時など）。</param>
         /// <param name="key">変わったら入力中の値を捨てて field の値に合わせる（左右の陣営の切り替えなど）。</param>

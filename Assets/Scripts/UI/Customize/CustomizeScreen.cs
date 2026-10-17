@@ -43,7 +43,7 @@ namespace MojiBattle
         public bool SpecialVisible => specialPanel != null && specialPanel.gameObject.activeSelf;
         public SpecialMovePanel SpecialPanel => specialPanel;
         /// <summary>武器の文字の入力欄を出してよいか（重なる画面を開いている間は隠す）。</summary>
-        public bool TextInputVisible => (!run || (customizer.Side==0 && string.IsNullOrEmpty(RunRuntimeStore.Current.lockedGlyph))) && !draft && !VsVisible && !SpecialVisible && (!challenge || ChallengeRuntimeStore.Current.FixedCharacter == null);
+        public bool TextInputVisible => !FusionScreen.BlocksInput && (!run || (customizer.Side==0 && string.IsNullOrEmpty(RunRuntimeStore.Current.lockedGlyph))) && !draft && !VsVisible && !StageVisible && !SpecialVisible && !SplitCatalogVisible && (!challenge || ChallengeRuntimeStore.Current.FixedCharacter == null);
 
         void Start()
         {
@@ -74,7 +74,7 @@ namespace MojiBattle
         {
             menuRoot = RetroUi.Screen("CustomizeCanvas", out canvas);
             var root = menuRoot;
-            RetroUi.Header(root, worldCup ? "WORLD CUP / CUSTOMIZE" : run ? "RUN / CUSTOMIZE" : draft ? "DRAFT / CUSTOMIZE" : challenge ? "04 / CHALLENGE / PREPARE" : practice ? "PRACTICE / CUSTOMIZE" : "02 / CUSTOMIZE",
+            RetroUi.Header(root, worldCup ? "WORLD MOJI CUP / CUSTOMIZE" : run ? "RUN / CUSTOMIZE" : draft ? "DRAFT / CUSTOMIZE" : challenge ? "04 / CHALLENGE / PREPARE" : practice ? "PRACTICE / CUSTOMIZE" : "02 / CUSTOMIZE",
                 worldCup ? (System.Action)GameFlow.ToWorldCupGuide : tournament ? (System.Action)GameFlow.ToTournamentSelect : run ? (System.Action)BackRun : draft ? (System.Action)GameFlow.ToDraftPicks : challenge ? (System.Action)GameFlow.BackToChallengeDetail : friend ? (System.Action)(() => FriendRoomSession.Instance.SaveAndReturn()) : GameFlow.ToModeSelect);
             if(worldCup)
             {
@@ -124,7 +124,8 @@ namespace MojiBattle
             previewViewport.gameObject.AddComponent<GripDragHandle>().Bind(this);
             RetroUi.Label(left, "PickHint", "文字の上でドラッグ → 離して持ち手を決定", 24, 470, 668, 38, 22, null, TextAnchor.MiddleCenter);
             gripValue = RetroUi.Label(left, "GripValue", "", 24, 510, 440,  h: 36, size: 20, color: RetroUi.Muted);
-            RetroUi.Button(left, "GripReset", "中央に戻す", 480, 510, 202, 36, 20, () => customizer.ResetGrip(), shadow: false);
+            RetroUi.Button(left, "GripReset", "中央に戻す", 480, 510, 202, 36, 20, ResetSelectedGrip, shadow: false);
+            BuildDualGripControls(left);
             // 能力値: 上段は武器（重さ・射程・扱いやすさ・攻撃）、下段は選手（防御・速度・耐久・重量）
             string[] statNames = { "重さ", "射程", "扱いやすさ", "攻撃", "防御", "速度", "耐久", "重量" };
             for (int s = 0; s < StatCount; s++)
@@ -167,7 +168,7 @@ namespace MojiBattle
 #if UNITY_WEBGL && !UNITY_EDITOR
             if (!draft && (!run || string.IsNullOrEmpty(RunRuntimeStore.Current.lockedGlyph)) && (!challenge || ChallengeRuntimeStore.Current.FixedCharacter == null)) WebCharacterInput.Attach(charInput, this);
 #endif
-            RetroUi.Label(settings, "CharHint", "好きな一文字を入力\n漢字・かな・英数字・記号", 476, 112, 500, 64, 24, RetroUi.Muted);
+            RetroUi.Label(settings, "CharHint", $"好きな一文字を入力\n分離 {SplitKanjiCatalog.Entries.Length}字：左右・上下・囲み", 476, 112, 500, 64, 24, RetroUi.Muted);
             if (draft)
             {
                 charInput.interactable = false;
@@ -183,11 +184,13 @@ namespace MojiBattle
             offhandInput.characterLimit = 1;
             offhandInput.onValueChanged.AddListener(OnOffhandEntered);
 #if UNITY_WEBGL && !UNITY_EDITOR
-            WebCharacterInput.Attach(offhandInput, () => TextInputVisible && customizer.Current.IsDualWield && customizer.Editable,
+            WebCharacterInput.Attach(offhandInput, () => TextInputVisible && customizer.Current.IsDualWield && !customizer.Current.IsSplitMing && customizer.Editable,
                 () => customizer.Side, "二刀流のもう一本の文字", "文字", 0, .8f);
 #endif
             offhandHint = RetroUi.Label(settings, "OffhandHint", "二刀流：もう一本の文字\n（空欄なら同じ文字）", 646, 112, 350, 64, 22, RetroUi.Muted);
             charError = RetroUi.Label(settings, "CharError", "", 476, 177, 508, 42, 20, RetroUi.Red);
+            splitButton = RetroUi.Button(settings, "SplitMing", "漢字を分離", 24, 176, 196, 34, 19,
+                () => customizer.SetSplitMing(!customizer.Current.IsSplitMing), shadow: false);
             float y = 228;
             Section(settings, "字体", y);
             foreach (FontStyleId f in System.Enum.GetValues(typeof(FontStyleId)))
@@ -229,7 +232,7 @@ namespace MojiBattle
                 flipButtons.Add((Option(settings, "Flip_" + f, flips[flipButtons.Count], flipButtons.Count, y, () => customizer.SetFlip(value)), f));
             }
             battle = RetroUi.Button(settings, "Battle", tournament ? "大会エントリー →" : "対戦確認へ →", 496, 653, 508, 60, 36,
-                tournament ? (System.Action)EnterTournament : ShowVs, RetroUi.Red);
+                tournament ? (System.Action)EnterTournament : ShowStageOrVs, RetroUi.Red);
             if (friend) battle.label.text = "装備を決定 → ロビー";
             if (practice) battle.label.text = "練習開始 →";
             if(worldCup)battle.label.text="この構成でエントリー →";
@@ -239,7 +242,15 @@ namespace MojiBattle
             BuildVs(root);
             specialPanel = SpecialMovePanel.Build(root, this);
             if(challenge) { ConfigureChallengeLayout(left,settings); specialPanel.transform.SetAsLastSibling(); }
+            if(challenge)
+            {
+                Move(splitButton.button.transform,24,150);
+                Move(handMain.button.transform,24,456); Move(handOff.button.transform,248,456); Move(handSwap.button.transform,472,456);
+            }
             if(worldCup) ConfigureWorldCupDesign();
+            StyleStageCustomize();
+            BuildSplitCatalogButton(settings);
+            BuildFusionControls(root, settings);
         }
         void ConfigureWorldCupDesign()
         {
@@ -364,6 +375,7 @@ namespace MojiBattle
             var bg = UguiKit.Fill(root, "VsPanel");
             bg.gameObject.AddComponent<Image>().color = RetroUi.Paper;
             vsPanel = bg.gameObject;
+            if(UsesStageSelection){BuildStageVs(bg);vsPanel.SetActive(false);return;}
             RetroUi.PaperSurface(bg, 0, 0, 1920, 1080);
             RetroUi.Frame(bg, 24, 24, 1872, 1032, RetroUi.Ink, 3);
             RetroUi.Frame(bg, 39, 39, 1842, 1002, RetroUi.Ink, 1);
@@ -400,6 +412,9 @@ namespace MojiBattle
             CancelGripDrag(); preview.EndGripEditing();
             var l = customizer.Get(0); var r = customizer.Get(1);
             vsLeftGlyph.text = l.character; vsRightGlyph.text = r.character;
+            vsLeftGlyph.font=GlyphFontLibrary.Default.Get(l.fontType).font;
+            vsRightGlyph.font=GlyphFontLibrary.Default.Get(r.fontType).font;
+            RefreshFusionVs(l, vsLeftGlyph); RefreshFusionVs(r, vsRightGlyph);
             if(draft)
             {
                 vsLeftGlyph.font=GlyphFontLibrary.Default.Get(l.fontType).font;
@@ -408,6 +423,7 @@ namespace MojiBattle
                 vsPanel.SetActive(true);preview.gameObject.SetActive(false);previewCamera.enabled=false;return;
             }
             vsLeft.text = "P1\n" + Summary(l); vsRight.text = "P2\n" + Summary(r);
+            RefreshStageVs();
             vsPanel.SetActive(true); preview.gameObject.SetActive(false); previewCamera.enabled = false;
         }
         public void EnterTournament()
@@ -431,7 +447,7 @@ namespace MojiBattle
         public void OnSpecialPanelClosed() { preview.gameObject.SetActive(true); previewCamera.enabled = true; Refresh(); }
         public void HideVs() { vsPanel.SetActive(false); preview.gameObject.SetActive(true); previewCamera.enabled = true; }
         static string Summary(FighterBuildData b) => $"{GlyphCatalog.FontDisplayName(b.fontType)} / {b.weaponSize}\n{CustomizeLabels.Grip(b)} / {CustomizeLabels.GripPlace(b)}\n{CustomizeLabels.Flip(b.weaponFlip)} / {CustomizeLabels.Style(b.battleStyle)}\n必殺「{SpecialLabel(b)}」";
-        static string SpecialLabel(FighterBuildData b) => b.EquippedSpecial?.name ?? SpecialMovePlan.StandardName(b.character);
+        static string SpecialLabel(FighterBuildData b) => b.EquippedSpecial?.name ?? SpecialMovePlan.StandardName(b);
         void Refresh()
         {
             if (gripDragging) CancelGripDrag();
@@ -446,15 +462,16 @@ namespace MojiBattle
             }
             charInput.SetTextWithoutNotify(b.character);
             bool dual = b.IsDualWield;
-            offhandInput.gameObject.SetActive(dual);
+            offhandInput.gameObject.SetActive(dual && !b.IsSplitMing);
             offhandHint.gameObject.SetActive(dual);
+            offhandHint.text = b.IsSplitMing ? $"{b.character} → 右手「{b.MainWeaponLabel}」\n　　 左手「{b.OffhandWeaponLabel}」" : "二刀流：もう一本の文字\n（空欄なら同じ文字）";
             charError.transform.parent.Find("CharHint").gameObject.SetActive(!dual);
             if (dual) offhandInput.SetTextWithoutNotify(string.IsNullOrEmpty(b.offhandCharacter) ? "" : b.offhandCharacter);
             offhandInput.interactable = customizer.Editable;
             if(run) { charInput.interactable=customizer.Editable && string.IsNullOrEmpty(RunRuntimeStore.Current.lockedGlyph); battle.label.text="次戦準備へ →"; }
             foreach (var (btn, f) in fontButtons)
             {
-                bool ok = FighterCustomizer.IsAvailable(b.character, f, out _);
+                bool ok = FighterCustomizer.IsAvailable(b, f, out _);
                 btn.button.interactable = ok && customizer.Editable;
                 btn.label.text = GlyphCatalog.FontDisplayName(f) + (ok ? "" : " ×");
                 RetroUi.Selected(btn, f == b.fontType, accent);
@@ -477,7 +494,6 @@ namespace MojiBattle
                 menuRoot.Find("PreviewPanel/PickHint").GetComponent<Text>().text = customizer.Editable
                     ? "文字の上でドラッグ → 離して持ち手を決定" : "COMの構成を確認中（変更できません）";
             }
-            gripValue.text = CustomizeLabels.GripPlace(b);
             charError.text = customizer.CharacterError ?? "";
             battle.button.interactable = string.IsNullOrEmpty(customizer.CharacterError) && (!draft || DraftRuntimeStore.CanBattle);
             specialButton.button.interactable = battle.button.interactable && customizer.Editable;
@@ -486,6 +502,8 @@ namespace MojiBattle
                 ? GripNote(b.gripType) + "（二刀流は S・M のみ）" : GripNote(b.gripType));
             styleNote.text = StyleNote(b.battleStyle);
             preview.Show(b, side);
+            RefreshDualGripControls();
+            RefreshFusionControls();
             foreach (var child in preview.GetComponentsInChildren<Transform>(true)) child.gameObject.layer = PreviewLayer;
             FitPreviewCamera();
             previewTitle.text = ((draft || run || worldCup) ? side == 0 ? "YOU" : "COM" : challenge ? "あなた" : tournament ? "YOU" : side == 0 ? "P1" : "P2") + " / PREVIEW";
@@ -612,20 +630,27 @@ namespace MojiBattle
         public void PickGripAt(Vector2 normalized)
         {
             var cur = customizer.Current;
+            if (preview.EditingOffhand)
+            {
+                if (cur.offhandCustomGrip && (cur.offhandGripPoint - normalized).sqrMagnitude < 1e-5f) return;
+                customizer.SetOffhandGripPoint(normalized); return;
+            }
             if (cur.customGrip && (cur.gripPoint - normalized).sqrMagnitude < 1e-5f) return;
             customizer.SetGripPoint(normalized);
         }
         void Update()
         {
-            if(SettingsScreen.BlocksInput)return;
+            if(SettingsScreen.BlocksInput || FusionScreen.BlocksInput)return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (gripDragging) CancelGripDrag();
+                else if (SplitCatalogVisible) CloseSplitCatalog();
                 else if (SpecialVisible) specialPanel.Hide();
-                else if (VsVisible) HideVs(); else if(worldCup) GameFlow.ToWorldCupGuide(); else if(run) BackRun(); else if(draft) GameFlow.ToDraftPicks(); else if (challenge) GameFlow.BackToChallengeDetail(); else if (friend) FriendRoomSession.Instance.SaveAndReturn(); else GameFlow.ToModeSelect();
+                else if (StageVisible) HideStages();
+                else if (VsVisible) { if(UsesStageSelection)ShowStages();else HideVs(); } else if(worldCup) GameFlow.ToWorldCupGuide(); else if(run) BackRun(); else if(draft) GameFlow.ToDraftPicks(); else if (challenge) GameFlow.BackToChallengeDetail(); else if (friend) FriendRoomSession.Instance.SaveAndReturn(); else GameFlow.ToModeSelect();
             }
             if (Input.GetKeyDown(KeyCode.Return) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
-            { if (SpecialVisible) return; if (VsVisible) StartBattle(); else ShowVs(); }
+            { if (SpecialVisible || SplitCatalogVisible) return; if (VsVisible) StartBattle(); else if(StageVisible){stagePanel.SetActive(false);ShowVs();} else ShowStageOrVs(); }
         }
         void OnDestroy()
         {

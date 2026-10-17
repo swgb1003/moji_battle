@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace MojiBattle
 {
     /// <summary>
-    /// カスタマイズ画面の「必殺技」画面。選んだ一文字を入れた 7 文字以内の技名を付け、AI が動きと見た目を設計する。
+    /// カスタマイズ画面の「必殺技」画面。7文字以内の技名を付け、AIが動きと見た目を設計する。合成文字は自由に命名できる。
     /// 一文字につき 3 つまで登録でき、1 つを装備するとバトルの必殺ボタンで出る（未装備なら文字ごとの初期技）。
     /// </summary>
     public sealed class SpecialMovePanel : MonoBehaviour
@@ -123,10 +123,12 @@ namespace MojiBattle
 
         public void Refresh()
         {
-            moves = SpecialMoveLibrary.For(Character);
+            moves = SpecialMoveLibrary.For(customizer.Current);
             var equipped = customizer.Current.EquippedSpecial;
             Color accent = RetroUi.Team(customizer.Side);
-            title.text = $"「{Character}」の必殺技";
+            title.text = $"「{customizer.Current.DisplayName}」の必殺技";
+            title.resizeTextForBestFit = true; title.resizeTextMinSize = 18; title.resizeTextMaxSize = 34;
+            title.supportRichText = false;
             count.text = $"登録 {moves.Count} / {SpecialMoveRules.MaxPerCharacter}";
             for (int i = 0; i < slots.Length; i++)
             {
@@ -150,10 +152,10 @@ namespace MojiBattle
                 s.equip.label.text = on ? "装備中" : "装備する";
                 RetroUi.Selected(s.equip, on, accent);
             }
-            string standardName = SpecialMovePlan.StandardName(Character);
+            string standardName = SpecialMovePlan.StandardName(customizer.Current);
             standard.label.text = equipped == null ? $"標準の必殺技（{standardName}）を装備中" : $"標準の必殺技（{standardName}）に戻す";
             RetroUi.Selected(standard, equipped == null, accent);
-            detail.text = Detail(equipped ?? BuiltinSpecialMoves.For(Character), standardName);
+            detail.text = Detail(equipped ?? BuiltinSpecialMoves.For(customizer.Current), standardName);
             RefreshName();
         }
 
@@ -174,11 +176,13 @@ namespace MojiBattle
         void RefreshName()
         {
             string name = nameInput.text ?? "";
-            string error = name.Trim().Length == 0 ? null : SpecialMoveRules.CheckName(name, Character);
+            bool composed = customizer.Current.HasFusion;
+            string error = name.Trim().Length == 0 ? null : SpecialMoveRules.CheckName(name, Character, composed);
             int n = SpecialMoveRules.Graphemes(name.Trim()).Count;
             bool full = moves.Count >= SpecialMoveRules.MaxPerCharacter;
             nameHint.text = full ? $"登録は一文字につき{SpecialMoveRules.MaxPerCharacter}つまで。削除すると新しく作れます"
-                : error ?? $"「{Character}」を必ず入れて{SpecialMoveRules.MaxName}文字以内（いま{n}文字）";
+                : error ?? (composed ? $"技名は{SpecialMoveRules.MaxName}文字以内で自由に命名できます（いま{n}文字）"
+                    : $"「{Character}」を必ず入れて{SpecialMoveRules.MaxName}文字以内（いま{n}文字）");
             nameHint.color = full || error != null ? RetroUi.Red : RetroUi.Muted;
             generate.button.interactable = !Busy && !full && name.Trim().Length > 0 && error == null;
             generate.label.text = Busy ? "AI が考えています…" : "AI で技をつくる →";
@@ -193,17 +197,17 @@ namespace MojiBattle
         public void Generate()
         {
             if (!generate.button.interactable) return;
-            string name = nameInput.text.Trim(), character = Character;
+            string name = nameInput.text.Trim(); var build = customizer.Current.Clone();
             int id = ++jobId;
-            job = StartCoroutine(GenerateRoutine(character, name, id));
+            job = StartCoroutine(GenerateRoutine(build, name, id));
             RefreshName();
         }
 
-        IEnumerator GenerateRoutine(string character, string name, int id)
+        IEnumerator GenerateRoutine(FighterBuildData build, string name, int id)
         {
             SetStatus($"「{name}」の技を AI が考えています…");
             var client = new SpecialMoveClient();
-            yield return client.Generate(character, name, () => id == jobId,
+            yield return client.Generate(build, name, () => id == jobId,
                 () => SetStatus("サーバーを起動しています。1 分ほどかかることがあります…"));
             if (id != jobId) yield break;
             job = null;

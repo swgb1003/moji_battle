@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d69669bff785849a623abdad1a673e, type: 3}
+  m_Name: u65e9_gothic
+  m_EditorClassIdentifier: 
+  grapheme: "\u65E9"
+  font: 0
+  mask: {fileID: 2800000, guid: 8759bc35ccf80814d9b192ea43878591, type: 3}
+  features:
+    inkRatio: 0.40425348
+    widthRatio: 0.92083335
+    heightRatio: 0.8958333
+    edgeRatio: 7.008333
+    balance: 0.99788177
+    centerOfMass: {x: 128.19402, y: 140.03781}
+    colliderRects:
+    - serializedVersion: 2
+      x: 112
+      y: 16
+      width: 31
+      height: 48
+    - serializedVersion: 2
+      x: 20
+      y: 64
+      width: 216
+      height: 4
+    - serializedVersion: 2
+      x: 17
+      y: 68
+      width: 223
+      height: 28
+    - serializedVersion: 2
+      x: 112
+      y: 96
+      width: 31
+      height: 24
+    - serializedVersion: 2
+      x: 41
+      y: 120
+      width: 174
+      height: 28
+    - serializedVersion: 2
+      x: 41
+      y: 148
+      width: 30
+      height: 16
+    - serializedVersion: 2
+      x: 184
+      y: 148
+      width: 31
+      height: 16
+    - serializedVersion: 2
+      x: 41
+      y: 164
+      width: 174
+      height: 24
+    - serializedVersion: 2
+      x: 41
+      y: 188
+      width: 31
+      height: 16
+    - serializedVersion: 2
+      x: 180
+      y: 188
+      width: 35
+      height: 4
+    - serializedVersion: 2
+      x: 184
+      y: 192
+      width: 31
+      height: 12
+    - serializedVersion: 2
+      x: 41
+      y: 204
+      width: 174
+      height: 28
+    inkBounds:
+      x: 18
+      y: 16
+      width: 221
+      height: 215
+    gripPoint: {x: 31.5, y: 81}
+    componentCount: 1
+    maskSize: 256
+    emSizePx: 240
+    colliderGridUsed: 64
+  fontAssetPath: Assets/Art/Fonts/Gothic/NotoSansJP-Bold.ttf
+  fontFamily: Noto Sans JP
+  fontHash: 9e4e354e728cfc32e04bbc0bf686c7285a1cf47f64ce2ac27c1d813ad1dc9d63
+  settingsHash: fb8263744cba8b65
+  bakedAt: 2026-10-16T19:02:53
+  unityVersion: 6000.0.61f1

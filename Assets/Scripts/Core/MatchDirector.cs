@@ -39,6 +39,7 @@ namespace MojiBattle
             if (!RemotePlayback) return;
             Clock = frame.clock; CountdownRemaining = frame.countdown; KoInProgress = frame.ko; Overtime = frame.overtime;
             Context.SimTime = frame.simTime; Context.MatchClock = frame.clock;
+            Context.Stage?.RefreshRemote();
             Context.MatchOver = frame.ended || frame.ko;
             if (frame.ended && !Ended) { Ended = true; Result = frame.result; Events.Raise(Result); MatchEnded?.Invoke(Result); }
         }
@@ -161,6 +162,7 @@ namespace MojiBattle
             ResolveWeaponLock(dt);
             Fighters[0].Tick(ctx.SimTime, dt);
             Fighters[1].Tick(ctx.SimTime, dt);
+            ctx.Stage?.Step(dt);
             // 向き反転・横振りの Collider 拡張で壁をまたいだら、壁の外側へ押し出される前に戻す。
             ResolveOutsideSideWalls();
             UpdateLooseWeapons();
@@ -621,8 +623,12 @@ namespace MojiBattle
                 var f = Fighters[i];
                 var rt = f.Runtime;
                 var s = rt.state;
-                bool wallJumping = s == FighterState.Evade && rt.evadeKind == EvadeKind.WallJump;
-                bool leaping = wallJumping || rt.aerialStage > 0 || (rt.attackStyle == AttackStyle.Leap && rt.leapJumped && !rt.IsDown
+                // Ordinary hops need the same passage as wall jumps: held glyphs and
+                // body hitboxes must not act as an invisible wall during a crossover.
+                // Overlap hit detection still makes attacks dangerous while airborne.
+                bool jumpingOver = s == FighterState.Evade
+                    && (rt.evadeKind == EvadeKind.HopOver || rt.evadeKind == EvadeKind.WallJump);
+                bool leaping = jumpingOver || rt.aerialStage > 0 || (rt.attackStyle == AttackStyle.Leap && rt.leapJumped && !rt.IsDown
                                && (s == FighterState.AttackWindup || s == FighterState.AttackActive || s == FighterState.AttackRecovery));
                 if (leaping != leapGhost[i])
                 {
@@ -630,7 +636,7 @@ namespace MojiBattle
                     foreach (var bc in f.BodyColliders)
                     foreach (var w in f.Opponent.WeaponColliders) SetGhost(bc, w, leaping);
                 }
-                bool want = !rt.IsDown && (wallJumping || rt.aerialStage > 0 || rt.launchConnectedAt >= 0f
+                bool want = !rt.IsDown && (jumpingOver || rt.aerialStage > 0 || rt.launchConnectedAt >= 0f
                             || (rt.attackStyle == AttackStyle.Smash && (s == FighterState.AttackWindup || s == FighterState.AttackActive || s == FighterState.AttackRecovery))
                             // 跳び斬り: 跳んでいる間は相手の上に乗らないよう素通りさせる（当たりは重なりで判定）
                             || (rt.attackStyle == AttackStyle.Leap && ((s == FighterState.AttackWindup && rt.leapJumped) || s == FighterState.AttackActive

@@ -65,6 +65,8 @@ namespace MojiBattle
                 features = f,
                 normalized = src.normalized,
                 runtimeBaked = src.runtimeBaked,
+                weaponSizeRatio = src.weaponSizeRatio,
+                weaponMassBasis = src.weaponMassBasis,
             };
             cache[(src, flip)] = def;
             sources[def] = src;
@@ -73,8 +75,16 @@ namespace MojiBattle
 
         public static void ClearCache()
         {
+            foreach (var glyph in cache.Values) if (glyph.texture != null) Object.Destroy(glyph.texture);
             cache.Clear();
             sources.Clear();
+        }
+
+        public static void Forget(GlyphDefinitionRuntime source)
+        {
+            foreach (var flip in new[] { WeaponFlip.Horizontal, WeaponFlip.Vertical, WeaponFlip.Both })
+                if (cache.TryGetValue((source, flip), out var glyph))
+                { cache.Remove((source, flip)); sources.Remove(glyph); if (glyph.texture != null) Object.Destroy(glyph.texture); }
         }
     }
 }

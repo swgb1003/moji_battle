@@ -13,6 +13,7 @@ namespace MojiBattle
         float shakeAmp, shakeTime;
         float zoomAmount, zoomTime, zoomDuration;
         Vector3 basePos;
+        float FloorViewport => director!=null && director.Config.stage!=BattleStageId.Dojo?.12f:BattleHudPresenter.GroundViewport;
 
         public const float GroundMargin = 1.35f;
 
@@ -22,7 +23,7 @@ namespace MojiBattle
             Cam = GetComponent<Camera>();
             xVel = yVel = sizeVel = shakeAmp = shakeTime = zoomAmount = zoomTime = zoomDuration = 0;
             Cam.orthographicSize = 4f;
-            basePos = new Vector3(0f, Cam.orthographicSize * (1 - 2 * BattleHudPresenter.GroundViewport), -10f);
+            basePos = new Vector3(0f, Cam.orthographicSize * (1 - 2 * FloorViewport), -10f);
             transform.position = basePos;
         }
 
@@ -70,7 +71,7 @@ namespace MojiBattle
             float targetX = Mathf.Clamp(bounds.center.x, -director.Context.ArenaHalfWidth, director.Context.ArenaHalfWidth);
             float x = Mathf.SmoothDamp(basePos.x, targetX, ref xVel, .18f, Mathf.Infinity, dt);
             x = Mathf.Clamp(x, bounds.max.x - halfW + .4f, bounds.min.x + halfW - .4f);
-            float targetY = Mathf.Max(size * (1 - 2 * BattleHudPresenter.GroundViewport), bounds.center.y + .15f);
+            float targetY = Mathf.Max(size * (1 - 2 * FloorViewport), bounds.center.y + .15f);
             float y = Mathf.SmoothDamp(basePos.y, targetY, ref yVel, .18f, Mathf.Infinity, dt);
             y = Mathf.Clamp(y, bounds.max.y - size + .35f, bounds.min.y + size - .15f);
             basePos = new Vector3(x, y, -10f);

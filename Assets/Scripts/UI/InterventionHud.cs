@@ -49,9 +49,11 @@ namespace MojiBattle
         {
             bool local = side == localSide;
             var team = RetroUi.Team(side);
-            float w = LocalWidth, h = local ? LocalHeight : 84;
+            bool compact=presenter.CompactStageHud;
+            float w = LocalWidth, h = local && !compact ? LocalHeight : 84;
             float x = side == 0 ? 16 : BattleHudPresenter.ArenaWidth - 16 - w;
             var panel = RetroUi.Group(arena, "Intervention" + side, x, 12, w, h);
+            if(compact){panel.localScale=Vector3.one*.78f;if(side==1)panel.anchoredPosition=new Vector2(BattleHudPresenter.ArenaWidth-16-w*.78f,-12);}
             RetroUi.Block(panel, "Paper", 0, 0, w, h, new Color(RetroUi.Paper.r, RetroUi.Paper.g, RetroUi.Paper.b, .92f));
             RetroUi.Frame(panel, 0, 0, w, h, local ? RetroUi.Ink : RetroUi.Rule, local ? 2 : 1);
             RetroUi.Label(panel, "GaugeCaption", "必殺", 12, 7, 80, 32, 24, team);
@@ -68,6 +70,12 @@ namespace MojiBattle
             cheerTag[side] = RetroUi.Label(arena, "CheerTag" + side, "声援中！", 0, 0, 180, 36, 26, team, TextAnchor.MiddleCenter);
             cheerTag[side].gameObject.SetActive(false);
             if (!local) return;
+            if(compact)
+            {
+                special=RetroUi.Button(arena.parent,"SpecialButton","",1195,983,440,46,22,()=>iv.Press(side,InterventionKind.Special),RetroUi.Red,false);
+                cheer=RetroUi.Button(arena.parent,"CheerButton",SelfControl?"声援 D":"声援 L",1655,983,190,46,24,()=>iv.Press(side,InterventionKind.Cheer),RetroUi.Blue,false);
+                return;
+            }
             special = RetroUi.Button(panel, "SpecialButton", "", 12, 88, 360, 58, 24, () => iv.Press(side, InterventionKind.Special), shadow: false);
             cheer = RetroUi.Button(panel, "CheerButton", SelfControl ? "声援  D" : "声援  L", 382, 88, 166, 58, 24, () => iv.Press(side, InterventionKind.Cheer), shadow: false);
         }

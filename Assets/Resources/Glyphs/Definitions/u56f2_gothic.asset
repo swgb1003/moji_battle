@@ -1,0 +1,176 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d69669bff785849a623abdad1a673e, type: 3}
+  m_Name: u56f2_gothic
+  m_EditorClassIdentifier: 
+  grapheme: "\u56F2"
+  font: 0
+  mask: {fileID: 2800000, guid: 8bd8962c7badab5429abb773737f88a6, type: 3}
+  features:
+    inkRatio: 0.53449655
+    widthRatio: 0.8541667
+    heightRatio: 0.8958333
+    edgeRatio: 9.858334
+    balance: 0.9938684
+    centerOfMass: {x: 128.61018, y: 126.199356}
+    colliderRects:
+    - serializedVersion: 2
+      x: 28
+      y: 14
+      width: 24
+      height: 2
+    - serializedVersion: 2
+      x: 200
+      y: 14
+      width: 32
+      height: 10
+    - serializedVersion: 2
+      x: 25
+      y: 16
+      width: 30
+      height: 8
+    - serializedVersion: 2
+      x: 25
+      y: 24
+      width: 207
+      height: 28
+    - serializedVersion: 2
+      x: 25
+      y: 52
+      width: 31
+      height: 152
+    - serializedVersion: 2
+      x: 80
+      y: 52
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 200
+      y: 52
+      width: 32
+      height: 152
+    - serializedVersion: 2
+      x: 77
+      y: 56
+      width: 11
+      height: 4
+    - serializedVersion: 2
+      x: 76
+      y: 60
+      width: 16
+      height: 4
+    - serializedVersion: 2
+      x: 140
+      y: 60
+      width: 28
+      height: 44
+    - serializedVersion: 2
+      x: 72
+      y: 64
+      width: 24
+      height: 4
+    - serializedVersion: 2
+      x: 68
+      y: 68
+      width: 32
+      height: 4
+    - serializedVersion: 2
+      x: 64
+      y: 72
+      width: 40
+      height: 4
+    - serializedVersion: 2
+      x: 68
+      y: 76
+      width: 36
+      height: 4
+    - serializedVersion: 2
+      x: 72
+      y: 80
+      width: 36
+      height: 4
+    - serializedVersion: 2
+      x: 76
+      y: 84
+      width: 32
+      height: 4
+    - serializedVersion: 2
+      x: 80
+      y: 88
+      width: 32
+      height: 8
+    - serializedVersion: 2
+      x: 84
+      y: 96
+      width: 28
+      height: 4
+    - serializedVersion: 2
+      x: 84
+      y: 100
+      width: 32
+      height: 4
+    - serializedVersion: 2
+      x: 64
+      y: 104
+      width: 128
+      height: 24
+    - serializedVersion: 2
+      x: 88
+      y: 128
+      width: 28
+      height: 20
+    - serializedVersion: 2
+      x: 140
+      y: 128
+      width: 28
+      height: 20
+    - serializedVersion: 2
+      x: 65
+      y: 148
+      width: 127
+      height: 24
+    - serializedVersion: 2
+      x: 88
+      y: 172
+      width: 32
+      height: 4
+    - serializedVersion: 2
+      x: 140
+      y: 172
+      width: 28
+      height: 24
+    - serializedVersion: 2
+      x: 90
+      y: 176
+      width: 26
+      height: 20
+    - serializedVersion: 2
+      x: 25
+      y: 204
+      width: 207
+      height: 27
+    inkBounds:
+      x: 26
+      y: 15
+      width: 205
+      height: 215
+    gripPoint: {x: 128.5, y: 28.5}
+    componentCount: 2
+    maskSize: 256
+    emSizePx: 240
+    colliderGridUsed: 64
+  fontAssetPath: Assets/Art/Fonts/Gothic/NotoSansJP-Bold.ttf
+  fontFamily: Noto Sans JP
+  fontHash: 9e4e354e728cfc32e04bbc0bf686c7285a1cf47f64ce2ac27c1d813ad1dc9d63
+  settingsHash: fb8263744cba8b65
+  bakedAt: 2026-10-16T19:03:01
+  unityVersion: 6000.0.61f1

@@ -32,6 +32,53 @@ namespace MojiBattle
         public SpecialMoveData special;
         [Tooltip("二刀流の副武器（反対の手）の文字。空なら主武器と同じ文字")]
         public string offhandCharacter = "";
+        public bool independentOffhandGrip;
+        public bool offhandCustomGrip;
+        public float offhandGripPosition = .5f;
+        public Vector2 offhandGripPoint = new Vector2(.5f, .5f);
+        public bool splitMing;
+        public bool splitSwapped;
+        public FusionData fusion;
+        public FusionData offhandFusion;
+        // Unity's inline JSON serialization substitutes a default object for null classes.
+        // Explicit presence bits keep ordinary and legacy builds ordinary after a round trip.
+        public bool fusionEnabled, offhandFusionEnabled;
+        public bool HasFusion => fusionEnabled && fusion != null && fusion.Validate(out _);
+        public FusionData OffhandFusion => string.IsNullOrEmpty(offhandCharacter) ? (HasFusion ? fusion : null)
+            : offhandFusionEnabled && offhandFusion != null && offhandFusion.Validate(out _) ? offhandFusion : null;
+        public string DisplayName => HasFusion ? fusion.DisplayName : character;
+        public string OffhandDisplayName => OffhandFusion != null ? OffhandFusion.DisplayName : OffhandGlyph;
+
+        // Keep the serialized splitMing field and the old API for existing saves.
+        public bool IsSplitMing => IsDualWield && (HasFusion || SplitKanjiCatalog.Supports(character)) && splitMing;
+        public string MainWeaponLabel => IsSplitMing && HasFusion ? (splitSwapped ? fusion.Right : fusion.Left)
+            : IsSplitMing && SplitKanjiCatalog.TryGet(character, out var part)
+            ? (splitSwapped ? part.Right : part.Left) : DisplayName;
+        public string OffhandWeaponLabel => IsSplitMing && HasFusion ? (splitSwapped ? fusion.Left : fusion.Right)
+            : IsSplitMing && SplitKanjiCatalog.TryGet(character, out var part)
+            ? (splitSwapped ? part.Left : part.Right) : OffhandDisplayName;
+
+        // Old saves used one grip for both hands. Preserve that grip when migrating.
+        public void EnsureIndependentGrips()
+        {
+            if (independentOffhandGrip) return;
+            offhandCustomGrip = customGrip;
+            offhandGripPosition = gripPosition;
+            offhandGripPoint = gripPoint;
+            independentOffhandGrip = true;
+        }
+
+        public FighterBuildData ForOffhand()
+        {
+            var copy = Clone();
+            if (independentOffhandGrip)
+            {
+                copy.customGrip = offhandCustomGrip;
+                copy.gripPosition = offhandGripPosition;
+                copy.gripPoint = offhandGripPoint;
+            }
+            return copy;
+        }
 
         /// <summary>二刀流を選べるサイズ（S・M のみ）。</summary>
         public static bool DualWieldAllowed(WeaponSize s) => s == WeaponSize.S || s == WeaponSize.M;
@@ -61,11 +108,12 @@ namespace MojiBattle
         {
             var c = (FighterBuildData)MemberwiseClone();
             c.special = special?.Clone();
+            c.fusion = fusion?.Clone(); c.offhandFusion = offhandFusion?.Clone();
             return c;
         }
 
         /// <summary>この文字で出せる装備中の必殺技（無い・別の文字のものなら null）。</summary>
-        public SpecialMoveData EquippedSpecial => SpecialMoveRules.Sanitize(special, character);
+        public SpecialMoveData EquippedSpecial => SpecialMoveRules.Sanitize(special, character, HasFusion ? fusion : null);
 
         public FighterLoadout ToLoadout() => new FighterLoadout(character, fontType) { build = Clone() };
 
@@ -84,7 +132,8 @@ namespace MojiBattle
                          : $"握り{Mathf.RoundToInt(b.gripPosition * 100f)}%";
 
         /// <summary>構成の持ち方。二刀流はもう一本の文字も添える（例: 二刀流・刀）。</summary>
-        public static string Grip(FighterBuildData b) => b.IsDualWield ? "二刀流・" + b.OffhandGlyph : Grip(b.gripType);
+        public static string Grip(FighterBuildData b) => b.IsSplitMing ? "分離二刀流・" + b.MainWeaponLabel + "／" + b.OffhandWeaponLabel
+            : b.IsDualWield ? "二刀流・" + b.OffhandGlyph : Grip(b.gripType);
 
         public static string Grip(GripType g)
         {

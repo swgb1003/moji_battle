@@ -202,7 +202,7 @@ namespace MojiBattle.Tests
                 audio.Bind(battle.Director, final);
                 var clip = audio.MusicSource.clip;
                 Assert.IsNotNull(clip);
-                if (final) Assert.AreEqual("final", clip.name);
+                if (final) Assert.AreEqual("final2", clip.name);
                 else
                 {
                     CollectionAssert.Contains(new[] { "battle", "battle2", "battle3" }, clip.name);
@@ -278,7 +278,7 @@ namespace MojiBattle.Tests
             Assert.IsNotNull(battle, error);
             var audio = battle.Root.GetComponent<CombatAudioDirector>();
             audio.SoundPlayed += e => played.Add(e);
-            Assert.AreEqual("final", audio.MusicSource.clip.name);
+            Assert.AreEqual("final2", audio.MusicSource.clip.name);
             Assert.AreEqual(AudioClipLoadType.Streaming, audio.MusicSource.clip.loadType);
             Assert.IsTrue(audio.MusicSource.loop);
             Assert.IsFalse(audio.MusicSource.isPlaying);

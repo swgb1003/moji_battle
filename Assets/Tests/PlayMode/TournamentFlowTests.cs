@@ -145,7 +145,7 @@ namespace MojiBattle.Tests
                 Assert.IsTrue(boot.IsTournament);
                 Assert.IsNotNull(boot.Battle);
                 string music = boot.Battle.Root.GetComponent<CombatAudioDirector>().MusicSource.clip.name;
-                if (round == 2) Assert.AreEqual("final", music);
+                if (round == 2) Assert.AreEqual("final2", music);
                 else CollectionAssert.Contains(new[] { "battle", "battle2", "battle3" }, music);
                 Assert.AreEqual(WeaponSize.S, boot.Battle.Left.Mods.size);
                 Assert.AreEqual(WeaponSize.S, boot.Battle.Right.Mods.size);

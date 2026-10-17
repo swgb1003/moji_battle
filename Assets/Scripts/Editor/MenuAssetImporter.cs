@@ -29,6 +29,14 @@ namespace MojiBattle.Editor
                     importer.maxTextureSize = 1024;
             }
             importer.wrapMode = UnityEngine.TextureWrapMode.Clamp;
+            if(assetPath.Contains("/Stages/prop_"))
+            {
+                importer.textureType=TextureImporterType.Sprite;
+                importer.spriteImportMode=SpriteImportMode.Single;
+                importer.spritePixelsPerUnit=100;
+                importer.alphaIsTransparency=true;
+                importer.maxTextureSize=1024;
+            }
         }
     }
 }

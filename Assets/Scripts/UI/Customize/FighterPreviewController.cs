@@ -53,6 +53,20 @@ namespace MojiBattle
         public bool Paused { get; set; }
         Vector3 shownGrip;
         Quaternion shownRot = Quaternion.identity;
+        Vector3 shownOffGrip;
+        Quaternion shownOffRot = Quaternion.identity;
+        bool editOffhand;
+        Color32[] offPixels;
+        public bool EditingOffhand => editOffhand && HasOffhand;
+        public WeaponGeometry EditingGeometry => EditingOffhand ? offGeometry : Geometry;
+        public GlyphDefinitionRuntime EditingGlyph => EditingOffhand ? offGlyph : glyph;
+        Vector3 EditingPosition => EditingOffhand ? shownOffGrip : shownGrip;
+        Quaternion EditingRotation => EditingOffhand ? shownOffRot : shownRot;
+        public void SelectHand(bool off)
+        {
+            EndGripEditing(); editOffhand = off && HasOffhand;
+            RenderPose();
+        }
         LineRenderer hoverMarker;
         bool gripEditing;
         bool pauseBeforeEditing;
@@ -101,19 +115,24 @@ namespace MojiBattle
         /// <summary>設定を反映（変更の瞬間に呼ぶ）。</summary>
         public void Show(FighterBuildData build, int side)
         {
-            bool glyphChanged = glyph == null || Build == null || build.character != Build.character
-                || build.fontType != Build.fontType || build.weaponFlip != Build.weaponFlip;
+            bool glyphChanged = glyph == null || glyph.texture == null || Build == null || build.character != Build.character
+                || (build.HasFusion ? build.fusion.Key : null) != (Build != null && Build.HasFusion ? Build.fusion.Key : null)
+                || build.fontType != Build.fontType || build.weaponFlip != Build.weaponFlip
+                || build.IsSplitMing != Build.IsSplitMing || (build.IsSplitMing && build.splitSwapped != Build.splitSwapped);
             bool gripChanged = Build == null || build.customGrip != Build.customGrip
                 || (build.customGrip ? build.gripPoint != Build.gripPoint : build.gripPosition != Build.gripPosition);
             bool geometryChanged = glyphChanged || Geometry == null || build.weaponSize != Build.weaponSize || gripChanged;
-            bool poseChanged = geometryChanged || build.gripType != Build.gripType || side != Side;
+            bool offChanged = Build == null || (offGlyph != null && offGlyph.texture == null) || build.offhandCharacter != Build.offhandCharacter
+                || build.OffhandFusion?.Key != Build?.OffhandFusion?.Key
+                || build.offhandCustomGrip != Build.offhandCustomGrip || build.offhandGripPosition != Build.offhandGripPosition
+                || build.offhandGripPoint != Build.offhandGripPoint;
+            bool poseChanged = geometryChanged || offChanged || build.gripType != Build.gripType || side != Side;
             if (gripEditing && Build != null && (glyphChanged || build.weaponSize != Build.weaponSize || side != Side)) EndGripEditing();
             Build = build.Clone();
             Side = side;
             if (glyphChanged)
             {
-                if (!GlyphCatalog.TryGet(build.character, build.fontType, B, GlyphCalibration.Default, out glyph, out _)) return;
-                glyph = GlyphFlip.Apply(glyph, build.weaponFlip);
+                if (!BattleBuilder.MainGlyph(build.ToLoadout(), B, GlyphCalibration.Default, out glyph, out _)) return;
                 Stats = StatCalculator.Compute(glyph, B);
             }
             if (geometryChanged)
@@ -140,10 +159,11 @@ namespace MojiBattle
             weapon.sprite = currentSprite;
             weapon.color = RetroUi.Team(side);
             ShowOffhand(build);
+            if (!HasOffhand) editOffhand = false;
             volume.SetTeam(weapon.color);
 
             var rects = glyph.features.colliderRects;
-            while (colliderLines.Count < rects.Length)
+            while (colliderLines.Count < Mathf.Max(rects.Length, offGlyph != null ? offGlyph.features.colliderRects.Length : 0))
                 colliderLines.Add(UiKit.Line(transform, "ColliderOutline", new Color(0f, 0.6f, 0.2f, 0.7f), 0.015f, 7, loop: true));
             psi = ReadyPsi;
             omega = 0f;
@@ -160,16 +180,11 @@ namespace MojiBattle
             offGeometry = null;
             offhand.enabled = false;
             if (!build.IsDualWield) return;
-            string ch = build.OffhandGlyph;
-            GlyphDefinitionRuntime g = glyph;
-            if (ch != build.character)
-            {
-                if (!GlyphCatalog.TryGet(ch, build.fontType, B, GlyphCalibration.Default, out g, out _)) g = glyph;
-                else g = GlyphFlip.Apply(g, build.weaponFlip);
-            }
+            GlyphDefinitionRuntime g = BattleBuilder.OffhandGlyph(build.ToLoadout(), glyph, B, GlyphCalibration.Default);
             offGlyph = g;
-            offGeometry = FighterFactory.ResolveWeapon(Build, g, StatCalculator.Compute(g, B), B, CB, out _);
+            offGeometry = FighterFactory.ResolveWeapon(Build.ForOffhand(), g, StatCalculator.Compute(g, B), B, CB, out _);
             var tex = g.texture;
+            offPixels = tex.GetPixels32();
             if (offSprite != null) Destroy(offSprite);
             offSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
                 new Vector2(offGeometry.gripPx.x / tex.width, offGeometry.gripPx.y / tex.height), 1f / offGeometry.scale, 0, SpriteMeshType.FullRect);
@@ -260,7 +275,7 @@ namespace MojiBattle
             Vector3 grip = P(B.shoulderLocal.x, B.shoulderLocal.y);
             float phi = psi - Geometry.alpha0Deg;
             var rot = Quaternion.Euler(0f, 0f, phi);
-            if (gripEditing && preserveEditingPose)
+            if (gripEditing && preserveEditingPose && !EditingOffhand)
             {
                 rot = editingRotation;
                 grip = editingPixelOrigin + rot * (Vector3)(Geometry.gripPx * Geometry.scale);
@@ -271,7 +286,7 @@ namespace MojiBattle
             volume.Leg(hip, P(-.12f, 0), P(-.06f, .43f), false, 1, true);
             shownGrip = grip;
             shownRot = rot;
-            Vector3 hand = pendingGripPx.HasValue ? PixelToWorld(pendingGripPx.Value) : grip;
+            Vector3 hand = pendingGripPx.HasValue && !EditingOffhand ? PixelToWorld(pendingGripPx.Value) : grip;
             Line(armFront, shoulder, Vector3.Lerp(shoulder, hand, 0.5f) + Vector3.down * 0.12f, hand);
             Vector3 back = hand;
             Vector3 backAxis = rot * (Vector3)Geometry.comLocal;
@@ -283,7 +298,14 @@ namespace MojiBattle
                 offPsi = float.IsNaN(offPsi) ? target : Mathf.LerpAngle(offPsi, target, 1f - Mathf.Exp(-Time.unscaledDeltaTime / Mathf.Max(.01f, CB.dualOffhandLag)));
                 var offRot = Quaternion.Euler(0f, 0f, offPsi - offGeometry.alpha0Deg);
                 back = grip + new Vector3(-0.06f, -0.03f, 0f);
+                if (gripEditing && preserveEditingPose && EditingOffhand)
+                {
+                    offRot = editingRotation;
+                    back = editingPixelOrigin + offRot * (Vector3)(offGeometry.gripPx * offGeometry.scale);
+                }
                 offhand.transform.SetPositionAndRotation(back, offRot);
+                shownOffGrip = back; shownOffRot = offRot;
+                if (pendingGripPx.HasValue && EditingOffhand) back = PixelToWorld(pendingGripPx.Value);
                 backAxis = offRot * (Vector3)offGeometry.comLocal;
             }
             else if (Mods.grip == GripType.TwoHanded)
@@ -298,22 +320,25 @@ namespace MojiBattle
                 Mods.grip == GripType.TwoHanded || HasOffhand, HasOffhand ? backAxis : axis);
             volume.End();
 
-            var rects = glyph.features.colliderRects;
+            var selectedGeometry = EditingGeometry;
+            var selectedPosition = EditingPosition;
+            var selectedRotation = EditingRotation;
+            var rects = EditingGlyph.features.colliderRects;
             for (int i = 0; i < colliderLines.Count; i++)
             {
                 var lr = colliderLines[i];
                 if (!showGuides || i >= rects.Length) { lr.positionCount = 0; continue; }
                 var r = rects[i];
                 lr.positionCount = 4;
-                lr.SetPosition(0, grip + rot * (Vector3)Geometry.PxToLocal(new Vector2(r.xMin, r.yMin)));
-                lr.SetPosition(1, grip + rot * (Vector3)Geometry.PxToLocal(new Vector2(r.xMax, r.yMin)));
-                lr.SetPosition(2, grip + rot * (Vector3)Geometry.PxToLocal(new Vector2(r.xMax, r.yMax)));
-                lr.SetPosition(3, grip + rot * (Vector3)Geometry.PxToLocal(new Vector2(r.xMin, r.yMax)));
+                lr.SetPosition(0, selectedPosition + selectedRotation * (Vector3)selectedGeometry.PxToLocal(new Vector2(r.xMin, r.yMin)));
+                lr.SetPosition(1, selectedPosition + selectedRotation * (Vector3)selectedGeometry.PxToLocal(new Vector2(r.xMax, r.yMin)));
+                lr.SetPosition(2, selectedPosition + selectedRotation * (Vector3)selectedGeometry.PxToLocal(new Vector2(r.xMax, r.yMax)));
+                lr.SetPosition(3, selectedPosition + selectedRotation * (Vector3)selectedGeometry.PxToLocal(new Vector2(r.xMin, r.yMax)));
             }
-            ColliderDebugView.DrawGripMarker(gripMarker, hand + Vector3.back * 0.1f, pendingGripPx.HasValue ? .12f : .08f);
+            ColliderDebugView.DrawGripMarker(gripMarker, (EditingOffhand ? back : hand) + Vector3.back * 0.1f, pendingGripPx.HasValue ? .12f : .08f);
             if (showGuides)
             {
-                ColliderDebugView.DrawComMarker(comMarker, grip + rot * (Vector3)Geometry.comLocal + Vector3.back * 0.1f, 0.09f);
+                ColliderDebugView.DrawComMarker(comMarker, selectedPosition + selectedRotation * (Vector3)selectedGeometry.comLocal + Vector3.back * 0.1f, 0.09f);
             }
             else
             {
@@ -328,10 +353,10 @@ namespace MojiBattle
         public bool TryPickGrip(Vector3 world, out Vector2 normalized, float snapPx = 14f)
         {
             normalized = default;
-            if (Geometry == null || glyph == null) return false;
-            Vector2 local = Quaternion.Inverse(shownRot) * (world - shownGrip);
-            Vector2 px = local / Geometry.scale + Geometry.gripPx;
-            var b = glyph.features.inkBounds;
+            if (EditingGeometry == null || EditingGlyph == null) return false;
+            Vector2 local = Quaternion.Inverse(EditingRotation) * (world - EditingPosition);
+            Vector2 px = local / EditingGeometry.scale + EditingGeometry.gripPx;
+            var b = EditingGlyph.features.inkBounds;
             if (px.x < b.xMin - snapPx || px.x > b.xMax + snapPx || px.y < b.yMin - snapPx || px.y > b.yMax + snapPx) return false;
             if (!NearInk(px, snapPx)) return false;
             normalized = new Vector2((px.x - b.xMin) / Mathf.Max(1f, b.width), (px.y - b.yMin) / Mathf.Max(1f, b.height));
@@ -349,8 +374,8 @@ namespace MojiBattle
 
         void CaptureEditingPose()
         {
-            editingRotation = shownRot;
-            editingPixelOrigin = shownGrip - shownRot * (Vector3)(Geometry.gripPx * Geometry.scale);
+            editingRotation = EditingRotation;
+            editingPixelOrigin = EditingPosition - EditingRotation * (Vector3)(EditingGeometry.gripPx * EditingGeometry.scale);
         }
 
         public void EndGripEditing()
@@ -368,9 +393,9 @@ namespace MojiBattle
         public bool ProjectGrip(Vector3 world, out Vector2 normalized)
         {
             normalized = default;
-            if (Geometry == null || glyph == null) return false;
-            Vector2 px = (Vector2)(Quaternion.Inverse(shownRot) * (world - shownGrip)) / Geometry.scale + Geometry.gripPx;
-            var bounds = glyph.features.inkBounds;
+            if (EditingGeometry == null || EditingGlyph == null) return false;
+            Vector2 px = (Vector2)(Quaternion.Inverse(EditingRotation) * (world - EditingPosition)) / EditingGeometry.scale + EditingGeometry.gripPx;
+            var bounds = EditingGlyph.features.inkBounds;
             normalized = new Vector2(Mathf.Clamp01((px.x - bounds.xMin) / Mathf.Max(1f, bounds.width)),
                 Mathf.Clamp01((px.y - bounds.yMin) / Mathf.Max(1f, bounds.height)));
             return true;
@@ -378,16 +403,17 @@ namespace MojiBattle
 
         public void ShowPendingGrip(Vector2? normalized)
         {
-            pendingGripPx = normalized.HasValue && glyph != null ? WeaponGripController.GripFromPoint(glyph,
-                normalized.Value, CB.gripClampMin * .5f, 1f - (1f - CB.gripClampMax) * .5f, gripPixels) : (Vector2?)null;
+            pendingGripPx = normalized.HasValue && EditingGlyph != null ? WeaponGripController.GripFromPoint(EditingGlyph,
+                normalized.Value, CB.gripClampMin * .5f, 1f - (1f - CB.gripClampMax) * .5f, EditingOffhand ? offPixels : gripPixels) : (Vector2?)null;
             ShowHover(null);
             RenderPose();
         }
 
         bool NearInk(Vector2 px, float radius)
         {
-            var tex = glyph.texture;
-            if (tex == null || gripPixels == null) return true;
+            var tex = EditingGlyph.texture;
+            var pixels = EditingOffhand ? offPixels : gripPixels;
+            if (tex == null || pixels == null) return true;
             int r = Mathf.CeilToInt(radius);
             int cx = Mathf.FloorToInt(px.x), cy = Mathf.FloorToInt(px.y);
             for (int y = cy - r; y <= cy + r; y += 2)
@@ -395,13 +421,13 @@ namespace MojiBattle
             {
                 if (x < 0 || y < 0 || x >= tex.width || y >= tex.height) continue;
                 if ((x - px.x) * (x - px.x) + (y - px.y) * (y - px.y) > radius * radius) continue;
-                if (gripPixels[y * tex.width + x].a >= 128) return true;
+                if (pixels[y * tex.width + x].a >= 128) return true;
             }
             return false;
         }
 
         /// <summary>字形の画素（マスク画素空間）が今表示されているワールド座標（テスト・確認用）。</summary>
-        public Vector3 PixelToWorld(Vector2 px) => shownGrip + shownRot * (Vector3)((px - Geometry.gripPx) * Geometry.scale);
+        public Vector3 PixelToWorld(Vector2 px) => EditingPosition + EditingRotation * (Vector3)((px - EditingGeometry.gripPx) * EditingGeometry.scale);
 
         /// <summary>カーソルが字形の上にある時、握れる場所として丸を出す。</summary>
         public void ShowHover(Vector3? world)
@@ -431,6 +457,7 @@ namespace MojiBattle
         {
             volume?.Dispose();
             if (currentSprite != null) Destroy(currentSprite);
+            if (offSprite != null) Destroy(offSprite);
         }
     }
 }

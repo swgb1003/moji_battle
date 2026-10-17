@@ -178,6 +178,8 @@ namespace MojiBattle
             // 観戦／自操作の切り替えは開始ボタンの右に並べ、2 つ合わせて中央に置く（選手の絵・説明に重ねない）
             RetroUi.Button(overlay,"RunStart","対戦開始 →",330,947,620,75,43,GameFlow.ToRunBattle,RetroUi.Red);
             PlayModePicker.Build(overlay,990,947+(75-PlayModePicker.Height)/2);
+            var stage=StageCatalog.Get(StageCatalog.ForSeed(unchecked(s.seed+s.round*104729),s.round==5));
+            RetroUi.Label(overlay,"RunStageAnnouncement","会場："+stage.Name,600,640,720,54,30,RetroUi.Blue,TextAnchor.MiddleCenter);
         }
         void Upgrade()
         {

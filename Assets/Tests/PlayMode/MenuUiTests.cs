@@ -68,6 +68,7 @@ namespace MojiBattle.Tests
             Button("PreviewGuides").onClick.Invoke(); Assert.IsTrue(screen.Preview.showGuides);
             Button("PreviewGuides").onClick.Invoke(); Assert.IsFalse(screen.Preview.showGuides);
             Button("Battle").onClick.Invoke(); yield return Ready();
+            Assert.IsTrue(screen.StageVisible);Button("ConfirmStage").onClick.Invoke();yield return Ready();
             Assert.IsTrue(screen.VsVisible); Capture("05_vs");
             screen.HideVs(); Assert.IsFalse(screen.VsVisible);
             Button("Side0").onClick.Invoke(); Assert.AreEqual("木", screen.Preview.Build.character);

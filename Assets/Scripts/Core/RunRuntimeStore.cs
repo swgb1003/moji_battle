@@ -56,7 +56,7 @@ namespace MojiBattle
             if(!CanBattle)throw new InvalidOperationException("次戦準備から対戦を始めてください。");
             var s=Current;s.stage=RunStage.Battle;Save();
             return new MatchConfig {left=s.player.ToLoadout(),right=s.Opponent.Build.ToLoadout(),
-                seed=unchecked(s.seed+s.round*104729+s.history.Count*787),durationSeconds=duration};
+                seed=unchecked(s.seed+s.round*104729+s.history.Count*787),stage=StageCatalog.ForSeed(unchecked(s.seed+s.round*104729),s.round==5),durationSeconds=duration};
         }
         public static bool Record(MatchResult result)
         {

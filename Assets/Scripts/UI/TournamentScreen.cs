@@ -87,6 +87,8 @@ namespace MojiBattle
             {
                 var opponent = session.Entrants[upcoming.LeftId == 0 ? upcoming.RightId : upcoming.LeftId];
                 nextOpponent.text = $"<color=#{ColorUtility.ToHtmlStringRGB(RetroUi.Red)}>{session.Entrants[0].Build.character}</color>   VS   <color=#{ColorUtility.ToHtmlStringRGB(RetroUi.Blue)}>{opponent.Build.character}</color>";
+                var stage=StageCatalog.Get(StageCatalog.ForSeed(upcoming.Seed,upcoming.Round==2));
+                nextOpponent.text+=$"\n<size=22>会場：{stage.Name}</size>";
             }
             else nextOpponent.text = error != null ? "結果を再集計してください"
                 : session.ChampionId >= 0 ? "優勝  " + session.Entrants[session.ChampionId].Build.character

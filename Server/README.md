@@ -39,3 +39,7 @@ npm test
 ```
 
 通信実装参考：[UnityWebRequest](https://docs.unity3d.com/ja/2023.2/ScriptReference/Networking.UnityWebRequest.html)。
+# 漢字の分離対応表
+
+`split-kanji.csv` はUnity側の構成表と同じ内容を配布する。プロジェクト全体では `python Tools/sync_split_catalog.py --check` で一致を検査する。サーバー単体を更新するときも、このCSVを `server.mjs` とともに配備する。現在は121字、通信プロトコルはv4。古いクライアントは再読み込みしてから接続する。
+

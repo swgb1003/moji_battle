@@ -1,0 +1,361 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d69669bff785849a623abdad1a673e, type: 3}
+  m_Name: u8a71_rounded
+  m_EditorClassIdentifier: 
+  grapheme: "\u8A71"
+  font: 2
+  mask: {fileID: 2800000, guid: ec3ff6546c545844b95d2bd104038ff7, type: 3}
+  features:
+    inkRatio: 0.44152778
+    widthRatio: 0.95
+    heightRatio: 0.8875
+    edgeRatio: 10.2
+    balance: 0.971265
+    centerOfMass: {x: 126.22786, y: 127.45993}
+    colliderRects:
+    - serializedVersion: 2
+      x: 52
+      y: 21
+      width: 28
+      height: 27
+    - serializedVersion: 2
+      x: 152
+      y: 22
+      width: 44
+      height: 26
+    - serializedVersion: 2
+      x: 40
+      y: 24
+      width: 52
+      height: 8
+    - serializedVersion: 2
+      x: 144
+      y: 24
+      width: 64
+      height: 8
+    - serializedVersion: 2
+      x: 36
+      y: 28
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 77
+      y: 28
+      width: 23
+      height: 60
+    - serializedVersion: 2
+      x: 136
+      y: 28
+      width: 80
+      height: 8
+    - serializedVersion: 2
+      x: 32
+      y: 32
+      width: 24
+      height: 56
+    - serializedVersion: 2
+      x: 132
+      y: 32
+      width: 8
+      height: 72
+    - serializedVersion: 2
+      x: 196
+      y: 32
+      width: 24
+      height: 72
+    - serializedVersion: 2
+      x: 28
+      y: 36
+      width: 4
+      height: 44
+    - serializedVersion: 2
+      x: 100
+      y: 36
+      width: 4
+      height: 48
+    - serializedVersion: 2
+      x: 128
+      y: 36
+      width: 24
+      height: 64
+    - serializedVersion: 2
+      x: 220
+      y: 36
+      width: 4
+      height: 60
+    - serializedVersion: 2
+      x: 100
+      y: 44
+      width: 7
+      height: 28
+    - serializedVersion: 2
+      x: 124
+      y: 44
+      width: 4
+      height: 48
+    - serializedVersion: 2
+      x: 220
+      y: 44
+      width: 8
+      height: 44
+    - serializedVersion: 2
+      x: 152
+      y: 48
+      width: 16
+      height: 4
+    - serializedVersion: 2
+      x: 184
+      y: 48
+      width: 12
+      height: 4
+    - serializedVersion: 2
+      x: 152
+      y: 52
+      width: 4
+      height: 12
+    - serializedVersion: 2
+      x: 56
+      y: 68
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 72
+      y: 68
+      width: 8
+      height: 4
+    - serializedVersion: 2
+      x: 56
+      y: 72
+      width: 24
+      height: 24
+    - serializedVersion: 2
+      x: 152
+      y: 72
+      width: 4
+      height: 8
+    - serializedVersion: 2
+      x: 148
+      y: 80
+      width: 12
+      height: 31
+    - serializedVersion: 2
+      x: 192
+      y: 80
+      width: 12
+      height: 31
+    - serializedVersion: 2
+      x: 160
+      y: 84
+      width: 31
+      height: 140
+    - serializedVersion: 2
+      x: 188
+      y: 84
+      width: 8
+      height: 28
+    - serializedVersion: 2
+      x: 40
+      y: 88
+      width: 56
+      height: 4
+    - serializedVersion: 2
+      x: 48
+      y: 92
+      width: 40
+      height: 3
+    - serializedVersion: 2
+      x: 140
+      y: 100
+      width: 72
+      height: 8
+    - serializedVersion: 2
+      x: 32
+      y: 105
+      width: 68
+      height: 23
+    - serializedVersion: 2
+      x: 28
+      y: 108
+      width: 4
+      height: 19
+    - serializedVersion: 2
+      x: 100
+      y: 108
+      width: 4
+      height: 16
+    - serializedVersion: 2
+      x: 26
+      y: 112
+      width: 2
+      height: 8
+    - serializedVersion: 2
+      x: 32
+      y: 138
+      width: 68
+      height: 25
+    - serializedVersion: 2
+      x: 28
+      y: 140
+      width: 8
+      height: 20
+    - serializedVersion: 2
+      x: 96
+      y: 140
+      width: 8
+      height: 20
+    - serializedVersion: 2
+      x: 188
+      y: 140
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 26
+      y: 144
+      width: 2
+      height: 12
+    - serializedVersion: 2
+      x: 112
+      y: 144
+      width: 4
+      height: 24
+    - serializedVersion: 2
+      x: 116
+      y: 144
+      width: 44
+      height: 26
+    - serializedVersion: 2
+      x: 188
+      y: 144
+      width: 48
+      height: 28
+    - serializedVersion: 2
+      x: 236
+      y: 144
+      width: 4
+      height: 24
+    - serializedVersion: 2
+      x: 108
+      y: 148
+      width: 8
+      height: 16
+    - serializedVersion: 2
+      x: 236
+      y: 148
+      width: 8
+      height: 16
+    - serializedVersion: 2
+      x: 20
+      y: 172
+      width: 92
+      height: 24
+    - serializedVersion: 2
+      x: 16
+      y: 176
+      width: 4
+      height: 19
+    - serializedVersion: 2
+      x: 14
+      y: 180
+      width: 2
+      height: 8
+    - serializedVersion: 2
+      x: 112
+      y: 180
+      width: 3
+      height: 12
+    - serializedVersion: 2
+      x: 120
+      y: 196
+      width: 40
+      height: 24
+    - serializedVersion: 2
+      x: 116
+      y: 200
+      width: 4
+      height: 19
+    - serializedVersion: 2
+      x: 114
+      y: 204
+      width: 2
+      height: 8
+    - serializedVersion: 2
+      x: 188
+      y: 204
+      width: 20
+      height: 4
+    - serializedVersion: 2
+      x: 32
+      y: 206
+      width: 68
+      height: 25
+    - serializedVersion: 2
+      x: 28
+      y: 208
+      width: 4
+      height: 20
+    - serializedVersion: 2
+      x: 96
+      y: 208
+      width: 8
+      height: 20
+    - serializedVersion: 2
+      x: 188
+      y: 208
+      width: 36
+      height: 24
+    - serializedVersion: 2
+      x: 224
+      y: 212
+      width: 4
+      height: 20
+    - serializedVersion: 2
+      x: 26
+      y: 216
+      width: 2
+      height: 8
+    - serializedVersion: 2
+      x: 224
+      y: 216
+      width: 7
+      height: 12
+    - serializedVersion: 2
+      x: 128
+      y: 220
+      width: 32
+      height: 4
+    - serializedVersion: 2
+      x: 164
+      y: 224
+      width: 24
+      height: 4
+    - serializedVersion: 2
+      x: 204
+      y: 232
+      width: 20
+      height: 4
+    inkBounds:
+      x: 15
+      y: 22
+      width: 228
+      height: 213
+    gripPoint: {x: 31.5, y: 58.5}
+    componentCount: 6
+    maskSize: 256
+    emSizePx: 240
+    colliderGridUsed: 64
+  fontAssetPath: Assets/Art/Fonts/RoundedGothic/ZenMaruGothic-Bold.ttf
+  fontFamily: Zen Maru Gothic
+  fontHash: fe24426b9c8b5523a0146a8235c8674eccf0493af354a53ec895c3596d9eb745
+  settingsHash: fb8263744cba8b65
+  bakedAt: 2026-10-16T19:03:30
+  unityVersion: 6000.0.61f1

@@ -61,10 +61,11 @@ namespace MojiBattle
         public SpecialMoveData move;
         public bool HasAppearance => move != null;
         public static string StandardName(string character) => BuiltinSpecialMoves.For(character).name;
+        public static string StandardName(FighterBuildData build) => BuiltinSpecialMoves.For(build).name;
 
         public static SpecialMovePlan For(Fighter f, InterventionTuning t)
         {
-            var move = f.Loadout.build?.EquippedSpecial ?? BuiltinSpecialMoves.For(f.Loadout.grapheme);
+            var move = f.Loadout.build?.EquippedSpecial ?? (f.Loadout.build != null ? BuiltinSpecialMoves.For(f.Loadout.build) : BuiltinSpecialMoves.For(f.Loadout.grapheme));
             var styles = move.Styles();
             return new SpecialMovePlan
             {

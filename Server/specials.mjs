@@ -26,14 +26,14 @@ export const graphemes = s => [...segmenter.segment(s)].map(x => x.segment);
 const clip = (s, n) => graphemes(String(s ?? '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim()).slice(0, n).join('');
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
 
-/** 技名の条件: 選んだ一文字を必ず含み、7 文字以内。 */
-export function checkName(name, character) {
+/** 7文字以内。通常文字では選んだ文字を含める。検証済みの合成文字は自由命名。 */
+export function checkName(name, character, composed = false) {
   if (typeof character !== 'string' || graphemes(character.trim()).length !== 1) fail(400, '文字を一つ選んでください。');
   if (typeof name !== 'string' || /[\u0000-\u001f\u007f<>]/.test(name)) fail(400, '技名を入力してください。');
   const n = name.trim(), length = graphemes(n).length;
   if (length < 1) fail(400, '技名を入力してください。');
   if (length > MAX_NAME) fail(400, `技名は${MAX_NAME}文字以内にしてください。`);
-  if (!graphemes(n).includes(character.trim())) fail(400, `技名に「${character.trim()}」を入れてください。`);
+  if (!composed && !graphemes(n).includes(character.trim())) fail(400, `技名に「${character.trim()}」を入れてください。`);
   return n;
 }
 
@@ -41,11 +41,12 @@ export function checkName(name, character) {
  * AI の出力も、クライアントから届いた装備も、同じ規則で丸める。
  * 能力の合計は STAT_BUDGET まで（名前で強さが決まらないように）。不明な値は無難な既定へ。
  */
-export function sanitizeSpecial(raw, character) {
+export function sanitizeSpecial(raw, character, fusion = null) {
   if (!raw || typeof raw !== 'object' || typeof raw.name !== 'string' || !raw.name.trim()) return null;
   if (typeof raw.character === 'string' && raw.character && raw.character !== character) return null; // made for another character
+  if (raw.fusionEnabled && (!fusion || !sameFusion(raw.fusion, fusion))) return null;
   let name;
-  try { name = checkName(raw.name, character); } catch { return null; }
+  try { name = checkName(raw.name, character, fusion != null && raw.fusionEnabled === true); } catch { return null; }
   const steps = (Array.isArray(raw.steps) ? raw.steps : []).filter(s => Object.hasOwn(STYLES, s)).slice(0, MAX_STEPS);
   if (steps.length === 0) steps.push('DashSlash');
   const stat = v => Math.min(MAX_STAT, Math.max(1, Math.round(Number.isFinite(v) ? v : 3)));
@@ -55,9 +56,17 @@ export function sanitizeSpecial(raw, character) {
   const effect = Object.hasOwn(EFFECTS, raw.effect) ? raw.effect : 'burst';
   const hex = (v, fallback) => typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v.toUpperCase() : fallback;
   const [p, s] = ELEMENT_COLORS[element];
-  return { name, character: character.trim(), reading: clip(raw.reading, 16), steps, power: stats[0], speed: stats[1], reach: stats[2],
+  return { name, character: character.trim(), ...(fusion ? { fusionEnabled: true, fusion } : {}), reading: clip(raw.reading, 16), steps, power: stats[0], speed: stats[1], reach: stats[2],
     element, effect, primary: hex(raw.primary, p), secondary: hex(raw.secondary, s),
     callout: clip(raw.callout, 14), description: clip(raw.description, 48) };
+}
+
+// Match the portable geometry fields; renaming a saved glyph does not change its techniques.
+function sameFusion(a, b) {
+  return a && ['version', 'leftSource', 'rightSource', 'leftWidth', 'leftHeight', 'rightWidth', 'rightHeight',
+    'leftX', 'leftY', 'rightX', 'rightY', 'gap'].every(k => a[k] === b[k]) &&
+    (a.layout ?? 0) === (b.layout ?? 0) && (a.leftUseSecond ?? false) === (b.leftUseSecond ?? false) &&
+    (a.rightUseFirst ?? false) === (b.rightUseFirst ?? false);
 }
 
 const schema = {
@@ -108,7 +117,7 @@ ${list(EFFECTS)}
 export function createClaudeGenerator({ apiKey = process.env.ANTHROPIC_API_KEY, model = process.env.SPECIAL_MODEL || 'claude-opus-5-5', fetch } = {}) {
   if (!apiKey) return null;
   const client = new Anthropic({ apiKey, timeout: 45000, maxRetries: 1, ...(fetch ? { fetch } : {}) });
-  return async ({ character, name }) => {
+  return async ({ character, name, weaponDescription }) => {
     let response;
     try {
       response = await client.beta.messages.create({
@@ -116,7 +125,7 @@ export function createClaudeGenerator({ apiKey = process.env.ANTHROPIC_API_KEY, 
         betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
         output_config: { effort: 'low', format: { type: 'json_schema', schema } },
         system,
-        messages: [{ role: 'user', content: `武器の文字: ${character}\n必殺技名: ${name}` }],
+        messages: [{ role: 'user', content: `武器の文字: ${weaponDescription || character}\n必殺技名: ${name}` }],
       });
     } catch (e) {
       if (e instanceof Anthropic.RateLimitError) fail(503, 'AI が混み合っています。少し待ってからお試しください。');

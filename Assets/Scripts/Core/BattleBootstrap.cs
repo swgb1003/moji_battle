@@ -52,7 +52,7 @@ namespace MojiBattle
             {
                 var room = FriendRoomSession.Instance.Room;
                 BuildMatch(new MatchConfig { left = room.players[0].build.ToLoadout(), right = room.players[1].build.ToLoadout(),
-                    seed = room.seed, durationSeconds = (balance != null ? balance : CombatBalance.Default).matchDuration });
+                    seed = room.seed, stage=(BattleStageId)Mathf.Clamp(room.arena,0,5), durationSeconds = (balance != null ? balance : CombatBalance.Default).matchDuration });
                 if (battle != null)
                 {
                     // 自分の陣営はこの端末、相手の陣営はオンラインの友人が操作する
@@ -107,6 +107,7 @@ namespace MojiBattle
                 left = custom ? BuildRuntimeStore.Get(0).ToLoadout() : new FighterLoadout(leftGrapheme, leftFont),
                 right = custom ? BuildRuntimeStore.Get(1).ToLoadout() : new FighterLoadout(rightGrapheme, rightFont),
                 seed = matchSeed,
+                stage = GameFlow.PracticeMode?BattleStageId.Dojo:StageSession.Selected,
                 durationSeconds = b.matchDuration,
             };
             BuildMatch(config);
@@ -253,6 +254,11 @@ namespace MojiBattle
         /// <summary>リザルトの操作: 同じ設定でもう一度（新しい seed）/ カスタマイズへ戻る。</summary>
         void ShowResultButtons()
         {
+            if(!GameFlow.FriendMode && !GameFlow.PracticeMode)
+            {
+                if(resultPanel!=null){resultPanel.SetActive(false);Destroy(resultPanel);}
+                resultPanel=StageResultScreen.Build(battle.Director,RematchSameBuild);return;
+            }
             if (resultPanel == null)
             {
                 var canvas = UguiKit.MakeCanvas("ResultCanvas", 10);

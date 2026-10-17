@@ -114,7 +114,7 @@ namespace MojiBattle
             var m=Match(id);
             if(m==null || !m.Ready)throw new InvalidOperationException("この試合は開始できません。");
             m.InProgress=true;
-            return new MatchConfig {left=Entrants[m.LeftId].Build.ToLoadout(),right=Entrants[m.RightId].Build.ToLoadout(),seed=m.Seed,durationSeconds=duration};
+            return new MatchConfig {left=Entrants[m.LeftId].Build.ToLoadout(),right=Entrants[m.RightId].Build.ToLoadout(),seed=m.Seed,stage=StageCatalog.ForSeed(m.Seed,m.Group<0&&m.Round==4&&!m.Bronze),durationSeconds=duration};
         }
         public void CancelStart(int id){var m=Match(id);if(m!=null && !m.Complete)m.InProgress=false;}
         public bool Record(int id,MatchResult r)

@@ -33,10 +33,12 @@ Unityのソース全体ではなく、**Builds/WebGLの内容だけ**を公開�
 Vercelにログイン済みのCLIから、接続先チームを明示して公開できます。
 
 ```powershell
-npx vercel@63.0.0 --scope swgb1003-5441s-projects deploy Builds/WebGL --prod
+npx vercel@63.0.0 --scope swgb1003-5441s-projects deploy Builds/WebGL --prod --archive=tgz
 ```
 
 更新時もWebビルドを作り直して同じプロジェクトへデプロイします。生成する `.vercelignore` で、認証・接続管理用の `.env*` と `.vercel` を公開対象から除外します。
+
+大きなUnityデータを含む場合はアーカイブ形式でアップロードします。Vercel CLI 63の `--archive=tgz` は分割アーカイブとして送信されるため、通常のファイルアップロードで発生する100MB制限に対応できます。ゲームデータや画質は変更しません。
 
 ## 配信の検証
 

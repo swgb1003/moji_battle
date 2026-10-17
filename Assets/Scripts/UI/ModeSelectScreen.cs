@@ -16,48 +16,46 @@ namespace MojiBattle
             RetroUi.Header(root, "01 / MODE SELECT", GameFlow.ToTitle);
             RetroUi.Button(root, "MenuSettings", "⚙ 設定", 1260, 55, 220, 60, 30, SettingsScreen.Open, RetroUi.Ink, false);
             RetroUi.Heading(root, "遊び方を選ぶ", 88);
+            RetroUi.Button(root, "FusionMode", "文字合成 →", 1414, 159, 430, 78, 34, () => FusionScreen.Open(build =>
+            { BuildRuntimeStore.Set(0, build); GameFlow.ToCustomize(); }), RetroUi.Red);
             Card(root, 78, "BattleMode", "01", "バトル", "文字を自由にカスタマイズ", "バトルへ →", RetroUi.Red, GameFlow.ToCustomize, false);
             Card(root, 526, "TournamentMode", "02", "トーナメント", "大会を選んで頂点を目指す", "大会へ →", RetroUi.Blue, GameFlow.ToTournamentSelect, true);
             Card(root, 974, "ChallengeMode", "03", "お題バトル", "条件を攻略して腕を試す", "お題を選ぶ →", RetroUi.Red, GameFlow.ToChallenges, false);
             Card(root, 1422, "DraftMode", "04", "文字ドラフト", "候補から選んだ文字で戦う", "ドラフトへ →", RetroUi.Red, GameFlow.ToDraftIntro, false);
-            var run=DraftUi.Panel(root,"RunMode",78,724,1040,284);
+            var run=DraftUi.Panel(root,"RunMode",78,724,420,284);
             var runHit=CardHit(run,"RunMode",GameFlow.ToRunIntro);
-            ChallengeScreen.Tag(run,"05",18,18,70);
-            RetroUi.Label(run,"Title","勝ち抜き・育成",114,15,600,68,44);
-            ChallengeScreen.Stamp(run,"NEW",910,25,92,34);
-            RetroUi.Label(run,"Caption","一文字を育て、五連戦を突破せよ。",32,93,970,50,30);
-            RunUi.Progress(run,36,162,500,1,0);
-            var runStart=RetroUi.Button(run,"RunModeStart","挑戦を始める →",610,180,394,68,34,GameFlow.ToRunIntro,RetroUi.Red);
+            RetroUi.Label(run,"Title","勝ち抜き・育成",20,12,380,58,37);
+            RetroUi.Label(run,"Caption","一文字を育て、五連戦を突破せよ。",20,78,380,42,22);
+            RunUi.Progress(run,25,135,365,1,0);
+            var runStart=RetroUi.Button(run,"RunModeStart","挑戦を始める →",20,214,380,48,28,GameFlow.ToRunIntro,RetroUi.Red);
             run.gameObject.AddComponent<ModeCardHover>().Bind(this,runHit,runStart);
-            // 右の列: 練習・友人と対戦・称号（各 88 の高さ）
-            var practice=DraftUi.Panel(root,"PracticeMode",1142,724,700,88);
+            var practice=DraftUi.Panel(root,"PracticeMode",526,724,420,284);
             var practiceHit=CardHit(practice,"PracticeMode",GameFlow.ToPractice);
-            ChallengeScreen.Tag(practice,"06",18,14,70);
-            RetroUi.Fighter(practice,112,6,.17f,"練",RetroUi.Red);
-            RetroUi.Label(practice,"Title","練習",228,4,200,48,33);
-            RetroUi.Label(practice,"Caption","自操作で技を試す",228,48,260,32,20);
-            var practiceStart=RetroUi.Button(practice,"PracticeModeStart","練習へ →",502,18,168,52,27,GameFlow.ToPractice,RetroUi.Red);
+            RetroUi.Fighter(practice,245,51,.36f,"練",RetroUi.Red);
+            RetroUi.Label(practice,"Title","練習",20,12,380,58,37);
+            RetroUi.Label(practice,"Caption","自操作で\n動きと技を試す",20,86,230,80,24);
+            var practiceStart=RetroUi.Button(practice,"PracticeModeStart","練習へ →",20,214,380,48,28,GameFlow.ToPractice,RetroUi.Red);
             practice.gameObject.AddComponent<ModeCardHover>().Bind(this,practiceHit,practiceStart);
-            var friends=DraftUi.Panel(root,"FriendMode",1142,822,700,88);
+            var friends=DraftUi.Panel(root,"FriendMode",974,724,420,284);
             var friendHit=CardHit(friends,"FriendMode",()=>GameFlow.ToFriendRoom());
-            ChallengeScreen.Tag(friends,"07",18,14,70);
-            var symbol=RetroUi.Group(friends,"FriendConnectionIcon",120,8,80,70).gameObject.AddComponent<AchievementSymbolGraphic>();symbol.friends=true;symbol.raycastTarget=false;
-            RetroUi.Label(friends,"Title","友人と対戦",228,4,260,48,33);
-            RetroUi.Label(friends,"Caption","ルームコードでつながる",228,48,260,32,20);
-            var friendStart=RetroUi.Button(friends,"FriendModeStart","対戦へ →",502,18,168,52,27,()=>GameFlow.ToFriendRoom(),RetroUi.Ink);
+            var symbol=RetroUi.Group(friends,"FriendConnectionIcon",256,85,130,102).gameObject.AddComponent<AchievementSymbolGraphic>();symbol.friends=true;symbol.raycastTarget=false;
+            RetroUi.Label(friends,"Title","友人と対戦",20,12,380,58,37);
+            RetroUi.Label(friends,"Caption","ルームコードで\n友人とつながる",20,86,240,80,24);
+            var friendStart=RetroUi.Button(friends,"FriendModeStart","対戦へ →",20,214,380,48,28,()=>GameFlow.ToFriendRoom(),RetroUi.Ink);
             friends.gameObject.AddComponent<ModeCardHover>().Bind(this,friendHit,friendStart);
-            var awards=DraftUi.Panel(root,"AchievementsMode",1142,920,700,88);
+            var awards=DraftUi.Panel(root,"AchievementsMode",1422,724,420,284);
             var awardsHit=CardHit(awards,"AchievementsMode",GameFlow.ToAchievements);
-            ChallengeScreen.Tag(awards,"08",18,14,70);
-            AchievementBadge.Create(awards,3,true,120,6,76);
-            RetroUi.Label(awards,"Title","称号",228,4,150,48,33);
-            achievementCount=RetroUi.Label(awards,"Count","",228,48,265,32,22);
-            var newRoot=RetroUi.Group(awards,"NewAchievements",378,14,70,29);
+            AchievementBadge.Create(awards,3,true,260,83,112);
+            RetroUi.Label(awards,"Title","称号",20,12,380,58,37);
+            achievementCount=RetroUi.Label(awards,"Count","",20,100,250,48,27);
+            var newRoot=RetroUi.Group(awards,"NewAchievements",260,24,70,29);
             RetroUi.Block(newRoot,"Plate",0,0,70,29,RetroUi.Red);RetroUi.Label(newRoot,"Label","NEW",0,0,70,29,22,RetroUi.Paper,TextAnchor.MiddleCenter);
             achievementNew=newRoot.gameObject;
-            var awardsStart=RetroUi.Button(awards,"AchievementsStart","称号を見る →",502,18,168,52,25,GameFlow.ToAchievements,RetroUi.Ink);
+            var awardsStart=RetroUi.Button(awards,"AchievementsStart","称号を見る →",20,214,380,48,28,GameFlow.ToAchievements,RetroUi.Ink);
             awards.gameObject.AddComponent<ModeCardHover>().Bind(this,awardsHit,awardsStart);
             CreateHoverFrame(root);
+            foreach(var t in root.GetComponentsInChildren<UnityEngine.UI.Text>(true))
+                if(t.fontSize>=30){t.font=WorldCupDesign.HeadingFont;t.fontStyle=FontStyle.Normal;}
             AchievementStore.Changed+=RefreshAchievements;
             RefreshAchievements();
         }
@@ -76,6 +74,8 @@ namespace MojiBattle
             var heading=RetroUi.Label(panel, "Heading", title, 84, 16, draft?255:314,70,38,null,TextAnchor.MiddleCenter);
             heading.resizeTextForBestFit=true; heading.resizeTextMinSize=27; heading.resizeTextMaxSize=38;
             RetroUi.Block(panel, "HeadingRule", 25, 96, 370, 2, RetroUi.Ink);
+            var scene=StageUi.Preview(panel,tournament?BattleStageId.Letterpress:challenge?BattleStageId.Exam:draft?BattleStageId.Dictionary:BattleStageId.Calligraphy,18,104,384,189,false);
+            scene.GetComponentInChildren<UnityEngine.UI.RawImage>().color=new Color(1,1,1,.52f);
             if (tournament)
             {
                 RetroUi.Group(panel, "TournamentIcon", 50, 106, 320, 180).gameObject.AddComponent<TournamentMenuGraphic>();
@@ -117,6 +117,7 @@ namespace MojiBattle
         internal void DeselectCard(ModeCardHover card){if(selectedCard==card)selectedCard=null;}
         void Update()
         {
+            if (FusionScreen.BlocksInput) return;
             if(hoverFrame!=null)
             {
                 var focus=SettingsScreen.IsOpen?null:hoveredCard!=null?hoveredCard:selectedCard;

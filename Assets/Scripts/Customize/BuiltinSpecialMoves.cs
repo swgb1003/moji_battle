@@ -55,6 +55,17 @@ namespace MojiBattle
         public static int Count => Presets.Length;
         public static string Representative(int index) => Presets[index].characters.Substring(0,1);
 
+        public static SpecialMoveData For(FighterBuildData build)
+        {
+            var move = For(build?.character);
+            if (build != null && build.HasFusion)
+            {
+                move.name = "創字" + move.name.Substring(build.character.Length); move.reading = "";
+                move.fusionEnabled = true; move.fusion = build.fusion.Clone();
+            }
+            return move;
+        }
+
         public static SpecialMoveData For(string character)
         {
             if (string.IsNullOrEmpty(character)) character="一";

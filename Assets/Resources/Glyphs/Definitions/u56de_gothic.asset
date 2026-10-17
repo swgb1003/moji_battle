@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d69669bff785849a623abdad1a673e, type: 3}
+  m_Name: u56de_gothic
+  m_EditorClassIdentifier: 
+  grapheme: "\u56DE"
+  font: 0
+  mask: {fileID: 2800000, guid: 3fd4fe3b8a965af4abbfce06a85bed54, type: 3}
+  features:
+    inkRatio: 0.4967361
+    widthRatio: 0.85833335
+    heightRatio: 0.90416664
+    edgeRatio: 8.358334
+    balance: 0.99653774
+    centerOfMass: {x: 128.21861, y: 128.97714}
+    colliderRects:
+    - serializedVersion: 2
+      x: 24
+      y: 16
+      width: 32
+      height: 12
+    - serializedVersion: 2
+      x: 200
+      y: 16
+      width: 32
+      height: 12
+    - serializedVersion: 2
+      x: 24
+      y: 28
+      width: 208
+      height: 28
+    - serializedVersion: 2
+      x: 24
+      y: 56
+      width: 32
+      height: 144
+    - serializedVersion: 2
+      x: 200
+      y: 56
+      width: 32
+      height: 144
+    - serializedVersion: 2
+      x: 80
+      y: 82
+      width: 96
+      height: 2
+    - serializedVersion: 2
+      x: 77
+      y: 84
+      width: 99
+      height: 24
+    - serializedVersion: 2
+      x: 77
+      y: 108
+      width: 31
+      height: 40
+    - serializedVersion: 2
+      x: 144
+      y: 108
+      width: 32
+      height: 40
+    - serializedVersion: 2
+      x: 77
+      y: 148
+      width: 99
+      height: 28
+    - serializedVersion: 2
+      x: 24
+      y: 200
+      width: 208
+      height: 34
+    inkBounds:
+      x: 25
+      y: 16
+      width: 206
+      height: 217
+    gripPoint: {x: 128, y: 29.5}
+    componentCount: 2
+    maskSize: 256
+    emSizePx: 240
+    colliderGridUsed: 64
+  fontAssetPath: Assets/Art/Fonts/Gothic/NotoSansJP-Bold.ttf
+  fontFamily: Noto Sans JP
+  fontHash: 9e4e354e728cfc32e04bbc0bf686c7285a1cf47f64ce2ac27c1d813ad1dc9d63
+  settingsHash: fb8263744cba8b65
+  bakedAt: 2026-10-16T19:03:01
+  unityVersion: 6000.0.61f1

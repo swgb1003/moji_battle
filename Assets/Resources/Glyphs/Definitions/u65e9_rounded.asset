@@ -1,0 +1,201 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d69669bff785849a623abdad1a673e, type: 3}
+  m_Name: u65e9_rounded
+  m_EditorClassIdentifier: 
+  grapheme: "\u65E9"
+  font: 2
+  mask: {fileID: 2800000, guid: 81e525649689a5f4395d8fc9437b964d, type: 3}
+  features:
+    inkRatio: 0.37458333
+    widthRatio: 0.9458333
+    heightRatio: 0.9125
+    edgeRatio: 7.025
+    balance: 0.99864995
+    centerOfMass: {x: 128.14604, y: 141.92139}
+    colliderRects:
+    - serializedVersion: 2
+      x: 124
+      y: 14
+      width: 8
+      height: 2
+    - serializedVersion: 2
+      x: 117
+      y: 16
+      width: 23
+      height: 4
+    - serializedVersion: 2
+      x: 116
+      y: 20
+      width: 27
+      height: 4
+    - serializedVersion: 2
+      x: 112
+      y: 24
+      width: 32
+      height: 52
+    - serializedVersion: 2
+      x: 20
+      y: 76
+      width: 219
+      height: 4
+    - serializedVersion: 2
+      x: 16
+      y: 80
+      width: 224
+      height: 4
+    - serializedVersion: 2
+      x: 14
+      y: 84
+      width: 229
+      height: 8
+    - serializedVersion: 2
+      x: 16
+      y: 92
+      width: 227
+      height: 4
+    - serializedVersion: 2
+      x: 16
+      y: 96
+      width: 224
+      height: 4
+    - serializedVersion: 2
+      x: 20
+      y: 100
+      width: 216
+      height: 4
+    - serializedVersion: 2
+      x: 112
+      y: 104
+      width: 32
+      height: 16
+    - serializedVersion: 2
+      x: 76
+      y: 120
+      width: 104
+      height: 4
+    - serializedVersion: 2
+      x: 60
+      y: 124
+      width: 136
+      height: 4
+    - serializedVersion: 2
+      x: 56
+      y: 128
+      width: 144
+      height: 4
+    - serializedVersion: 2
+      x: 52
+      y: 132
+      width: 152
+      height: 4
+    - serializedVersion: 2
+      x: 48
+      y: 136
+      width: 160
+      height: 8
+    - serializedVersion: 2
+      x: 45
+      y: 144
+      width: 166
+      height: 4
+    - serializedVersion: 2
+      x: 45
+      y: 148
+      width: 39
+      height: 4
+    - serializedVersion: 2
+      x: 172
+      y: 148
+      width: 39
+      height: 4
+    - serializedVersion: 2
+      x: 44
+      y: 152
+      width: 32
+      height: 12
+    - serializedVersion: 2
+      x: 180
+      y: 152
+      width: 32
+      height: 12
+    - serializedVersion: 2
+      x: 44
+      y: 164
+      width: 168
+      height: 28
+    - serializedVersion: 2
+      x: 44
+      y: 192
+      width: 32
+      height: 12
+    - serializedVersion: 2
+      x: 180
+      y: 192
+      width: 32
+      height: 12
+    - serializedVersion: 2
+      x: 45
+      y: 204
+      width: 39
+      height: 4
+    - serializedVersion: 2
+      x: 172
+      y: 204
+      width: 39
+      height: 4
+    - serializedVersion: 2
+      x: 46
+      y: 208
+      width: 164
+      height: 4
+    - serializedVersion: 2
+      x: 48
+      y: 212
+      width: 160
+      height: 8
+    - serializedVersion: 2
+      x: 52
+      y: 220
+      width: 152
+      height: 4
+    - serializedVersion: 2
+      x: 56
+      y: 224
+      width: 144
+      height: 4
+    - serializedVersion: 2
+      x: 64
+      y: 228
+      width: 128
+      height: 4
+    - serializedVersion: 2
+      x: 80
+      y: 232
+      width: 96
+      height: 3
+    inkBounds:
+      x: 15
+      y: 15
+      width: 227
+      height: 219
+    gripPoint: {x: 29.5, y: 89}
+    componentCount: 1
+    maskSize: 256
+    emSizePx: 240
+    colliderGridUsed: 64
+  fontAssetPath: Assets/Art/Fonts/RoundedGothic/ZenMaruGothic-Bold.ttf
+  fontFamily: Zen Maru Gothic
+  fontHash: fe24426b9c8b5523a0146a8235c8674eccf0493af354a53ec895c3596d9eb745
+  settingsHash: fb8263744cba8b65
+  bakedAt: 2026-10-16T19:03:36
+  unityVersion: 6000.0.61f1

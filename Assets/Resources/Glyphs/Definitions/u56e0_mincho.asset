@@ -1,0 +1,361 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d69669bff785849a623abdad1a673e, type: 3}
+  m_Name: u56e0_mincho
+  m_EditorClassIdentifier: 
+  grapheme: "\u56E0"
+  font: 1
+  mask: {fileID: 2800000, guid: 68233d695fdd4b745acbab6991ccb549, type: 3}
+  features:
+    inkRatio: 0.33743057
+    widthRatio: 0.84166664
+    heightRatio: 0.92083335
+    edgeRatio: 10.533334
+    balance: 0.9917179
+    centerOfMass: {x: 129.7284, y: 127.18075}
+    colliderRects:
+    - serializedVersion: 2
+      x: 32
+      y: 16
+      width: 20
+      height: 4
+    - serializedVersion: 2
+      x: 194
+      y: 16
+      width: 18
+      height: 12
+    - serializedVersion: 2
+      x: 29
+      y: 17
+      width: 3
+      height: 27
+    - serializedVersion: 2
+      x: 32
+      y: 20
+      width: 28
+      height: 204
+    - serializedVersion: 2
+      x: 212
+      y: 20
+      width: 8
+      height: 4
+    - serializedVersion: 2
+      x: 196
+      y: 24
+      width: 28
+      height: 204
+    - serializedVersion: 2
+      x: 224
+      y: 28
+      width: 2
+      height: 8
+    - serializedVersion: 2
+      x: 192
+      y: 32
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 60
+      y: 36
+      width: 136
+      height: 8
+    - serializedVersion: 2
+      x: 64
+      y: 56
+      width: 8
+      height: 8
+    - serializedVersion: 2
+      x: 68
+      y: 60
+      width: 12
+      height: 8
+    - serializedVersion: 2
+      x: 164
+      y: 60
+      width: 12
+      height: 8
+    - serializedVersion: 2
+      x: 72
+      y: 64
+      width: 16
+      height: 8
+    - serializedVersion: 2
+      x: 161
+      y: 65
+      width: 3
+      height: 3
+    - serializedVersion: 2
+      x: 88
+      y: 68
+      width: 4
+      height: 20
+    - serializedVersion: 2
+      x: 156
+      y: 68
+      width: 24
+      height: 24
+    - serializedVersion: 2
+      x: 77
+      y: 72
+      width: 3
+      height: 3
+    - serializedVersion: 2
+      x: 80
+      y: 72
+      width: 20
+      height: 8
+    - serializedVersion: 2
+      x: 100
+      y: 76
+      width: 4
+      height: 40
+    - serializedVersion: 2
+      x: 152
+      y: 76
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 180
+      y: 76
+      width: 8
+      height: 12
+    - serializedVersion: 2
+      x: 85
+      y: 80
+      width: 7
+      height: 4
+    - serializedVersion: 2
+      x: 92
+      y: 80
+      width: 16
+      height: 16
+    - serializedVersion: 2
+      x: 148
+      y: 80
+      width: 8
+      height: 8
+    - serializedVersion: 2
+      x: 188
+      y: 80
+      width: 8
+      height: 7
+    - serializedVersion: 2
+      x: 108
+      y: 84
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 108
+      y: 88
+      width: 8
+      height: 8
+    - serializedVersion: 2
+      x: 144
+      y: 88
+      width: 12
+      height: 28
+    - serializedVersion: 2
+      x: 180
+      y: 88
+      width: 4
+      height: 3
+    - serializedVersion: 2
+      x: 156
+      y: 92
+      width: 16
+      height: 8
+    - serializedVersion: 2
+      x: 172
+      y: 92
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 96
+      y: 96
+      width: 24
+      height: 4
+    - serializedVersion: 2
+      x: 97
+      y: 100
+      width: 3
+      height: 4
+    - serializedVersion: 2
+      x: 104
+      y: 100
+      width: 20
+      height: 28
+    - serializedVersion: 2
+      x: 140
+      y: 100
+      width: 8
+      height: 28
+    - serializedVersion: 2
+      x: 156
+      y: 100
+      width: 8
+      height: 4
+    - serializedVersion: 2
+      x: 156
+      y: 104
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 124
+      y: 108
+      width: 4
+      height: 20
+    - serializedVersion: 2
+      x: 136
+      y: 116
+      width: 8
+      height: 24
+    - serializedVersion: 2
+      x: 148
+      y: 116
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 128
+      y: 120
+      width: 4
+      height: 8
+    - serializedVersion: 2
+      x: 106
+      y: 128
+      width: 2
+      height: 4
+    - serializedVersion: 2
+      x: 108
+      y: 128
+      width: 28
+      height: 76
+    - serializedVersion: 2
+      x: 136
+      y: 140
+      width: 4
+      height: 20
+    - serializedVersion: 2
+      x: 68
+      y: 145
+      width: 8
+      height: 3
+    - serializedVersion: 2
+      x: 64
+      y: 148
+      width: 44
+      height: 11
+    - serializedVersion: 2
+      x: 136
+      y: 148
+      width: 20
+      height: 8
+    - serializedVersion: 2
+      x: 156
+      y: 148
+      width: 32
+      height: 16
+    - serializedVersion: 2
+      x: 188
+      y: 149
+      width: 4
+      height: 10
+    - serializedVersion: 2
+      x: 160
+      y: 164
+      width: 23
+      height: 4
+    - serializedVersion: 2
+      x: 164
+      y: 168
+      width: 8
+      height: 7
+    - serializedVersion: 2
+      x: 172
+      y: 168
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 136
+      y: 176
+      width: 4
+      height: 28
+    - serializedVersion: 2
+      x: 140
+      y: 197
+      width: 3
+      height: 6
+    - serializedVersion: 2
+      x: 108
+      y: 204
+      width: 20
+      height: 3
+    - serializedVersion: 2
+      x: 224
+      y: 210
+      width: 4
+      height: 14
+    - serializedVersion: 2
+      x: 60
+      y: 212
+      width: 136
+      height: 12
+    - serializedVersion: 2
+      x: 224
+      y: 212
+      width: 8
+      height: 8
+    - serializedVersion: 2
+      x: 29
+      y: 220
+      width: 19
+      height: 12
+    - serializedVersion: 2
+      x: 48
+      y: 224
+      width: 8
+      height: 4
+    - serializedVersion: 2
+      x: 200
+      y: 228
+      width: 16
+      height: 8
+    - serializedVersion: 2
+      x: 216
+      y: 228
+      width: 4
+      height: 4
+    - serializedVersion: 2
+      x: 29
+      y: 232
+      width: 7
+      height: 4
+    - serializedVersion: 2
+      x: 204
+      y: 236
+      width: 4
+      height: 2
+    inkBounds:
+      x: 30
+      y: 16
+      width: 202
+      height: 221
+    gripPoint: {x: 45, y: 29.5}
+    componentCount: 2
+    maskSize: 256
+    emSizePx: 240
+    colliderGridUsed: 64
+  fontAssetPath: Assets/Art/Fonts/Mincho/ShipporiMincho-Bold.ttf
+  fontFamily: Shippori Mincho
+  fontHash: 63bc4eddc74793f671c3ab827c5175e773ffbe569d0bf50ee65375ea9e3bc286
+  settingsHash: fb8263744cba8b65
+  bakedAt: 2026-10-16T19:03:22
+  unityVersion: 6000.0.61f1

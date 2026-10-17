@@ -76,6 +76,7 @@ namespace MojiBattle
     {
         public FighterLoadout left, right;
         public int seed;
+        public BattleStageId stage;
         public float durationSeconds;
     }
 

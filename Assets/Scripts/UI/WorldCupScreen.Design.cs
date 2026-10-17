@@ -8,13 +8,13 @@ namespace MojiBattle
 {
     public sealed partial class WorldCupScreen
     {
-        void Header(string phase,Action back=null,string label="← 戻る")=>D.Header(root,"WORLD CUP / "+phase,back??GameFlow.ToTournamentSelect,label);
+        void Header(string phase,Action back=null,string label="← 戻る")=>D.Header(root,"WORLD MOJI CUP / "+phase,back??GameFlow.ToTournamentSelect,label);
         static Text T(Transform p,string name,string value,float x,float y,float w,float h,int size=28,Color? c=null,TextAnchor a=TextAnchor.MiddleLeft)
             =>D.Text(p,name,value,x,y,w,h,size,c,a,size>=34);
         UguiKit.ChoiceButton Button(string name,string text,float x,float y,float w,Action action,Color? color=null,float h=68,int size=32)
             =>D.Button(root,name,text,x,y,w,h,action,color,size);
         string Glyph(int id)=>id<0?"—":Session.Entrants[id].Build.character;
-        static string Special(FighterBuildData b)=>b.EquippedSpecial?.name??SpecialMovePlan.StandardName(b.character);
+        static string Special(FighterBuildData b)=>b.EquippedSpecial?.name??SpecialMovePlan.StandardName(b);
         string Pair(WorldCupMatch m)=>m==null?"—":Glyph(m.LeftId)+" VS "+Glyph(m.RightId);
         void Fighter(Transform p,int id,float x,float y,float w,float h,bool mirror=false,string pose="ready")
         {if(id>=0)D.Fighter(p,x,y,w,h,Session.Entrants[id].Build,id==0?D.Red:D.Navy,mirror,pose,pose=="kneel");}
@@ -237,7 +237,11 @@ namespace MojiBattle
             for(int i=0;i<3;i++){float ry=67+i*48;D.Block(p,"BuildRow",4,ry,w-8,1,D.Rule);if(i==2){D.InkFill(p,"SpecialLabel",4,ry,w*.42f-4,48,D.Ink);D.InkFill(p,"SpecialValue",w*.42f,ry,w*.58f-4,48,id==0?D.Red:D.Navy);}T(p,"BuildLabel",labels[i],12,ry,w*.42f-20,48,21,i==2?D.Paper:D.Ink);T(p,"Build",texts[i],w*.42f+7,ry,w*.58f-15,48,26,i==2?D.Paper:D.Ink,TextAnchor.MiddleCenter);D.Block(p,"BuildColumn",w*.42f,67,1,144,D.Ink);}
         }
         void StartButton(WorldCupMatch m,float x,float y,float width,float height,string label)
-        {Button("WorldCupStart",m.IncludesPlayer?label:m.Bronze?"3位決定戦を観戦 →":label,x,y,width,()=>{ScreenAudioDirector.PlayBattleStart();GameFlow.ToWorldCupBattle();},D.Red,height,36);}
+        {
+            var stage=StageCatalog.Get(StageCatalog.ForSeed(m.Seed,m.Group<0&&m.Round==4&&!m.Bronze));
+            T(root,"WorldCupStageAnnouncement","会場："+stage.Name,55,908,1480,24,18,D.Navy,TextAnchor.MiddleCenter);
+            Button("WorldCupStart",m.IncludesPlayer?label:m.Bronze?"3位決定戦を観戦 →":label,x,y,width,()=>{ScreenAudioDirector.PlayBattleStart();GameFlow.ToWorldCupBattle();},D.Red,height,36);
+        }
         void BronzeVersus(WorldCupMatch m)
         {
             Header("BRONZE MATCH",()=>Open(WorldCupPage.Bracket));D.Title(root,"<color=#AE2319>3位</color>決定戦",119,98);
@@ -256,8 +260,6 @@ namespace MojiBattle
             Fighter(root,m.LeftId,237,266,480,285);Fighter(root,m.RightId,1059,214,469,336,true);D.Art(root,"design_trophy",737,270,195,121);T(root,"FinalVS","VS",737,403,195,127,86,D.Gold,TextAnchor.MiddleCenter);
             BuildCard(m.LeftId,215,565,560,109,true);BuildCard(m.RightId,897,565,560,109,true);
             var bronze=D.Panel(root,"FinalBronzeResult",97,704,712,120);T(bronze,"BronzeResultCaption","3位決定戦\n結果",25,12,181,89,28);Fighter(bronze,Session.ThirdId,226,8,143,96);Fighter(bronze,Session.FourthId,480,8,144,96);T(bronze,"BronzeWinner","○",379,26,70,68,44,D.Red,TextAnchor.MiddleCenter);
-            // A miniature real podium preview uses the actual semifinal and bronze finalists.
-            WorldCupCeremony.PreviewPodium(root,Session,1087,694,422,189,m.LeftId,m.RightId,Session.ThirdId);
             StartButton(m,236,844,534,65,"決勝戦を始める →");Button("WorldCupVersusBack","トーナメント表へ",801,844,269,()=>Open(WorldCupPage.Bracket),null,65,26);
         }
         void MatchResult()

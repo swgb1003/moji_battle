@@ -15,6 +15,9 @@ namespace MojiBattle
         public NormalizedGlyphFeatures normalized;
         /// <summary>入力された文字を実行時に字形化した（ベイク済みアセットではない）</summary>
         public bool runtimeBaked;
+        // Component weapons retain their original size and share the original mass.
+        public float weaponSizeRatio = 1f;
+        public float weaponMassBasis = -1f;
     }
 
     /// <summary>
@@ -113,6 +116,8 @@ namespace MojiBattle
 
         public static void ClearCache()
         {
+            FusionGlyphs.ClearCache();
+            SplitMingGlyphs.ClearCache();
             GlyphFlip.ClearCache();
             cache.Clear();
             failed.Clear();

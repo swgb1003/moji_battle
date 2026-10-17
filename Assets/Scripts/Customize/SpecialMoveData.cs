@@ -9,13 +9,15 @@ namespace MojiBattle
     public enum SpecialEffect { Burst, Ring, Pillar, Slash, Spiral, Rain }
 
     /// <summary>
-    /// AI が技名から設計した必殺技。技名は武器の一文字を必ず含む 7 文字以内。
+    /// AI が技名から設計した必殺技。7文字以内。通常文字は武器の文字を含め、合成文字は自由に命名する。
     /// 動き（steps）は既存の技の連なりで、物理と当たり判定はゲーム側が持つ。値は文字列のまま保存し、使う時に解釈する（未知の値は無難な既定へ）。
     /// </summary>
     [Serializable]
     public class SpecialMoveData
     {
         public string name = "", character = "", reading = "";
+        public bool fusionEnabled;
+        public FusionData fusion;
         [Tooltip("出す順の技（AttackStyle の名前）。1〜4 個")] public string[] steps = Array.Empty<string>();
         [Tooltip("威力 / 速さ / 伸び。各 1〜5、合計 9 まで")] public int power = 3, speed = 3, reach = 3;
         public string element = "none", effect = "burst", primary = "", secondary = "", callout = "", description = "";
@@ -25,9 +27,13 @@ namespace MojiBattle
         {
             var c = (SpecialMoveData)MemberwiseClone();
             c.steps = steps != null ? (string[])steps.Clone() : Array.Empty<string>();
+            c.fusion = fusion?.Clone();
             return c;
         }
-        public bool SameAs(SpecialMoveData other) => other != null && other.name == name && other.character == character;
+        public bool SameWeapon(string ch, FusionData recipe) => character == ch && (recipe == null ? !fusionEnabled
+            : fusionEnabled && fusion != null && fusion.Validate(out _) && fusion.Key == recipe.Key);
+        public bool SameAs(SpecialMoveData other) => other != null && other.name == name
+            && fusionEnabled == other.fusionEnabled && SameWeapon(other.character, other.fusionEnabled ? other.fusion : null);
 
         /// <summary>出せる技の並び（未知の名前は除く。空なら踏み込み斬り）。</summary>
         public AttackStyle[] Styles()
@@ -83,24 +89,28 @@ namespace MojiBattle
         }
 
         /// <summary>技名の条件を確かめる。使えれば null、使えなければ理由。</summary>
-        public static string CheckName(string name, string character)
+        public static string CheckName(string name, string character, bool composed = false)
         {
             name = name?.Trim() ?? "";
             if (name.Length == 0) return "技名を入力してください";
             foreach (char c in name) if (char.IsControl(c) || c == '<' || c == '>') return "使えない記号が入っています";
             var g = Graphemes(name);
             if (g.Count > MaxName) return $"技名は{MaxName}文字以内にしてください（いま{g.Count}文字）";
-            if (!g.Contains(character)) return $"技名に「{character}」を入れてください";
+            if (!composed && !g.Contains(character)) return $"技名に「{character}」を入れてください";
             return null;
         }
 
         /// <summary>サーバーと同じ規則で丸める（友人対戦では相手の装備もサーバーが丸めて届く）。</summary>
-        public static SpecialMoveData Sanitize(SpecialMoveData m, string character)
+        public static SpecialMoveData Sanitize(SpecialMoveData m, string character, FusionData fusion = null)
         {
-            if (m == null || !m.IsSet || CheckName(m.name, character) != null) return null;
+            if (m == null || !m.IsSet || (fusion != null && !fusion.Validate(out _))) return null;
+            // Old equipped moves can be rebound to this build; unbound library entries stay ordinary.
+            if (m.fusionEnabled && (fusion == null || !m.SameWeapon(character, fusion))) return null;
+            if (CheckName(m.name, character, fusion != null && m.fusionEnabled) != null) return null;
             if (!string.IsNullOrEmpty(m.character) && m.character != character) return null; // 別の文字のために作った技
             var c = m.Clone();
             c.name = c.name.Trim(); c.character = character;
+            c.fusionEnabled = fusion != null; c.fusion = fusion?.Clone();
             var styles = new List<string>();
             foreach (var s in c.Styles()) styles.Add(s.ToString());
             c.steps = styles.ToArray();
@@ -201,10 +211,15 @@ namespace MojiBattle
         public static List<SpecialMoveData> For(string character)
         {
             Load();
-            return moves.FindAll(m => m.character == character);
+            return moves.FindAll(m => m.SameWeapon(character, null));
         }
 
+        public static List<SpecialMoveData> For(FighterBuildData build)
+        { Load(); return moves.FindAll(m => m.SameWeapon(build.character, build.HasFusion ? build.fusion : null)); }
+
         public static bool IsFull(string character) => For(character).Count >= SpecialMoveRules.MaxPerCharacter;
+        public static int CountFor(SpecialMoveData move)
+        { Load(); return moves.FindAll(m => m.SameWeapon(move.character, move.fusionEnabled ? move.fusion : null)).Count; }
         public static List<SpecialMoveData> All() { Load(); return moves.ConvertAll(m => m.Clone()); }
 
         /// <summary>登録する（同じ名前は上書き）。その文字の枠が埋まっていれば false。</summary>
@@ -213,10 +228,11 @@ namespace MojiBattle
             Load();
             int same = moves.FindIndex(m => m.SameAs(move));
             if (same >= 0) moves[same] = move.Clone();
-            else if (IsFull(move.character)) return false;
+            else if (CountFor(move) >= SpecialMoveRules.MaxPerCharacter) return false;
             else moves.Add(move.Clone());
             Save();
             AchievementStore.SpecialSaved(move.character);
+            if (move.fusionEnabled) AchievementStore.Change(p => p.Set(4, CountFor(move)), true);
             return true;
         }
 

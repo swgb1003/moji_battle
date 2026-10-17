@@ -163,7 +163,7 @@ namespace MojiBattle
             {
                 var offGlyph = offhandGlyph ?? glyph;
                 var offBase = StatCalculator.Compute(offGlyph, b);
-                var offGeo = ResolveWeapon(build, offGlyph, offBase, b, cb, out float offMass);
+                var offGeo = ResolveWeapon(build.ForOffhand(), offGlyph, offBase, b, cb, out float offMass);
                 fighter.Offhand = new OffhandWeapon(fighter, offGlyph, offGeo, offMass, container, TeamColor(id));
             }
 
@@ -200,8 +200,8 @@ namespace MojiBattle
                 weaponMass = baseStats.weaponMass;
                 return BuildGeometry(glyph, b);
             }
-            weaponMass = WeaponSizeController.WeaponMass(baseStats.weaponMass, build.weaponSize, cb);
-            float maxSide = WeaponSizeController.MaxSide(build.weaponSize, b, cb);
+            weaponMass = WeaponSizeController.WeaponMass(glyph.weaponMassBasis >= 0f ? glyph.weaponMassBasis : baseStats.weaponMass, build.weaponSize, cb);
+            float maxSide = WeaponSizeController.MaxSide(build.weaponSize, b, cb) * glyph.weaponSizeRatio;
             var geo = BuildGeometry(glyph, maxSide, ResolveGrip(build, glyph, cb), true);
             // 反転した字形は、字形の本体（重心）が握りから見て反転前と同じ側に来る向きで持つ。
             // 長い方の軸だけを基準にすると、軸から横にずれた重心が反転で反対側へ移り、本体が手の反対側に付いて逆向きに振られる

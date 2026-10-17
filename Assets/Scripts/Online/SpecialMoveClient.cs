@@ -12,7 +12,7 @@ namespace MojiBattle
     /// </summary>
     public sealed class SpecialMoveClient
     {
-        [Serializable] sealed class GenerateRequest { public string version = FriendRoomClient.Version, character, name; }
+        [Serializable] sealed class GenerateRequest { public string version = FriendRoomClient.Version, character, name; public bool fusionEnabled; public FusionData fusion; }
         [Serializable] sealed class GenerateResponse { public SpecialMoveData special; public string error; }
 
         public string ServerUrl { get; }
@@ -22,13 +22,18 @@ namespace MojiBattle
         public SpecialMoveClient(string url = null) { ServerUrl = (url ?? FriendRoomSession.ResolvedServerUrl).TrimEnd('/'); }
 
         public IEnumerator Generate(string character, string name, Func<bool> stillCurrent = null, Action onWaking = null)
+            => Generate(new FighterBuildData { character = character }, name, stillCurrent, onWaking);
+
+        public IEnumerator Generate(FighterBuildData build, string name, Func<bool> stillCurrent = null, Action onWaking = null)
         {
+            build = build.Clone();
             Result = null; Error = null;
             var rooms = new FriendRoomClient(ServerUrl);
             yield return rooms.WaitUntilReady(stillCurrent, onWaking);
             if (stillCurrent != null && !stillCurrent()) yield break;
             if (!string.IsNullOrEmpty(rooms.Error)) { Error = rooms.Error.Replace("ルームサーバー", "サーバー"); yield break; }
-            var body = JsonUtility.ToJson(new GenerateRequest { character = character, name = name.Trim() });
+            var body = JsonUtility.ToJson(new GenerateRequest { character = build.character, name = name.Trim(),
+                fusionEnabled = build.HasFusion, fusion = build.HasFusion ? build.fusion.Clone() : null });
             using (var request = new UnityWebRequest(rooms.ServerUrl + "/specials", "POST"))
             {
                 request.downloadHandler = new DownloadHandlerBuffer();
@@ -45,7 +50,7 @@ namespace MojiBattle
                         : "サーバーに接続できません。通信環境を確認してください。";
                     yield break;
                 }
-                Result = SpecialMoveRules.Sanitize(response.special, character);
+                Result = SpecialMoveRules.Sanitize(response.special, build.character, build.HasFusion ? build.fusion : null);
                 if (Result == null) Error = "サーバーの応答を読み取れません。";
             }
         }

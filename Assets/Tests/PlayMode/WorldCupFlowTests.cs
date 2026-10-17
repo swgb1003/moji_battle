@@ -69,7 +69,7 @@ namespace MojiBattle.Tests
             Assert.AreEqual(m.RightId==0?InterventionController.Local:InterventionController.Com,battle.Context.Interventions.Side(1).controller);
             if(!m.IncludesPlayer)Assert.AreEqual(-1,battle.Root.GetComponent<InterventionHud>().LocalSide);
             if(m.Group>=0)Assert.IsFalse(battle.Context.Balance.suddenDeath);
-            if(m.Group<0 && m.Round==4 && !m.Bronze)Assert.AreEqual("final",battle.Root.GetComponent<CombatAudioDirector>().MusicSource.clip.name);
+            if(m.Group<0 && m.Round==4 && !m.Bronze)Assert.AreEqual("final2",battle.Root.GetComponent<CombatAudioDirector>().MusicSource.clip.name);
             double deadline=Time.realtimeSinceStartupAsDouble+12;
             while(!battle.Director.Fighting && !battle.Director.Ended && Time.realtimeSinceStartupAsDouble<deadline)yield return null;
             Assert.IsTrue(battle.Director.Fighting);

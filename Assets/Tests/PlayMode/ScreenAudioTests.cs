@@ -68,7 +68,8 @@ namespace MojiBattle.Tests
             Music("title");
             var audio = ScreenAudioDirector.Instance;
             Button("Start").onClick.Invoke();
-            yield return Frames();
+            // The title now plays the short weapon clash before entering the menu.
+            yield return new WaitForSecondsRealtime(.8f);
             Music("menu");
             Assert.AreSame(audio, ScreenAudioDirector.Instance);
             Assert.AreEqual("title_start", audio.ButtonSource.clip.name);

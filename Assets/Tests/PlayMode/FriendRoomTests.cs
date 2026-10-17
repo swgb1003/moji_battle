@@ -108,6 +108,9 @@ namespace MojiBattle.Tests
             var build = FighterBuildData.Default("史"); build.fontType = FontStyleId.Mincho; build.gripType = GripType.TwoHanded; build.battleStyle = BattleStyle.Counter;
             yield return guest.Join(session.Room.code, build); Assert.IsNull(guest.Error);
             yield return Until(() => session.Room.players[1].joined, "Guest join must appear on host lobby.");
+            session.SelectStage(BattleStageId.EraserFactory);
+            yield return Until(()=>!session.Busy && session.Room.arena==(int)BattleStageId.EraserFactory,"Host stage selection must be shared.");
+            yield return guest.Poll();Assert.AreEqual((int)BattleStageId.EraserFactory,guest.State.arena);
             Button("CopyRoomCode").onClick.Invoke(); Assert.AreEqual(session.Room.code, GUIUtility.systemCopyBuffer);
             Button("RoomSetReady").onClick.Invoke();
             yield return Until(() => !session.Busy && session.Room.players[0].ready, "Host ready failed.");
@@ -136,6 +139,7 @@ namespace MojiBattle.Tests
             yield return Until(() => SceneManager.GetActiveScene().name == GameFlow.BattleScene, "Online battle failed."); yield return Ready();
             var boot = Object.FindAnyObjectByType<BattleBootstrap>();
             Assert.IsNotNull(boot.Battle); Assert.AreEqual("木", boot.Battle.Left.Loadout.grapheme);
+            Assert.AreEqual(BattleStageId.EraserFactory,boot.Battle.Director.Config.stage);
             Assert.AreEqual("史", boot.Battle.Right.Loadout.grapheme);
             Assert.IsFalse(Button("BattlePause").interactable); Assert.IsFalse(Button("BattleAgain").interactable);
             yield return new WaitForSecondsRealtime(4);

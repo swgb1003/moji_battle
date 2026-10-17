@@ -194,7 +194,7 @@ namespace MojiBattle
                 profile.migrated = true;
                 if (PlayerPrefs.HasKey("MojiBattle.Builds.v1")) profile.Set(6,1);
                 foreach (var move in SpecialMoveLibrary.All())
-                { profile.Set(3,1); profile.Set(4,SpecialMoveLibrary.For(move.character).Count); }
+                { profile.Set(3,1); profile.Set(4,SpecialMoveLibrary.CountFor(move)); }
             }
             profile.Check(); dirty = true; Save();
         }

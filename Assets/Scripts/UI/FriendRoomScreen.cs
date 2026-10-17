@@ -17,6 +17,8 @@ namespace MojiBattle
         Button exit;
         int shownRevision = -1;
         string shownMessage;
+        Text roomStage;
+        UguiKit.ChoiceButton stagePrevious,stageNext;
         void Start()
         {
             GameFlow.EnterFriendMode();
@@ -88,6 +90,10 @@ namespace MojiBattle
             roomCode = RetroUi.Label(root, "RoomCode", "", 693, 269, 580, 106, 86, null, TextAnchor.MiddleCenter);
             copy = RetroUi.Button(root, "CopyRoomCode", "コピー", 1300, 294, 182, 62, 29, CopyCode, shadow: false);
             RetroUi.Label(root, "ShareHelp", "このコードを友人に伝えてください", 390, 390, 1140, 44, 27, null, TextAnchor.MiddleCenter);
+            root.Find("ShareHelp").gameObject.SetActive(false);
+            roomStage=RetroUi.Label(root,"RoomStage","",560,390,800,48,27,RetroUi.Blue,TextAnchor.MiddleCenter);
+            stagePrevious=RetroUi.Button(root,"RoomStagePrevious","◀",485,393,60,42,23,()=>CycleStage(-1),shadow:false);
+            stageNext=RetroUi.Button(root,"RoomStageNext","▶",1375,393,60,42,23,()=>CycleStage(1),shadow:false);
             for (int side = 0; side < 2; side++)
             {
                 var panel = Panel(root, "RoomPlayer" + side, side == 0 ? 96 : 1048, 458, 776, 398, RetroUi.Team(side), "");
@@ -151,6 +157,8 @@ namespace MojiBattle
             entryMessage.color = session.Message != null ? RetroUi.Red : RetroUi.Ink;
             if (!inRoom) return;
             var room = session.Room;
+            roomStage.text="STAGE / "+StageCatalog.Get((BattleStageId)room.arena).Name;
+            stagePrevious.button.interactable=stageNext.button.interactable=session.IsHost&&!session.Busy&&room.stage=="lobby";
             roomCode.text = string.Join(" ", room.code.ToCharArray());
             bool localReady = room.players[room.side].ready;
             if (shownRevision != room.revision || shownMessage != session.Message)
@@ -161,7 +169,9 @@ namespace MojiBattle
                     headings[i].text = "P" + (i + 1) + (local ? " / YOU" : " / FRIEND");
                     glyphs[i].text = p.joined ? p.build.character : "?";
                     if (p.joined) glyphs[i].font = GlyphFontLibrary.Default.Get(p.build.fontType).font;
+                    FusionUi.Glyph(glyphs[i], p.joined ? p.build : null);
                     summaries[i].text = p.joined ? GlyphCatalog.FontDisplayName(p.build.fontType) + " / " + p.build.weaponSize + "\n" + CustomizeLabels.Grip(p.build) + " / " + CustomizeLabels.StyleShort(p.build.battleStyle) : "友人の参加を\n待っています";
+                    if (p.joined && p.build.HasFusion) summaries[i].text = FusionUi.Safe(p.build.DisplayName) + "\n" + summaries[i].text;
                     readyText[i].text = !p.joined ? "未参加" : p.ready ? "準備完了" : "準備中";
                     readySquares[i].color = p.ready ? RetroUi.Team(i) : RetroUi.Wash;
                 }
@@ -185,6 +195,7 @@ namespace MojiBattle
             if (Input.GetKeyDown(KeyCode.Return) && entry.activeSelf && (serverPanel == null || !serverPanel.activeSelf) && EventSystem.current.currentSelectedGameObject == codeInput.gameObject) Join();
             if (Input.GetKeyDown(KeyCode.Escape)) { if (serverPanel != null && serverPanel.activeSelf) serverPanel.SetActive(false); else if (session.Connected) session.Leave(); else session.Leave(true); }
         }
+        void CycleStage(int direction) => session.SelectStage((BattleStageId)((session.Room.arena+direction+6)%6));
         void OnDestroy() { if (session != null) session.Changed -= Refresh; }
     }
 }

@@ -1,0 +1,216 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d69669bff785849a623abdad1a673e, type: 3}
+  m_Name: u56de_mincho
+  m_EditorClassIdentifier: 
+  grapheme: "\u56DE"
+  font: 1
+  mask: {fileID: 2800000, guid: 1bd576a21923091469dd618b683b99e5, type: 3}
+  features:
+    inkRatio: 0.32206598
+    widthRatio: 0.8333333
+    heightRatio: 0.9
+    edgeRatio: 9.025
+    balance: 0.9869909
+    centerOfMass: {x: 128.74818, y: 124.48825}
+    colliderRects:
+    - serializedVersion: 2
+      x: 32
+      y: 16
+      width: 20
+      height: 4
+    - serializedVersion: 2
+      x: 196
+      y: 17
+      width: 12
+      height: 3
+    - serializedVersion: 2
+      x: 30
+      y: 20
+      width: 30
+      height: 4
+    - serializedVersion: 2
+      x: 193
+      y: 20
+      width: 23
+      height: 4
+    - serializedVersion: 2
+      x: 32
+      y: 24
+      width: 30
+      height: 12
+    - serializedVersion: 2
+      x: 193
+      y: 24
+      width: 31
+      height: 12
+    - serializedVersion: 2
+      x: 32
+      y: 36
+      width: 192
+      height: 12
+    - serializedVersion: 2
+      x: 32
+      y: 48
+      width: 30
+      height: 160
+    - serializedVersion: 2
+      x: 193
+      y: 48
+      width: 31
+      height: 156
+    - serializedVersion: 2
+      x: 84
+      y: 76
+      width: 16
+      height: 4
+    - serializedVersion: 2
+      x: 82
+      y: 80
+      width: 26
+      height: 12
+    - serializedVersion: 2
+      x: 144
+      y: 80
+      width: 20
+      height: 4
+    - serializedVersion: 2
+      x: 144
+      y: 84
+      width: 28
+      height: 12
+    - serializedVersion: 2
+      x: 84
+      y: 92
+      width: 24
+      height: 4
+    - serializedVersion: 2
+      x: 84
+      y: 96
+      width: 88
+      height: 8
+    - serializedVersion: 2
+      x: 84
+      y: 104
+      width: 24
+      height: 56
+    - serializedVersion: 2
+      x: 145
+      y: 104
+      width: 27
+      height: 52
+    - serializedVersion: 2
+      x: 145
+      y: 156
+      width: 31
+      height: 4
+    - serializedVersion: 2
+      x: 84
+      y: 160
+      width: 96
+      height: 4
+    - serializedVersion: 2
+      x: 82
+      y: 164
+      width: 97
+      height: 4
+    - serializedVersion: 2
+      x: 82
+      y: 168
+      width: 94
+      height: 4
+    - serializedVersion: 2
+      x: 81
+      y: 172
+      width: 19
+      height: 4
+    - serializedVersion: 2
+      x: 148
+      y: 172
+      width: 23
+      height: 4
+    - serializedVersion: 2
+      x: 81
+      y: 176
+      width: 11
+      height: 4
+    - serializedVersion: 2
+      x: 149
+      y: 176
+      width: 15
+      height: 4
+    - serializedVersion: 2
+      x: 156
+      y: 180
+      width: 4
+      height: 2
+    - serializedVersion: 2
+      x: 193
+      y: 204
+      width: 35
+      height: 4
+    - serializedVersion: 2
+      x: 32
+      y: 208
+      width: 200
+      height: 8
+    - serializedVersion: 2
+      x: 32
+      y: 216
+      width: 196
+      height: 4
+    - serializedVersion: 2
+      x: 32
+      y: 220
+      width: 24
+      height: 4
+    - serializedVersion: 2
+      x: 196
+      y: 220
+      width: 27
+      height: 4
+    - serializedVersion: 2
+      x: 30
+      y: 224
+      width: 18
+      height: 4
+    - serializedVersion: 2
+      x: 197
+      y: 224
+      width: 22
+      height: 4
+    - serializedVersion: 2
+      x: 30
+      y: 228
+      width: 6
+      height: 4
+    - serializedVersion: 2
+      x: 200
+      y: 228
+      width: 12
+      height: 4
+    inkBounds:
+      x: 31
+      y: 16
+      width: 200
+      height: 216
+    gripPoint: {x: 46.5, y: 29.5}
+    componentCount: 2
+    maskSize: 256
+    emSizePx: 240
+    colliderGridUsed: 64
+  fontAssetPath: Assets/Art/Fonts/Mincho/ShipporiMincho-Bold.ttf
+  fontFamily: Shippori Mincho
+  fontHash: 63bc4eddc74793f671c3ab827c5175e773ffbe569d0bf50ee65375ea9e3bc286
+  settingsHash: fb8263744cba8b65
+  bakedAt: 2026-10-16T19:03:22
+  unityVersion: 6000.0.61f1

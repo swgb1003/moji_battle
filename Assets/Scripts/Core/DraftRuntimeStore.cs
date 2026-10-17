@@ -105,7 +105,7 @@ namespace MojiBattle
         {
             if (!CanBattle) throw new InvalidOperationException("ドラフトの構成を確定してください。");
             Current.stage = DraftStage.Battle; Save();
-            return new MatchConfig { left = Current.player.ToLoadout(), right = Current.com.ToLoadout(), seed = seed, durationSeconds = duration };
+            return new MatchConfig { left = Current.player.ToLoadout(), right = Current.com.ToLoadout(), seed = seed, stage=StageCatalog.ForSeed(seed),durationSeconds = duration };
         }
         public static bool Record(MatchResult r)
         {

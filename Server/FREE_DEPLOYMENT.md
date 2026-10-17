@@ -13,13 +13,13 @@
 2. このディレクトリの `server.mjs`、`specials.mjs`、`package.json`、`package-lock.json`、`Dockerfile`、`.dockerignore`、`render.yaml` だけを公開用Gitリポジトリに配置する。
    AI の必殺技づくりを使う場合は、Render の Environment に `ANTHROPIC_API_KEY` を本人が設定する（リポジトリには書かない）。
 3. RenderでそのリポジトリからBlueprintを作成し、サービスのプランが **Free** になっていることを確認して公開する。
-4. Renderが割り当てたHTTPS URLの `/health` で `moji-fighter-x-rooms-v3` の応答を確認する。
+4. Renderが割り当てたHTTPS URLの `/health` で `moji-fighter-x-rooms-v7` の応答を確認する。
 5. プロジェクトルートで `Tools/SetRoomServer.ps1 -Url <HTTPS URL>` を実行し、ゲームを再ビルドする。
 
 Blueprintは公開用リポジトリのルートに `render.yaml` がある構成です。Unityプロジェクト全体をアップロードする必要はありません。
 ## 公開済みの構成（2026-10-08）
 
-- URL: https://moji-fighter-x-rooms.onrender.com （`/health` で `moji-fighter-x-rooms-v3`）
+- URL: https://moji-fighter-x-rooms.onrender.com （`/health` で `moji-fighter-x-rooms-v7`）
 - Renderサービス: `srv-db3mkam0tbcc73858i50`（Free・Singapore・Docker・自動デプロイ無効）
 - ソース: https://github.com/swgb1003/moji-fighter-x-rooms （このディレクトリのサーバーファイルのみ）
 - `TRUST_PROXY=1`: Renderのプロキシ越しでも、`X-Forwarded-For` の接続元ごとに回数制限する。

@@ -103,7 +103,7 @@ namespace MojiBattle
                 throw new InvalidOperationException("This match cannot be played yet.");
             m.InProgress = true;
             return new MatchConfig { left = entrants[m.LeftId].Build.ToLoadout(), right = entrants[m.RightId].Build.ToLoadout(),
-                seed = m.Seed, durationSeconds = duration };
+                seed = m.Seed, stage=StageCatalog.ForSeed(m.Seed,m.Round==2), durationSeconds = duration };
         }
 
         public void CancelStart(int id) { if (id >= 0 && id < matches.Length && !matches[id].Complete) matches[id].InProgress = false; }

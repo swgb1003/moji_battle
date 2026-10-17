@@ -10,6 +10,7 @@ namespace MojiBattle
         public HitResolver Hits;
         public EnvironmentImpactResolver Env;
         public RangedCombat Ranged;
+        public ArenaStage Stage;
         public int MatchSeed;
         public float SimTime;
         public float ArenaHalfWidth;
@@ -986,6 +987,7 @@ namespace MojiBattle
                 : WeightClass == WeightClass.Light ? Balance.attackCooldownLight : Balance.attackCooldownHeavy);
             if (Balance.combatTempo) rt.attackReadyAt = time + (rt.attackReadyAt-time) * Balance.tempoCooldownScale;
             if (Brain.IsPlayer) rt.attackReadyAt = time + (rt.attackReadyAt - time) * PlayerController.CooldownScale;
+            if (Brain.IsPlayer && AttackTechniques.IsKick(rt.attackStyle)) rt.attackReadyAt = time;
             SetState(FighterState.Approach);
             Brain.OnAttackSequenceFinished(time);
         }
@@ -1076,7 +1078,8 @@ namespace MojiBattle
         {
             // 足が地面付近で上下に動いていなければ接地扱い（武器が地面に突っかえて体がわずかに浮いた場合も含む）
             float vy = Mathf.Abs(Body.linearVelocity.y);
-            IsGrounded = !Runtime.IsDown && ((Body.position.y < 0.3f && vy < 0.5f) || (Body.position.y < 1.2f && vy < 0.2f));
+            float groundY = Context.Stage?.GroundAt(X) ?? 0;
+            IsGrounded = !Runtime.IsDown && ((Body.position.y < groundY+0.3f && vy < 0.5f) || (Body.position.y < groundY+1.2f && vy < 0.2f));
             if (IsGrounded || Runtime.IsDown) return;
             // 地面以外（相手の字形や体）の上に立っている場合も接地扱い。乗ったまま動けなくなるのを防ぐ
             int n = Body.GetContacts(contactBuffer);
