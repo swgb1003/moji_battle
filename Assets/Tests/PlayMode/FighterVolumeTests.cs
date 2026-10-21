@@ -102,6 +102,7 @@ namespace MojiBattle.Tests
                 for(int i=0;i<300;i++)RenderViews();
                 watch.Stop();milliseconds[pass]=watch.Elapsed.TotalMilliseconds/300;
             }
+            Directory.CreateDirectory(Path.Combine(Application.dataPath,"../Reports"));
             File.WriteAllText(Path.Combine(Application.dataPath,"../Reports/fighter-volume-render-cost.json"),
                 $"{{\"legacyMilliseconds\":{milliseconds[0].ToString(System.Globalization.CultureInfo.InvariantCulture)},\"volumeMilliseconds\":{milliseconds[1].ToString(System.Globalization.CultureInfo.InvariantCulture)},\"verticesPerFighter\":{battle.Left.View.VolumeRig.VertexCount},\"scope\":\"Native CPU pose and mesh update for two fighters; excludes GPU and WebGL\"}}");
         }

@@ -410,7 +410,7 @@ namespace MojiBattle
                 title = r.winner < 0 ? "DRAW" : $"「{FusionUi.Name(director.Fighters[r.winner].Loadout)}」の勝ち";
                 center.color = r.winner < 0 ? RetroUi.Ink : RetroUi.Team(r.winner);
                 string reason = r.finishReason.StartsWith("TIME") ? "TIME UP" : r.finishReason.StartsWith("SUDDEN") ? "延長戦" : "K.O.";
-                caption = $"{reason}   /   {r.elapsedSeconds:F1}秒\n残HP {r.hpRemaining[0]:F0} / {r.hpRemaining[1]:F0}   与ダメ {r.metrics[0].damageDealt:F0} / {r.metrics[1].damageDealt:F0}";
+                caption = $"{reason}   /   {r.elapsedSeconds:F1}秒\n残HP {Mathf.CeilToInt(r.hpRemaining[0])} / {Mathf.CeilToInt(r.hpRemaining[1])}   与ダメ {r.metrics[0].damageDealt:F0} / {r.metrics[1].damageDealt:F0}";
             }
             else center.color = RetroUi.Ink;
             bool visible = title.Length > 0;

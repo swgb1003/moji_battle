@@ -25,7 +25,7 @@ namespace MojiBattle
             var matchup=StageUi.Text(panel,"ResultMatchup",$"P1 {left}   VS   {right} P2",25,16,650,67,48,null,TextAnchor.MiddleCenter);
             matchup.resizeTextMinSize=20;matchup.verticalOverflow=VerticalWrapMode.Truncate;matchup.supportRichText=false;
             StageUi.Preview(panel,def.Id,20,95,410,230,false);
-            StageUi.Text(panel,"RemainingHp",$"残りHP\n{(winner<0?Mathf.Max(r.hpRemaining[0],r.hpRemaining[1]):r.hpRemaining[winner]):0}",451,95,220,110,38,null,TextAnchor.MiddleCenter);
+            StageUi.Text(panel,"RemainingHp",$"残りHP\n{Mathf.CeilToInt(winner<0?Mathf.Max(r.hpRemaining[0],r.hpRemaining[1]):r.hpRemaining[winner])}",451,95,220,110,38,null,TextAnchor.MiddleCenter);
             StageUi.Text(panel,"DamageDealt",$"与ダメージ\n{(winner<0?Mathf.Max(r.metrics[0].damageDealt,r.metrics[1].damageDealt):r.metrics[winner].damageDealt):0}",451,225,220,110,34,null,TextAnchor.MiddleCenter);
             StageUi.Text(panel,"ResultStageName","STAGE / "+def.Name,20,338,660,60,31,null,TextAnchor.MiddleCenter);
             WorldCupDesign.Button(root,"Again","同じ条件で再戦 →",40,790,550,110,rematch,RetroUi.Red,40);

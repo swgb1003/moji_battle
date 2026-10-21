@@ -300,7 +300,9 @@ namespace MojiBattle.Tests
             var previous = RenderTexture.active; RenderTexture.active = target;
             var texture = new Texture2D(width, height, TextureFormat.RGB24, false);
             texture.ReadPixels(new Rect(0, 0, width, height), 0, 0); texture.Apply();
-            string directory = Path.Combine(Application.dataPath, "../Reports/UI"); Directory.CreateDirectory(directory);
+            string directory = Path.Combine(Application.dataPath, "../Reports/UI");
+            // name may include a subfolder (e.g. "Achievements/..."), so create the file's own folder.
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(directory, name + ".png")));
             File.WriteAllBytes(Path.Combine(directory, name + ".png"), texture.EncodeToPNG());
             RenderTexture.active = previous;
             for (int i = 0; i < canvases.Length; i++)

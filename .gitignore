@@ -33,3 +33,7 @@ Server/node_modules/
 /PRVideo/remotion/node_modules/
 /PRVideo/remotion/public/footage/
 /PRVideo/footage_*/
+
+# Presentation build output
+/Presentation/build/node_modules/
+/Presentation/media/*.mp4
